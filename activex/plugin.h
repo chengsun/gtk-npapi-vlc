@@ -247,7 +247,7 @@ public:
     // async events;
     void fireOnMediaPlayerNothingSpecialEvent();
     void fireOnMediaPlayerOpeningEvent();
-    void fireOnMediaPlayerBufferingEvent(long cache);
+    void fireOnMediaPlayerBufferingEvent(float cache);
     void fireOnMediaPlayerPlayingEvent();
     void fireOnMediaPlayerPausedEvent();
     void fireOnMediaPlayerForwardEvent();
@@ -256,8 +256,8 @@ public:
     void fireOnMediaPlayerEndReachedEvent();
     void fireOnMediaPlayerStoppedEvent();
 
-    void fireOnMediaPlayerTimeChangedEvent(long time);
-    void fireOnMediaPlayerPositionChangedEvent(long position);
+    void fireOnMediaPlayerTimeChangedEvent(libvlc_time_t time);
+    void fireOnMediaPlayerPositionChangedEvent(float position);
     void fireOnMediaPlayerSeekableChangedEvent(VARIANT_BOOL seekable);
     void fireOnMediaPlayerPausableChangedEvent(VARIANT_BOOL pausable);
 

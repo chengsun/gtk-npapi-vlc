@@ -1037,14 +1037,14 @@ void VLCPlugin::fireOnMediaPlayerOpeningEvent()
     vlcConnectionPointContainer->fireEvent(DISPID_MediaPlayerOpeningEvent, &dispparamsNoArgs);
 };
 
-void VLCPlugin::fireOnMediaPlayerBufferingEvent(long cache)
+void VLCPlugin::fireOnMediaPlayerBufferingEvent(float cache)
 {
     DISPPARAMS params;
     params.cArgs = 1;
     params.rgvarg = (VARIANTARG *) CoTaskMemAlloc(sizeof(VARIANTARG) * params.cArgs) ;
     memset(params.rgvarg, 0, sizeof(VARIANTARG) * params.cArgs);
     params.rgvarg[0].vt = VT_I4;
-    params.rgvarg[0].lVal = cache;
+    params.rgvarg[0].lVal = static_cast<LONG>(cache);
     params.rgdispidNamedArgs = NULL;
     params.cNamedArgs = 0;
     vlcConnectionPointContainer->fireEvent(DISPID_MediaPlayerBufferingEvent, &params);
@@ -1130,14 +1130,14 @@ static void handle_input_state_event(const libvlc_event_t* event, void *param)
     }
 }
 
-void VLCPlugin::fireOnMediaPlayerTimeChangedEvent(long time)
+void VLCPlugin::fireOnMediaPlayerTimeChangedEvent(libvlc_time_t  time)
 {
     DISPPARAMS params;
     params.cArgs = 1;
     params.rgvarg = (VARIANTARG *) CoTaskMemAlloc(sizeof(VARIANTARG) * params.cArgs) ;
     memset(params.rgvarg, 0, sizeof(VARIANTARG) * params.cArgs);
     params.rgvarg[0].vt = VT_I4;
-    params.rgvarg[0].lVal = time;
+    params.rgvarg[0].lVal = static_cast<LONG>(time);
     params.rgdispidNamedArgs = NULL;
     params.cNamedArgs = 0;
     vlcConnectionPointContainer->fireEvent(DISPID_MediaPlayerTimeChangedEvent, &params);
@@ -1149,14 +1149,14 @@ static void handle_time_changed_event(const libvlc_event_t* event, void *param)
     plugin->fireOnMediaPlayerTimeChangedEvent(event->u.media_player_time_changed.new_time);
 }
 
-void VLCPlugin::fireOnMediaPlayerPositionChangedEvent(long position)
+void VLCPlugin::fireOnMediaPlayerPositionChangedEvent(float position)
 {
     DISPPARAMS params;
     params.cArgs = 1;
     params.rgvarg = (VARIANTARG *) CoTaskMemAlloc(sizeof(VARIANTARG) * params.cArgs) ;
     memset(params.rgvarg, 0, sizeof(VARIANTARG) * params.cArgs);
     params.rgvarg[0].vt = VT_I4;
-    params.rgvarg[0].lVal = position;
+    params.rgvarg[0].lVal = static_cast<LONG>(position);
     params.rgdispidNamedArgs = NULL;
     params.cNamedArgs = 0;
     vlcConnectionPointContainer->fireEvent(DISPID_MediaPlayerPositionChangedEvent, &params);
