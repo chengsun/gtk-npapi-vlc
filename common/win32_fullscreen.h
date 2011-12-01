@@ -38,10 +38,11 @@ public:
     static VLCHolderWnd* CreateHolderWindow(HWND hParentWnd, VLCWindowsManager* WM);
     void DestroyWindow();
 
-    libvlc_media_player_t* getMD() const {return _p_md;}
-
-    void LibVlcAttach(libvlc_media_player_t* p_md);
+    void LibVlcAttach();
     void LibVlcDetach();
+
+    //libvlc events arrives from separate thread
+    void OnLibVlcEvent(const libvlc_event_t* event);
 
 private:
     static LPCTSTR getClassName(void)  { return TEXT("VLC ActiveX Window Holder Class"); };
@@ -49,8 +50,7 @@ private:
     static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
     HHOOK _hMouseHook;
 
-    static void OnLibVlcEvent(const libvlc_event_t* event, void *param);
-    void DetachFromLibVlcEventSystem();
+    libvlc_media_player_t* getMD() const;
 
 private:
     static HINSTANCE _hinstance;
@@ -59,8 +59,7 @@ private:
 private:
     VLCHolderWnd(HWND hWnd, VLCWindowsManager* WM)
         : _hMouseHook(NULL), _hWnd(hWnd)
-         , _WindowsManager(WM), _p_md(0)
-         , _LibVlcESAttached(false){};
+         , _WindowsManager(WM){};
 
 public:
     HWND getHWND() const {return _hWnd;}
@@ -68,8 +67,6 @@ public:
 private:
     HWND _hWnd;
     VLCWindowsManager* _WindowsManager;
-    libvlc_media_player_t* _p_md;
-    bool _LibVlcESAttached;
 };
 
 ///////////////////////
@@ -120,9 +117,6 @@ private:
     }
 
 private:
-    void RegisterEvents();
-    void UnRegisterEvents();
-
     void SetVideoPosScrollRangeByVideoLen();
     void SyncVideoPosScrollPosWithVideoPos();
     void SetVideoPos(float Pos); //0-start, 1-end
@@ -132,6 +126,8 @@ private:
 
 public:
     void NeedShowControls();
+    //libvlc events arrives from separate thread
+    void OnLibVlcEvent(const libvlc_event_t* event);
 
 private:
     void NeedHideControls();
@@ -163,10 +159,8 @@ private:
 
 private:
     void SetVideoPosScrollPosByVideoPos(libvlc_time_t CurPos);
-    static bool handle_position_changed_event_enabled;
-    static void handle_position_changed_event(const libvlc_event_t* event, void *param);
-    //static void handle_time_changed_event(const libvlc_event_t* event, void *param);
-    static void handle_input_state_event(const libvlc_event_t* event, void *param);
+    void handle_position_changed_event(const libvlc_event_t* event);
+    void handle_input_state_event(const libvlc_event_t* event);
 
 public:
     HWND getHWND() const {return _hWnd;}
@@ -200,7 +194,7 @@ public:
     HMODULE getHModule() const {return _hModule;};
     VLCHolderWnd* getHolderWnd() const {return _HolderWnd;}
     VLCFullScreenWnd* getFullScreenWnd() const {return _FSWnd;}
-    libvlc_media_player_t* getMD() const {return _HolderWnd?_HolderWnd->getMD():0;}
+    libvlc_media_player_t* getMD() const {return _p_md;}
 
 public:
     void setNewMessageFlag(bool Yes)
@@ -211,8 +205,16 @@ public:
     void OnMouseEvent(UINT uMouseMsg);
 
 private:
+    void VlcEvents(bool Attach);
+    //libvlc events arrives from separate thread
+    static void OnLibVlcEvent_proxy(const libvlc_event_t* event, void *param);
+    void OnLibVlcEvent(const libvlc_event_t* event);
+
+private:
     HMODULE _hModule;
     HWND _hWindowedParentWnd;
+
+    libvlc_media_player_t* _p_md;
 
     VLCHolderWnd* _HolderWnd;
     VLCFullScreenWnd* _FSWnd;

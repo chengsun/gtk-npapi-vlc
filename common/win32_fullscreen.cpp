@@ -94,6 +94,11 @@ VLCHolderWnd* VLCHolderWnd::CreateHolderWindow(HWND hParentWnd, VLCWindowsManage
     return 0;
 }
 
+libvlc_media_player_t* VLCHolderWnd::getMD() const
+{
+    return _WindowsManager->getMD();
+}
+
 LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     VLCHolderWnd* h_data = reinterpret_cast<VLCHolderWnd*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
@@ -125,8 +130,6 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
                 h_data->_hMouseHook =
                     SetWindowsHookEx(WH_MOUSE, VLCHolderWnd::MouseHookProc,
                                      NULL, GetWindowThreadProcessId(hChildWnd, NULL));
-                //all work done, we don't need any notifications more
-                h_data->DetachFromLibVlcEventSystem();
             }
             break;
         }
@@ -181,55 +184,32 @@ LRESULT CALLBACK VLCHolderWnd::MouseHookProc(int nCode, WPARAM wParam, LPARAM lP
         return 1;
 }
 
-void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event, void *param)
+//libvlc events arrives from separate thread
+void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
 {
-    VLCHolderWnd* _this = reinterpret_cast<VLCHolderWnd*>(param);
-    if(!_this->_hMouseHook){
+    //We need set hook to catch doubleclicking (to switch to fullscreen and vice versa).
+    //But libvlc media window may not exist yet,
+    //and we don't know when it will be created, nor ThreadId of it.
+    //So we try catch events,
+    //(suppose wnd will be ever created),
+    //and then try set mouse hook.
+    if(!_hMouseHook){
         //libvlc events arrives from separate thread,
         //so we need post message to main thread, to notify it.
-        PostMessage(_this->getHWND(), WM_TRY_SET_MOUSE_HOOK, 0, 0);
+        PostMessage(getHWND(), WM_TRY_SET_MOUSE_HOOK, 0, 0);
     }
 }
 
-void VLCHolderWnd::LibVlcAttach(libvlc_media_player_t* p_md)
+void VLCHolderWnd::LibVlcAttach()
 {
-    if(!_p_md){
-        _p_md = p_md;
-        libvlc_media_player_set_hwnd(p_md, getHWND());
-
-        libvlc_event_manager_t* em = libvlc_media_player_event_manager(_p_md);
-        if(em){
-            //We need set hook to catch doubleclicking (to switch to fullscreen and vice versa).
-            //But libvlc media window not exist yet,
-            //and we don't know when it will be created, nor ThreadId of it.
-            //So we try catch first libvlc_MediaPlayerPositionChanged event,
-            //(suppose wnd will be created to that moment)),
-            //and then try set mouse hook.
-            _LibVlcESAttached =
-                0==libvlc_event_attach(em, libvlc_MediaPlayerPositionChanged,
-                                       OnLibVlcEvent, this);
-        }
-    }
-}
-
-void VLCHolderWnd::DetachFromLibVlcEventSystem()
-{
-    libvlc_event_manager_t* em = libvlc_media_player_event_manager(_p_md);
-    if(_LibVlcESAttached && em){
-        libvlc_event_detach(em, libvlc_MediaPlayerPositionChanged,
-                            OnLibVlcEvent, this);
-        _LibVlcESAttached=false;
-    }
+    libvlc_media_player_set_hwnd(getMD(), getHWND());
 }
 
 void VLCHolderWnd::LibVlcDetach()
 {
-    if(_p_md){
-        DetachFromLibVlcEventSystem();
-
-        libvlc_media_player_set_hwnd(_p_md, 0);
-        _p_md=0;
-    }
+    libvlc_media_player_t* p_md = getMD();
+    if(p_md)
+        libvlc_media_player_set_hwnd(p_md, 0);
 
     if(_hMouseHook){
         UnhookWindowsHookEx(_hMouseHook);
@@ -243,7 +223,6 @@ HINSTANCE VLCFullScreenWnd::_hinstance = 0;
 ATOM VLCFullScreenWnd::_fullscreen_wndclass_atom = 0;
 ATOM VLCFullScreenWnd::_fullscreen_controls_wndclass_atom = 0;
 
-bool VLCFullScreenWnd::handle_position_changed_event_enabled = true;
 void VLCFullScreenWnd::RegisterWndClassName(HINSTANCE hInstance)
 {
     //save hInstance for future use
@@ -339,11 +318,7 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
             break;
         case WM_SHOWWINDOW:{
             if(FALSE==wParam){ //hidding
-                fs_data->UnRegisterEvents();
                 break;
-            }
-            else{//showing
-                fs_data->RegisterEvents();
             }
 
             fs_data->NeedShowControls();
@@ -781,126 +756,42 @@ void VLCFullScreenWnd::CreateToolTip()
 
 /////////////////////////////////////
 //VLCFullScreenWnd event handlers
-void VLCFullScreenWnd::handle_position_changed_event(const libvlc_event_t* event, void *param)
+void VLCFullScreenWnd::handle_position_changed_event(const libvlc_event_t* event)
 {
-    VLCFullScreenWnd* fs_data = reinterpret_cast<VLCFullScreenWnd *>(param);
-    if(fs_data->handle_position_changed_event_enabled)
-        fs_data->SyncVideoPosScrollPosWithVideoPos();
+    SyncVideoPosScrollPosWithVideoPos();
 }
 
-void VLCFullScreenWnd::handle_input_state_event(const libvlc_event_t* event, void *param)
+void VLCFullScreenWnd::handle_input_state_event(const libvlc_event_t* event)
 {
-    VLCFullScreenWnd* fs_data = reinterpret_cast<VLCFullScreenWnd *>(param);
     switch( event->type )
     {
-        case libvlc_MediaPlayerNothingSpecial:
-            break;
-        case libvlc_MediaPlayerOpening:
-            break;
-        case libvlc_MediaPlayerBuffering:
-            break;
         case libvlc_MediaPlayerPlaying:
-            SendMessage(fs_data->hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hPauseBitmap);
+            SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hPauseBitmap);
             break;
         case libvlc_MediaPlayerPaused:
-            SendMessage(fs_data->hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hPlayBitmap);
+            SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hPlayBitmap);
             break;
         case libvlc_MediaPlayerStopped:
-            SendMessage(fs_data->hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hPlayBitmap);
-            break;
-        case libvlc_MediaPlayerForward:
-            break;
-        case libvlc_MediaPlayerBackward:
-            break;
-        case libvlc_MediaPlayerEndReached:
-            break;
-        case libvlc_MediaPlayerEncounteredError:
+            SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hPlayBitmap);
             break;
     }
 }
 
-void VLCFullScreenWnd::RegisterEvents()
+//libvlc events arrives from separate thread
+void VLCFullScreenWnd::OnLibVlcEvent(const libvlc_event_t* event)
 {
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        libvlc_event_manager_t *eventManager = NULL;
+    if( !_WindowsManager->IsFullScreen() )
+        return;
 
-        eventManager = libvlc_media_player_event_manager(p_md);
-        if(eventManager) {
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerNothingSpecial,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerOpening,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerBuffering,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-
-            libvlc_event_attach(eventManager, libvlc_MediaPlayerPlaying,
-                                VLCFullScreenWnd::handle_input_state_event, this);
-            libvlc_event_attach(eventManager, libvlc_MediaPlayerPaused,
-                                VLCFullScreenWnd::handle_input_state_event, this);
-            libvlc_event_attach(eventManager, libvlc_MediaPlayerStopped,
-                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerForward,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerBackward,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerEndReached,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerEncounteredError,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerTimeChanged,
-//                                VLCFullScreenWnd::handle_time_changed_event, this);
-            libvlc_event_attach(eventManager, libvlc_MediaPlayerPositionChanged,
-                                VLCFullScreenWnd::handle_position_changed_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerSeekableChanged,
-//                                handle_seekable_changed_event, this);
-//            libvlc_event_attach(eventManager, libvlc_MediaPlayerPausableChanged,
-//                                handle_pausable_changed_event, this);
-
-        }
-    }
-}
-
-void VLCFullScreenWnd::UnRegisterEvents()
-{
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        libvlc_event_manager_t *eventManager = NULL;
-
-        eventManager = libvlc_media_player_event_manager(p_md);
-        if(eventManager) {
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerNothingSpecial,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerOpening,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerBuffering,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-
-            libvlc_event_detach(eventManager, libvlc_MediaPlayerPlaying,
-                                handle_input_state_event, this);
-            libvlc_event_detach(eventManager, libvlc_MediaPlayerPaused,
-                                handle_input_state_event, this);
-            libvlc_event_detach(eventManager, libvlc_MediaPlayerStopped,
-                                handle_input_state_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerForward,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerBackward,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerEndReached,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerEncounteredError,
-//                                VLCFullScreenWnd::handle_input_state_event, this);
-
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerTimeChanged,
-//                                VLCFullScreenWnd::handle_time_changed_event, this);
-            libvlc_event_detach(eventManager, libvlc_MediaPlayerPositionChanged,
-                                VLCFullScreenWnd::handle_position_changed_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerSeekableChanged,
-//                                handle_seekable_changed_event, this);
-//            libvlc_event_detach(eventManager, libvlc_MediaPlayerPausableChanged,
-//                                handle_pausable_changed_event, this);
-        }
+    switch(event->type){
+        case libvlc_MediaPlayerPlaying:
+        case libvlc_MediaPlayerPaused:
+        case libvlc_MediaPlayerStopped:
+            handle_input_state_event(event);
+            break;
+        case libvlc_MediaPlayerPositionChanged:
+            handle_position_changed_event(event);
+            break;
     }
 }
 
@@ -908,7 +799,7 @@ void VLCFullScreenWnd::UnRegisterEvents()
 //VLCWindowsManager
 ///////////////////////
 VLCWindowsManager::VLCWindowsManager(HMODULE hModule)
-    :_hModule(hModule), _hWindowedParentWnd(0), _HolderWnd(0), _FSWnd(0),
+    :_hModule(hModule), _hWindowedParentWnd(0), _p_md(0), _HolderWnd(0), _FSWnd(0),
     _b_new_messages_flag(false), Last_WM_MOUSEMOVE_Pos(0)
 {
     VLCHolderWnd::RegisterWndClassName(hModule);
@@ -952,13 +843,23 @@ void VLCWindowsManager::LibVlcAttach(libvlc_media_player_t* p_md)
     if(!_HolderWnd)
         return;//VLCWindowsManager::CreateWindows was not called
 
-    _HolderWnd->LibVlcAttach(p_md);
+    if(!_p_md){
+        _p_md = p_md;
+        VlcEvents(true);
+    }
+
+    _HolderWnd->LibVlcAttach();
 }
 
 void VLCWindowsManager::LibVlcDetach()
 {
     if(_HolderWnd)
         _HolderWnd->LibVlcDetach();
+
+    if(_p_md){
+        VlcEvents(false);
+        _p_md = 0;
+    }
 }
 
 void VLCWindowsManager::StartFullScreen()
@@ -1032,4 +933,58 @@ void VLCWindowsManager::OnMouseEvent(UINT uMouseMsg)
             break;
         }
     }
+}
+
+//libvlc events arrives from separate thread
+void VLCWindowsManager::OnLibVlcEvent_proxy(const libvlc_event_t* event, void *param)
+{
+    VLCWindowsManager* WM = static_cast<VLCWindowsManager*>(param);
+    WM->OnLibVlcEvent(event);
+}
+
+void VLCWindowsManager::VlcEvents(bool Attach)
+{
+    libvlc_media_player_t* p_md = getMD();
+    if( !p_md )
+        return;
+
+    libvlc_event_manager_t* em =
+        libvlc_media_player_event_manager(p_md);
+    if(!em)
+        return;
+
+    for(int e=libvlc_MediaPlayerMediaChanged; e<=libvlc_MediaPlayerVout; ++e){
+        switch(e){
+        //case libvlc_MediaPlayerMediaChanged:
+        //case libvlc_MediaPlayerNothingSpecial:
+        //case libvlc_MediaPlayerOpening:
+        //case libvlc_MediaPlayerBuffering:
+        case libvlc_MediaPlayerPlaying:
+        case libvlc_MediaPlayerPaused:
+        case libvlc_MediaPlayerStopped:
+        //case libvlc_MediaPlayerForward:
+        //case libvlc_MediaPlayerBackward:
+        //case libvlc_MediaPlayerEndReached:
+        //case libvlc_MediaPlayerEncounteredError:
+        //case libvlc_MediaPlayerTimeChanged:
+        case libvlc_MediaPlayerPositionChanged:
+        //case libvlc_MediaPlayerSeekableChanged:
+        //case libvlc_MediaPlayerPausableChanged:
+        //case libvlc_MediaPlayerTitleChanged:
+        //case libvlc_MediaPlayerSnapshotTaken:
+        //case libvlc_MediaPlayerLengthChanged:
+        //case libvlc_MediaPlayerVout:
+            if(Attach)
+                libvlc_event_attach(em, e, OnLibVlcEvent_proxy, this);
+            else
+                libvlc_event_detach(em, e, OnLibVlcEvent_proxy, this);
+            break;
+        }
+    }
+}
+
+void VLCWindowsManager::OnLibVlcEvent(const libvlc_event_t* event)
+{
+    if(_HolderWnd) _HolderWnd->OnLibVlcEvent(event);
+    if(_FSWnd) _FSWnd->OnLibVlcEvent(event);
 }
