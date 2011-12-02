@@ -853,6 +853,10 @@ void VLCWindowsManager::LibVlcAttach(libvlc_media_player_t* p_md)
     if(!_HolderWnd)
         return;//VLCWindowsManager::CreateWindows was not called
 
+    if(_p_md && _p_md != p_md){
+        LibVlcDetach();
+    }
+
     if(!_p_md){
         _p_md = p_md;
         VlcEvents(true);
