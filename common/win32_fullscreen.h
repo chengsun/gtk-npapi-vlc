@@ -48,7 +48,9 @@ private:
     static LPCTSTR getClassName(void)  { return TEXT("VLC ActiveX Window Holder Class"); };
     static LRESULT CALLBACK VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
+
     HHOOK _hMouseHook;
+    void MouseHook(bool SetHook);
 
     libvlc_media_player_t* getMD() const;
 

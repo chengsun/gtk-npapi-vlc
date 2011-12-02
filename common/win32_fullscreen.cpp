@@ -124,13 +124,7 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
             break;
         case WM_TRY_SET_MOUSE_HOOK:{
-            HWND hChildWnd = GetWindow(h_data->getHWND(), GW_CHILD);
-            if(!h_data->_hMouseHook && hChildWnd){
-                //Set mouse hook to catch mouse double clicking
-                h_data->_hMouseHook =
-                    SetWindowsHookEx(WH_MOUSE, VLCHolderWnd::MouseHookProc,
-                                     NULL, GetWindowThreadProcessId(hChildWnd, NULL));
-            }
+            h_data->MouseHook(true);
             break;
         }
         case WM_MOUSEMOVE:
@@ -184,6 +178,24 @@ LRESULT CALLBACK VLCHolderWnd::MouseHookProc(int nCode, WPARAM wParam, LPARAM lP
         return 1;
 }
 
+void VLCHolderWnd::MouseHook(bool SetHook)
+{
+    if(SetHook){
+        HWND hChildWnd = GetWindow(getHWND(), GW_CHILD);
+        if(!_hMouseHook && hChildWnd){
+            _hMouseHook =
+                SetWindowsHookEx(WH_MOUSE, VLCHolderWnd::MouseHookProc,
+                                 NULL, GetWindowThreadProcessId(hChildWnd, NULL));
+        }
+    }
+    else{
+        if(_hMouseHook){
+            UnhookWindowsHookEx(_hMouseHook);
+            _hMouseHook = 0;
+        }
+    }
+}
+
 //libvlc events arrives from separate thread
 void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
 {
@@ -200,6 +212,7 @@ void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
     }
 }
 
+
 void VLCHolderWnd::LibVlcAttach()
 {
     libvlc_media_player_set_hwnd(getMD(), getHWND());
@@ -211,10 +224,7 @@ void VLCHolderWnd::LibVlcDetach()
     if(p_md)
         libvlc_media_player_set_hwnd(p_md, 0);
 
-    if(_hMouseHook){
-        UnhookWindowsHookEx(_hMouseHook);
-        _hMouseHook = 0;
-    }
+    MouseHook(false);
 }
 
 /////////////////////////////////
