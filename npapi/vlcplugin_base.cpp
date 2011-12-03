@@ -34,7 +34,7 @@
 
 #include "control/npolibvlc.h"
 
-#include <ctype.h>
+#include <cctype>
 
 #if defined(XP_UNIX)
 #   include <pthread.h>
@@ -45,51 +45,10 @@
 #warning "locking not implemented for this platform"
 #endif
 
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-
-#if defined(XP_UNIX)
-#include "../share/pixmaps/x11/fullscreen.xpm"
-#include "../share/pixmaps/x11/pause.xpm"
-#include "../share/pixmaps/x11/play.xpm"
-#include "../share/pixmaps/x11/stop.xpm"
-#include "../share/pixmaps/x11/time_icon.xpm"
-#include "../share/pixmaps/x11/time_line.xpm"
-#include "../share/pixmaps/x11/volume_max.xpm"
-#include "../share/pixmaps/x11/volume_mute.xpm"
-//#include "../share/pixmaps/x11/skip_next.xpm"
-//#include "../share/pixmaps/x11/skip_previous.xpm"
-//#include "../share/pixmaps/x11/volume_knob.xpm"
-//#include "../share/pixmaps/x11/volume_slider_bar.xpm"
-#endif
-
-#ifdef XP_WIN
-#include "../common/win32_fullscreen.h"
-
-static HMODULE hDllModule= 0;
-
-HMODULE DllGetModule()
-{
-    return hDllModule;
-};
-
-extern "C"
-BOOL WINAPI DllMain(HANDLE hModule, DWORD fdwReason, LPVOID lpReserved )
-{
-    switch( fdwReason )
-    {
-        case DLL_PROCESS_ATTACH:
-            hDllModule = (HMODULE)hModule;
-            break;
-        default:
-            break;
-    }
-    return TRUE;
-};
-
-#endif
-
+#include <cstdio>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
 
 /*****************************************************************************
  * utilitiy functions
@@ -174,7 +133,7 @@ static vlcplugin_event_t vlcevents[] = {
 
 static void handle_input_event(const libvlc_event_t* event, void *param)
 {
-    VlcPlugin *plugin = (VlcPlugin*)param;
+    VlcPluginBase *plugin = (VlcPluginBase*)param;
     switch( event->type )
     {
         case libvlc_MediaPlayerNothingSpecial:
@@ -186,7 +145,7 @@ static void handle_input_event(const libvlc_event_t* event, void *param)
         case libvlc_MediaPlayerBackward:
         case libvlc_MediaPlayerEndReached:
         case libvlc_MediaPlayerEncounteredError:
-            plugin->event_callback(event, NULL, 0, param);
+            plugin->event_callback(event, NULL, 0);
             break;
         default: /* ignore all other libvlc_event_type_t */
             break;
@@ -198,7 +157,7 @@ static void handle_changed_event(const libvlc_event_t* event, void *param)
     uint32_t   npcount = 1;
     NPVariant *npparam = (NPVariant *) NPN_MemAlloc( sizeof(NPVariant) * npcount );
 
-    VlcPlugin *plugin = (VlcPlugin*)param;
+    VlcPluginBase *plugin = (VlcPluginBase*)param;
     switch( event->type )
     {
 #ifdef LIBVLC120
@@ -228,7 +187,7 @@ static void handle_changed_event(const libvlc_event_t* event, void *param)
             NPN_MemFree( npparam );
             return;
     }
-    plugin->event_callback(event, npparam, npcount, param);
+    plugin->event_callback(event, npparam, npcount);
 }
 
 bool EventObj::init()
@@ -380,9 +339,9 @@ void EventObj::unhook_manager( void *userdata )
 }
 
 /*****************************************************************************
- * VlcPlugin constructor and destructor
+ * VlcPluginBase constructor and destructor
  *****************************************************************************/
-VlcPlugin::VlcPlugin( NPP instance, NPuint16_t mode ) :
+VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     i_npmode(mode),
     b_stream(0),
     b_autoplay(1),
@@ -396,31 +355,8 @@ VlcPlugin::VlcPlugin( NPP instance, NPuint16_t mode ) :
     p_scriptClass(NULL),
     p_browser(instance),
     psz_baseURL(NULL)
-#if defined(XP_WIN)
-    ,pf_wndproc(NULL)
-    ,_WindowsManager(DllGetModule())
-#endif
-#if defined(XP_UNIX)
-    ,i_width((unsigned)-1)
-    ,i_height((unsigned)-1)
-    ,i_tb_width(0)
-    ,i_tb_height(0)
-    ,i_last_position(0)
-    ,p_btnPlay(NULL)
-    ,p_btnPause(NULL)
-    ,p_btnStop(NULL)
-    ,p_btnMute(NULL)
-    ,p_btnUnmute(NULL)
-    ,p_btnFullscreen(NULL)
-    ,p_btnTime(NULL)
-    ,p_timeline(NULL)
-#endif
 {
     memset(&npwindow, 0, sizeof(NPWindow));
-#if defined(XP_UNIX)
-    memset(&npvideo, 0, sizeof(Window));
-    memset(&npcontrol, 0, sizeof(Window));
-#endif
 }
 
 static bool boolValue(const char *value) {
@@ -429,19 +365,19 @@ static bool boolValue(const char *value) {
              !strcasecmp(value, "yes") );
 }
 
-void VlcPlugin::eventAsync(void *param)
+void VlcPluginBase::eventAsync(void *param)
 {
-    VlcPlugin *plugin = (VlcPlugin*)param;
+    VlcPluginBase *plugin = (VlcPluginBase*)param;
     plugin->events.deliver(plugin->getBrowser());
+    plugin->update_controls();
 }
 
-void VlcPlugin::event_callback(const libvlc_event_t* event,
-                NPVariant *npparams, uint32_t npcount, void *userdata)
+void VlcPluginBase::event_callback(const libvlc_event_t* event,
+                NPVariant *npparams, uint32_t npcount)
 {
-    VlcPlugin *plugin = (VlcPlugin*)userdata;
-#if defined(XP_UNIX)
-    plugin->events.callback(event, npparams, npcount);
-    NPN_PluginThreadAsyncCall(plugin->getBrowser(), eventAsync, plugin);
+#ifdef XP_UNIX
+    events.callback(event, npparams, npcount);
+    NPN_PluginThreadAsyncCall(getBrowser(), eventAsync, this);
 #else
 #ifdef _MSC_VER
 #pragma message("NPN_PluginThreadAsyncCall not implemented yet.")
@@ -452,7 +388,7 @@ void VlcPlugin::event_callback(const libvlc_event_t* event,
 #endif
 }
 
-NPError VlcPlugin::init(int argc, char* const argn[], char* const argv[])
+NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
 {
     /* prepare VLC command line */
     const char *ppsz_argv[32];
@@ -558,11 +494,7 @@ NPError VlcPlugin::init(int argc, char* const argn[], char* const argv[])
         }
         else if( !strcmp( argn[i], "toolbar" ) )
         {
-/* FIXME: Remove this when toolbar functionality has been implemented on
- * MacOS X and Win32 for Firefox/Mozilla/Safari. */
-#ifdef XP_UNIX
             b_toolbar = boolValue(argv[i]);
-#endif
         }
     }
 
@@ -625,12 +557,8 @@ NPError VlcPlugin::init(int argc, char* const argn[], char* const argv[])
     return NPERR_NO_ERROR;
 }
 
-VlcPlugin::~VlcPlugin()
+VlcPluginBase::~VlcPluginBase()
 {
-#ifdef XP_WIN
-    _WindowsManager.DestroyWindows();
-#endif
-
     free(psz_baseURL);
     free(psz_target);
     free(psz_text);
@@ -648,32 +576,15 @@ VlcPlugin::~VlcPlugin()
         libvlc_release( libvlc_instance );
 }
 
-void VlcPlugin::setWindow(const NPWindow &window)
+void VlcPluginBase::setWindow(const NPWindow &window)
 {
     npwindow = window;
-#ifdef XP_WIN
-    _WindowsManager.CreateWindows((HWND)(getWindow().window));
-#endif
 };
 
 /*****************************************************************************
- * VlcPlugin playlist replacement methods
+ * VlcPluginBase playlist replacement methods
  *****************************************************************************/
-void VlcPlugin::set_player_window()
-{
-#ifdef XP_UNIX
-    libvlc_media_player_set_xwindow(libvlc_media_player,
-                                    (uint32_t)getVideoWindow());
-#endif
-#ifdef XP_MACOSX
-    // XXX FIXME insert appropriate call here
-#endif
-#ifdef XP_WIN
-    _WindowsManager.LibVlcAttach(libvlc_media_player);
-#endif
-}
-
-int VlcPlugin::playlist_add( const char *mrl )
+int VlcPluginBase::playlist_add( const char *mrl )
 {
     int item = -1;
     libvlc_media_t *p_m = libvlc_media_new_location(libvlc_instance,mrl);
@@ -690,7 +601,7 @@ int VlcPlugin::playlist_add( const char *mrl )
     return item;
 }
 
-int VlcPlugin::playlist_add_extended_untrusted( const char *mrl, const char *name,
+int VlcPluginBase::playlist_add_extended_untrusted( const char *mrl, const char *name,
                     int optc, const char **optv )
 {
     libvlc_media_t *p_m;
@@ -714,7 +625,7 @@ int VlcPlugin::playlist_add_extended_untrusted( const char *mrl, const char *nam
     return item;
 }
 
-bool VlcPlugin::playlist_select( int idx )
+bool VlcPluginBase::playlist_select( int idx )
 {
     libvlc_media_t *p_m = NULL;
 
@@ -761,7 +672,7 @@ bad_unlock:
     return false;
 }
 
-int VlcPlugin::playlist_delete_item( int idx )
+int VlcPluginBase::playlist_delete_item( int idx )
 {
     if( !libvlc_media_list )
         return -1;
@@ -771,14 +682,14 @@ int VlcPlugin::playlist_delete_item( int idx )
     return ret;
 }
 
-void VlcPlugin::playlist_clear()
+void VlcPluginBase::playlist_clear()
 {
     if( libvlc_media_list )
         libvlc_media_list_release(libvlc_media_list);
     libvlc_media_list = libvlc_media_list_new(getVLC());
 }
 
-int VlcPlugin::playlist_count()
+int VlcPluginBase::playlist_count()
 {
     int items_count = 0;
     if( !libvlc_media_list )
@@ -789,52 +700,8 @@ int VlcPlugin::playlist_count()
     return items_count;
 }
 
-void VlcPlugin::toggle_fullscreen()
-{
-#ifdef XP_WIN
-    if(!get_fullscreen()){//now in windowed mode
-        set_fullscreen(true);
-    }
-    else if(get_fullscreen()){//now in fullscreen mode
-        set_fullscreen(false);
-    }
-    else {
-        //and what it meen?
-    }
-#else
-    if( playlist_isplaying() )
-        libvlc_toggle_fullscreen(libvlc_media_player);
-#endif
-}
 
-void VlcPlugin::set_fullscreen( int yes )
-{
-#ifdef XP_WIN
-    if(yes){
-        _WindowsManager.StartFullScreen();
-    }
-    else{
-        _WindowsManager.EndFullScreen();
-    }
-#else
-    if( playlist_isplaying() )
-        libvlc_set_fullscreen(libvlc_media_player,yes);
-#endif
-}
-
-int  VlcPlugin::get_fullscreen()
-{
-#ifdef XP_WIN
-    return _WindowsManager.IsFullScreen();
-#else
-    int r = 0;
-    if( playlist_isplaying() )
-        r = libvlc_get_fullscreen(libvlc_media_player);
-    return r;
-#endif
-}
-
-bool  VlcPlugin::player_has_vout()
+bool  VlcPluginBase::player_has_vout()
 {
     bool r = false;
     if( playlist_isplaying() )
@@ -843,10 +710,10 @@ bool  VlcPlugin::player_has_vout()
 }
 
 /*****************************************************************************
- * VlcPlugin methods
+ * VlcPluginBase methods
  *****************************************************************************/
 
-char *VlcPlugin::getAbsoluteURL(const char *url)
+char *VlcPluginBase::getAbsoluteURL(const char *url)
 {
     if( NULL != url )
     {
@@ -1000,330 +867,78 @@ relativeurl:
     return NULL;
 }
 
-#if defined(XP_UNIX)
-int  VlcPlugin::setSize(unsigned width, unsigned height)
+void VlcPluginBase::control_handler(vlc_toolbar_clicked_t clicked)
 {
-    int diff = (width != i_width) || (height != i_height);
-
-    i_width = width;
-    i_height = height;
-
-    /* return size */
-    return diff;
-}
-
-#define BTN_SPACE ((unsigned int)4)
-void VlcPlugin::showToolbar()
-{
-    const NPWindow& window = getWindow();
-    Window control = getControlWindow();
-    Window video = getVideoWindow();
-    Display *p_display = ((NPSetWindowCallbackStruct *)window.ws_info)->display;
-    unsigned int i_height = 0, i_width = BTN_SPACE;
-
-    /* load icons */
-    if( !p_btnPlay )
-        XpmCreateImageFromData( p_display, play_xpm,
-                            &p_btnPlay, NULL, NULL);
-    if( p_btnPlay )
+    switch( clicked )
     {
-        i_height = __MAX( i_height, p_btnPlay->height );
-    }
-    if( !p_btnPause )
-        XpmCreateImageFromData( p_display, pause_xpm,
-                            &p_btnPause, NULL, NULL);
-    if( p_btnPause )
-    {
-        i_height = __MAX( i_height, p_btnPause->height );
-    }
-    i_width += __MAX( p_btnPause->width, p_btnPlay->width );
+        case clicked_Play:
+        {
+            playlist_play();
+        }
+        break;
 
-    if( !p_btnStop )
-        XpmCreateImageFromData( p_display, stop_xpm,
-                            &p_btnStop, NULL, NULL );
-    if( p_btnStop )
-    {
-        i_height = __MAX( i_height, p_btnStop->height );
-        i_width += BTN_SPACE + p_btnStop->width;
-    }
-    if( !p_timeline )
-        XpmCreateImageFromData( p_display, time_line2_xpm,
-                            &p_timeline, NULL, NULL);
-    if( p_timeline )
-    {
-        i_height = __MAX( i_height, p_timeline->height );
-        i_width += BTN_SPACE + p_timeline->width;
-    }
-    if( !p_btnTime )
-        XpmCreateImageFromData( p_display, time_slider_knob_xpm,
-                            &p_btnTime, NULL, NULL);
-    if( p_btnTime )
-    {
-        i_height = __MAX( i_height, p_btnTime->height );
-        i_width += BTN_SPACE + p_btnTime->width;
-    }
-    if( !p_btnFullscreen )
-        XpmCreateImageFromData( p_display, fullscreen_xpm,
-                            &p_btnFullscreen, NULL, NULL);
-    if( p_btnFullscreen )
-    {
-        i_height = __MAX( i_height, p_btnFullscreen->height );
-        i_width += BTN_SPACE + p_btnFullscreen->width;
-    }
-    if( !p_btnMute )
-        XpmCreateImageFromData( p_display, volume_max_xpm,
-                            &p_btnMute, NULL, NULL);
-    if( p_btnMute )
-    {
-        i_height = __MAX( i_height, p_btnMute->height );
-    }
-    if( !p_btnUnmute )
-        XpmCreateImageFromData( p_display, volume_mute_xpm,
-                            &p_btnUnmute, NULL, NULL);
-    if( p_btnUnmute )
-    {
-        i_height = __MAX( i_height, p_btnUnmute->height );
-    }
-    i_width += BTN_SPACE + __MAX( p_btnUnmute->width, p_btnMute->width );
+        case clicked_Pause:
+        {
+            playlist_pause();
+        }
+        break;
 
-    setToolbarSize( i_width, i_height );
+        case clicked_Stop:
+        {
+            playlist_stop();
+        }
+        break;
 
-    if( !p_btnPlay || !p_btnPause || !p_btnStop || !p_timeline ||
-        !p_btnTime || !p_btnFullscreen || !p_btnMute || !p_btnUnmute )
-        fputs("Error: some button images not found in "DATA_PATH"\n", stderr);
+        case clicked_Fullscreen:
+        {
+            set_fullscreen( 1 );
+        }
+        break;
 
-    /* reset panels position and size */
-    /* XXX  use i_width */
-    XResizeWindow( p_display, video, window.width, window.height - i_height);
-    XMoveWindow( p_display, control, 0, window.height - i_height );
-    XResizeWindow( p_display, control, window.width, i_height -1);
-
-    b_toolbar = 1; /* says toolbar is now shown */
-    redrawToolbar();
-}
-
-void VlcPlugin::hideToolbar()
-{
-    const NPWindow& window = getWindow();
-    Display *p_display = ((NPSetWindowCallbackStruct *)window.ws_info)->display;
-    Window control = getControlWindow();
-    Window video = getVideoWindow();
-
-    i_tb_width = i_tb_height = 0;
-
-    if( p_btnPlay )  XDestroyImage( p_btnPlay );
-    if( p_btnPause ) XDestroyImage( p_btnPause );
-    if( p_btnStop )  XDestroyImage( p_btnStop );
-    if( p_timeline ) XDestroyImage( p_timeline );
-    if( p_btnTime )  XDestroyImage( p_btnTime );
-    if( p_btnFullscreen ) XDestroyImage( p_btnFullscreen );
-    if( p_btnMute )  XDestroyImage( p_btnMute );
-    if( p_btnUnmute ) XDestroyImage( p_btnUnmute );
-
-    p_btnPlay = NULL;
-    p_btnPause = NULL;
-    p_btnStop = NULL;
-    p_timeline = NULL;
-    p_btnTime = NULL;
-    p_btnFullscreen = NULL;
-    p_btnMute = NULL;
-    p_btnUnmute = NULL;
-
-    /* reset panels position and size */
-    /* XXX  use i_width */
-    XResizeWindow( p_display, video, window.width, window.height );
-    XMoveWindow( p_display, control, 0, window.height-1 );
-    XResizeWindow( p_display, control, window.width, 1 );
-
-    b_toolbar = 0; /* says toolbar is now hidden */
-    redrawToolbar();
-}
-
-void VlcPlugin::redrawToolbar()
-{
-    int is_playing = 0;
-    bool b_mute = false;
-    unsigned int dst_x, dst_y;
-    GC gc;
-    XGCValues gcv;
-    unsigned int i_tb_width, i_tb_height;
-
-    /* This method does nothing if toolbar is hidden. */
-    if( !b_toolbar || !libvlc_media_player )
-        return;
-
-    const NPWindow& window = getWindow();
-    Window control = getControlWindow();
-    Display *p_display = ((NPSetWindowCallbackStruct *)window.ws_info)->display;
-
-    getToolbarSize( &i_tb_width, &i_tb_height );
-
-    /* get mute info */
-    b_mute = libvlc_audio_get_mute( libvlc_media_player );
-
-    gcv.foreground = BlackPixel( p_display, 0 );
-    gc = XCreateGC( p_display, control, GCForeground, &gcv );
-
-    XFillRectangle( p_display, control, gc,
-                    0, 0, window.width, i_tb_height );
-    gcv.foreground = WhitePixel( p_display, 0 );
-    XChangeGC( p_display, gc, GCForeground, &gcv );
-
-    /* position icons */
-    dst_x = BTN_SPACE;
-    dst_y = i_tb_height >> 1; /* baseline = vertical middle */
-
-    if( p_btnPause && (is_playing == 1) )
-    {
-        XPutImage( p_display, control, gc, p_btnPause, 0, 0, dst_x,
-                   dst_y - (p_btnPause->height >> 1),
-                   p_btnPause->width, p_btnPause->height );
-        dst_x += BTN_SPACE + p_btnPause->width;
-    }
-    else if( p_btnPlay )
-    {
-        XPutImage( p_display, control, gc, p_btnPlay, 0, 0, dst_x,
-                   dst_y - (p_btnPlay->height >> 1),
-                   p_btnPlay->width, p_btnPlay->height );
-        dst_x += BTN_SPACE + p_btnPlay->width;
-    }
-
-    if( p_btnStop )
-        XPutImage( p_display, control, gc, p_btnStop, 0, 0, dst_x,
-                   dst_y - (p_btnStop->height >> 1),
-                   p_btnStop->width, p_btnStop->height );
-
-    dst_x += BTN_SPACE + ( p_btnStop ? p_btnStop->width : 0 );
-
-    if( p_btnFullscreen )
-        XPutImage( p_display, control, gc, p_btnFullscreen, 0, 0, dst_x,
-                   dst_y - (p_btnFullscreen->height >> 1),
-                   p_btnFullscreen->width, p_btnFullscreen->height );
-
-    dst_x += BTN_SPACE + ( p_btnFullscreen ? p_btnFullscreen->width : 0 );
-
-    if( p_btnUnmute && b_mute )
-    {
-        XPutImage( p_display, control, gc, p_btnUnmute, 0, 0, dst_x,
-                   dst_y - (p_btnUnmute->height >> 1),
-                   p_btnUnmute->width, p_btnUnmute->height );
-
-        dst_x += BTN_SPACE + ( p_btnUnmute ? p_btnUnmute->width : 0 );
-    }
-    else if( p_btnMute )
-    {
-        XPutImage( p_display, control, gc, p_btnMute, 0, 0, dst_x,
-                   dst_y - (p_btnMute->height >> 1),
-                   p_btnMute->width, p_btnMute->height );
-
-        dst_x += BTN_SPACE + ( p_btnMute ? p_btnMute->width : 0 );
-    }
-
-    if( p_timeline )
-        XPutImage( p_display, control, gc, p_timeline, 0, 0, dst_x,
-                   dst_y - (p_timeline->height >> 1),
-                   (window.width-(dst_x+BTN_SPACE)), p_timeline->height );
-
-    /* get movie position in % */
-    if( playlist_isplaying() )
-    {
-        i_last_position = (int)((window.width-(dst_x+BTN_SPACE))*
-                   libvlc_media_player_get_position(libvlc_media_player));
-    }
-
-    if( p_btnTime )
-        XPutImage( p_display, control, gc, p_btnTime,
-                   0, 0, (dst_x+i_last_position),
-                   dst_y - (p_btnTime->height >> 1),
-                   p_btnTime->width, p_btnTime->height );
-
-    XFreeGC( p_display, gc );
-}
-
-vlc_toolbar_clicked_t VlcPlugin::getToolbarButtonClicked( int i_xpos, int i_ypos )
-{
-    unsigned int i_dest = BTN_SPACE;
-    int is_playing = 0;
-    bool b_mute = false;
-
-#ifndef NDEBUG
-    fprintf( stderr, "ToolbarButtonClicked:: "
-                     "trying to match (%d,%d) (%d,%d)\n",
-             i_xpos, i_ypos, i_tb_height, i_tb_width );
+        case clicked_Mute:
+        case clicked_Unmute:
+#if 0
+        {
+            if( p_md )
+                libvlc_audio_toggle_mute( p_md );
+        }
 #endif
-    if( i_ypos >= i_tb_width )
-        return clicked_Unknown;
+        break;
 
-    /* Note: the order of testing is dependend on the original
-     * drawing positions of the icon buttons. Buttons are tested
-     * left to right.
-     */
+        case clicked_timeline:
+#if 0
+        {
+            /* if a movie is loaded */
+            if( p_md )
+            {
+                int64_t f_length;
+                f_length = libvlc_media_player_get_length( p_md ) / 100;
 
-    /* get isplaying */
-    is_playing = playlist_isplaying();
+                f_length = (float)f_length *
+                        ( ((float)i_xPos-4.0 ) / ( ((float)i_width-8.0)/100) );
 
-    /* get mute info */
-    if( libvlc_media_player )
-        b_mute = libvlc_audio_get_mute( libvlc_media_player );
-
-    /* is Pause of Play button clicked */
-    if( (is_playing != 1) &&
-        (i_xpos >= (BTN_SPACE>>1)) &&
-        (i_xpos <= i_dest + p_btnPlay->width + (BTN_SPACE>>1)) )
-        return clicked_Play;
-    else if( (i_xpos >= (BTN_SPACE>>1))  &&
-             (i_xpos <= i_dest + p_btnPause->width) )
-        return clicked_Pause;
-
-    /* is Stop button clicked */
-    if( is_playing != 1 )
-        i_dest += (p_btnPlay->width + (BTN_SPACE>>1));
-    else
-        i_dest += (p_btnPause->width + (BTN_SPACE>>1));
-
-    if( (i_xpos >= i_dest) &&
-        (i_xpos <= i_dest + p_btnStop->width + (BTN_SPACE>>1)) )
-        return clicked_Stop;
-
-    /* is Fullscreen button clicked */
-    i_dest += (p_btnStop->width + (BTN_SPACE>>1));
-    if( (i_xpos >= i_dest) &&
-        (i_xpos <= i_dest + p_btnFullscreen->width + (BTN_SPACE>>1)) )
-        return clicked_Fullscreen;
-
-    /* is Mute or Unmute button clicked */
-    i_dest += (p_btnFullscreen->width + (BTN_SPACE>>1));
-    if( !b_mute && (i_xpos >= i_dest) &&
-        (i_xpos <= i_dest + p_btnMute->width + (BTN_SPACE>>1)) )
-        return clicked_Mute;
-    else if( (i_xpos >= i_dest) &&
-             (i_xpos <= i_dest + p_btnUnmute->width + (BTN_SPACE>>1)) )
-        return clicked_Unmute;
-
-    /* is timeline clicked */
-    if( !b_mute )
-        i_dest += (p_btnMute->width + (BTN_SPACE>>1));
-    else
-        i_dest += (p_btnUnmute->width + (BTN_SPACE>>1));
-    if( (i_xpos >= i_dest) &&
-        (i_xpos <= i_dest + p_timeline->width + (BTN_SPACE>>1)) )
-        return clicked_timeline;
-
-    /* is time button clicked */
-    i_dest += (p_timeline->width + (BTN_SPACE>>1));
-    if( (i_xpos >= i_dest) &&
-        (i_xpos <= i_dest + p_btnTime->width + (BTN_SPACE>>1)) )
-        return clicked_Time;
-
-    return clicked_Unknown;
-}
-#undef BTN_SPACE
+                libvlc_media_player_set_time( p_md, f_length );
+            }
+        }
 #endif
+        break;
+
+        case clicked_Time:
+        {
+            /* Not implemented yet*/
+        }
+        break;
+
+        default: /* button_Unknown */
+            fprintf(stderr, "button Unknown!\n");
+        break;
+    }
+}
 
 // Verifies the version of the NPAPI.
 // The eventListeners use a NPAPI function available
 // since Gecko 1.9.
-bool VlcPlugin::canUseEventListener()
+bool VlcPluginBase::canUseEventListener()
 {
     int plugin_major, plugin_minor;
     int browser_major, browser_minor;

@@ -37,34 +37,6 @@
 #include "vlcplugin.h"
 #include "vlcshell.h"
 
-/* Enable/disable debugging printf's for X11 resizing */
-#undef X11_RESIZE_DEBUG
-
-/*****************************************************************************
- * Unix-only declarations
-******************************************************************************/
-#if defined(XP_UNIX)
-
-static void Redraw( Widget w, XtPointer closure, XEvent *event );
-static void ControlHandler( Widget w, XtPointer closure, XEvent *event );
-static void Resize( Widget w, XtPointer closure, XEvent *event );
-
-#endif
-
-/*****************************************************************************
- * MacOS-only declarations
-******************************************************************************/
-#ifdef XP_MACOSX
-#endif
-
-/*****************************************************************************
- * Windows-only declarations
- *****************************************************************************/
-#ifdef XP_WIN
-
-static LRESULT CALLBACK Manage( HWND p_hwnd, UINT i_msg, WPARAM wpar, LPARAM lpar );
-
-#endif
 
 /******************************************************************************
  * UNIX-only API calls
@@ -91,6 +63,12 @@ NPError NPP_GetValue( NPP instance, NPPVariable variable, void *value )
                       libvlc_get_version() );
             *((char **)value) = psz_desc;
             return NPERR_NO_ERROR;
+
+#if defined(XP_UNIX)
+        case NPPVpluginNeedsXEmbed:
+            *((bool *)value) = true;
+            return NPERR_NO_ERROR;
+#endif
 
         default:
             /* move on to instance variables ... */
@@ -262,6 +240,17 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
  *****************************************************************************/
 NPError NPP_Initialize( void )
 {
+#ifdef XP_UNIX
+    NPError err = NPERR_NO_ERROR;
+    bool supportsXEmbed = false;
+
+    err = NPN_GetValue( NULL, NPNVSupportsXEmbedBool,
+                        (void *)&supportsXEmbed );
+
+    if ( err != NPERR_NO_ERROR || supportsXEmbed != true )
+        return NPERR_INCOMPATIBLE_VERSION_ERROR;
+#endif
+
     return NPERR_NO_ERROR;
 }
 
@@ -298,10 +287,6 @@ NPError NPP_New( NPMIMEType pluginType, NPP instance,
     if( NPERR_NO_ERROR == status )
     {
         instance->pdata = reinterpret_cast<void*>(p_plugin);
-#if 0
-        NPN_SetValue(instance, NPPVpluginWindowBool, (void *)false);
-        NPN_SetValue(instance, NPPVpluginTransparentBool, (void *)false);
-#endif
     }
     else
     {
@@ -321,16 +306,6 @@ NPError NPP_Destroy( NPP instance, NPSavedData** save )
 
     instance->pdata = NULL;
 
-#if defined(XP_WIN)
-    HWND win = (HWND)p_plugin->getWindow().window;
-    WNDPROC winproc = p_plugin->getWindowProc();
-    if( winproc )
-    {
-        /* reset WNDPROC */
-        SetWindowLongPtr( win, GWLP_WNDPROC, (LONG_PTR)winproc );
-    }
-#endif
-
     if( p_plugin->playlist_isplaying() )
         p_plugin->playlist_stop();
 
@@ -341,11 +316,6 @@ NPError NPP_Destroy( NPP instance, NPSavedData** save )
 
 NPError NPP_SetWindow( NPP instance, NPWindow* window )
 {
-#if defined(XP_UNIX)
-    Window control;
-    unsigned int i_control_height = 0, i_control_width = 0;
-#endif
-
     if( ! instance )
     {
         return NPERR_INVALID_INSTANCE_ERROR;
@@ -359,10 +329,6 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
         return NPERR_NO_ERROR;
     }
 
-#if defined(XP_UNIX)
-    control = p_plugin->getControlWindow();
-#endif
-
     libvlc_instance_t *p_vlc = p_plugin->getVLC();
 
     /*
@@ -374,162 +340,39 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
      */
 
     /* retrieve current window */
-    NPWindow& curwin = p_plugin->getWindow();
+    NPWindow& curr_window = p_plugin->getWindow();
 
-#ifdef XP_MACOSX
-    if( window && window->window )
-    {
-        /* check if plugin has a new parent window */
-        CGrafPtr drawable = (((NP_Port*) (window->window))->port);
-
-        /* as MacOS X video output is windowless, set viewport */
-        libvlc_rectangle_t view, clip;
-
-        /*
-        ** browser sets port origin to top-left location of plugin
-        ** relative to GrafPort window origin is set relative to document,
-        ** which of little use for drawing
-        */
-        view.top     = ((NP_Port*) (window->window))->porty;
-        view.left    = ((NP_Port*) (window->window))->portx;
-        view.bottom  = window->height+view.top;
-        view.right   = window->width+view.left;
-
-        /* clipRect coordinates are also relative to GrafPort */
-        clip.top     = window->clipRect.top;
-        clip.left    = window->clipRect.left;
-        clip.bottom  = window->clipRect.bottom;
-        clip.right   = window->clipRect.right;
-#ifdef NOT_WORKING
-        libvlc_video_set_viewport(p_vlc, p_plugin->getMD(), &view, &clip);
-#else
-#warning disabled code
-#endif
-        /* remember new window */
-        p_plugin->setWindow(*window);
-    }
-    else if( curwin.window )
-    {
-        /* change/set parent */
-        curwin.window = NULL;
-    }
-#endif /* XP_MACOSX */
-
-#ifdef XP_WIN
-    if( window && window->window )
-    {
-        /* check if plugin has a new parent window */
-        HWND drawable = (HWND) (window->window);
-        if( !curwin.window || drawable != curwin.window )
-        {
-            /* reset previous window settings */
-            HWND oldwin = (HWND)p_plugin->getWindow().window;
-            WNDPROC oldproc = p_plugin->getWindowProc();
-            if( oldproc )
-            {
-                /* reset WNDPROC */
-                SetWindowLongPtr( oldwin, GWLP_WNDPROC, (LONG_PTR)oldproc );
-            }
-            /* attach our plugin object */
-            SetWindowLongPtr((HWND)drawable, GWLP_USERDATA,
-                             reinterpret_cast<LONG_PTR>(p_plugin));
-
-            /* install our WNDPROC */
-            p_plugin->setWindowProc( (WNDPROC)SetWindowLongPtr( drawable,
-                                             GWLP_WNDPROC, (LONG_PTR)Manage ) );
-
-            /* change window style to our liking */
-            LONG style = GetWindowLong((HWND)drawable, GWL_STYLE);
-            style |= WS_CLIPCHILDREN|WS_CLIPSIBLINGS;
-            SetWindowLong((HWND)drawable, GWL_STYLE, style);
-
-            /* remember new window */
+    if (window && window->window) {
+        if (!curr_window.window) {
+            /* we've just been created */
             p_plugin->setWindow(*window);
-
-            /* Redraw window */
-            InvalidateRect( (HWND)drawable, NULL, TRUE );
-            UpdateWindow( (HWND)drawable );
-        }
-    }
-    else if( curwin.window )
-    {
-        /* reset WNDPROC */
-        HWND oldwin = (HWND)curwin.window;
-        SetWindowLongPtr( oldwin, GWLP_WNDPROC, (LONG_PTR)(p_plugin->getWindowProc()) );
-        p_plugin->setWindowProc(NULL);
-
-        curwin.window = NULL;
-    }
-#endif /* XP_WIN */
-
-#if defined(XP_UNIX)
-    /* default to hidden toolbar, shown at the end of this method if asked *
-     * developers note : getToolbarSize need to wait the end of this method
-     */
-    i_control_height = 0;
-    i_control_width = window->width;
-
-    if( window && window->window )
-    {
-        Window  parent  = (Window) window->window;
-        if( !curwin.window || (parent != (Window)curwin.window) )
-        {
-            Display *p_display = ( (NPSetWindowCallbackStruct *)
-                                   window->ws_info )->display;
-
-            XResizeWindow( p_display, parent, window->width, window->height );
-
-            int i_blackColor = BlackPixel(p_display, DefaultScreen(p_display));
-
-            /* create windows */
-            Window video = XCreateSimpleWindow( p_display, parent, 0, 0,
-                           window->width, window->height - i_control_height,
-                           0, i_blackColor, i_blackColor );
-            Window controls = (Window) NULL;
-            controls = XCreateSimpleWindow( p_display, parent,
-                            0, window->height - i_control_height-1,
-                            window->width, i_control_height-1,
-                            0, i_blackColor, i_blackColor );
-
-            XMapWindow( p_display, parent );
-            XMapWindow( p_display, video );
-            if( controls ) { XMapWindow( p_display, controls ); }
-
-            XFlush(p_display);
-
-            /* bind events */
-            Widget w = XtWindowToWidget( p_display, parent );
-
-            XtAddEventHandler( w, ExposureMask, FALSE,
-                               (XtEventHandler)Redraw, p_plugin );
-            XtAddEventHandler( w, StructureNotifyMask, FALSE,
-                               (XtEventHandler)Resize, p_plugin );
-            XtAddEventHandler( w, ButtonReleaseMask, FALSE,
-                               (XtEventHandler)ControlHandler, p_plugin );
-
-            /* remember window */
-            p_plugin->setWindow( *window );
-            p_plugin->setVideoWindow( video );
-
-            if( controls )
-            {
-                p_plugin->setControlWindow( controls );
-            }
-
-            Redraw( w, (XtPointer)p_plugin, NULL );
-
-            /* now display toolbar if asked through parameters */
-            if( p_plugin->b_toolbar )
-            {
-                p_plugin->showToolbar();
+            p_plugin->create_windows();
+            p_plugin->resize_windows();
+        } else {
+            if (window->window == curr_window.window) {
+                /* resize / move notification */
+                p_plugin->setWindow(*window);
+                p_plugin->resize_windows();
+            } else {
+                /* we've already been created, but
+                 * our xembed socket has just changed. */
+                /* FIXME */
+                fprintf(stderr, "WARNING: plugin already created, but socket changed.\n");
             }
         }
+    } else {
+        if (curr_window.window) {
+            /* we've been destroyed */
+            p_plugin->destroy_windows();
+        }
     }
-    else if( curwin.window )
+    
+    /* now display toolbar if asked through parameters */
+    if( p_plugin->b_toolbar )
     {
-        curwin.window = NULL;
+        p_plugin->show_toolbar();
     }
-#endif /* XP_UNIX */
+
 
     if( !p_plugin->b_stream )
     {
@@ -585,7 +428,7 @@ NPint32_t NPP_WriteReady( NPP instance, NPStream *stream )
 }
 
 NPint32_t NPP_Write( NPP instance, NPStream *stream, NPint32_t offset,
-                     NPint32_t len, void *buffer )
+                 NPint32_t len, void *buffer )
 {
     /* TODO */
     return len;
@@ -672,7 +515,7 @@ void NPP_Print( NPP instance, NPPrint* printInfo )
             \**************************************/
 
             /* Do the default*/
-            printInfo->print.fullPrint.pluginPrinted = FALSE;
+            printInfo->print.fullPrint.pluginPrinted = false;
         }
         else
         {
@@ -698,269 +541,3 @@ void NPP_Print( NPP instance, NPPrint* printInfo )
         }
     }
 }
-
-/******************************************************************************
- * Windows-only methods
- *****************************************************************************/
-#if defined(XP_WIN)
-static LRESULT CALLBACK Manage( HWND p_hwnd, UINT i_msg, WPARAM wpar, LPARAM lpar )
-{
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(GetWindowLongPtr(p_hwnd, GWLP_USERDATA));
-
-    switch( i_msg )
-    {
-        case WM_ERASEBKGND:
-            return 1L;
-
-        case WM_PAINT:
-        {
-            PAINTSTRUCT paintstruct;
-            HDC hdc;
-            RECT rect;
-
-            hdc = BeginPaint( p_hwnd, &paintstruct );
-
-            GetClientRect( p_hwnd, &rect );
-
-            FillRect( hdc, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH) );
-            SetTextColor(hdc, RGB(255, 255, 255));
-            SetBkColor(hdc, RGB(0, 0, 0));
-            if( p_plugin->psz_text )
-                DrawText( hdc, p_plugin->psz_text, strlen(p_plugin->psz_text), &rect,
-                          DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-
-            EndPaint( p_hwnd, &paintstruct );
-            return 0L;
-        }
-        case WM_SIZE:{
-            int new_client_width = LOWORD(lpar);
-            int new_client_height = HIWORD(lpar);
-            //first child will be resized to client area
-            HWND hChildWnd = GetWindow(p_hwnd, GW_CHILD);
-            if(hChildWnd){
-                MoveWindow(hChildWnd, 0, 0, new_client_width, new_client_height, FALSE);
-            }
-            return 0L;
-        }
-        case WM_LBUTTONDBLCLK:{
-            p_plugin->toggle_fullscreen();
-            return 0L;
-        }
-        default:
-            /* delegate to default handler */
-            return CallWindowProc( p_plugin->getWindowProc(), p_hwnd,
-                                   i_msg, wpar, lpar );
-    }
-}
-#endif /* XP_WIN */
-
-/******************************************************************************
- * UNIX-only methods
- *****************************************************************************/
-#if defined(XP_UNIX)
-static void Redraw( Widget w, XtPointer closure, XEvent *event )
-{
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(closure);
-    Window control = p_plugin->getControlWindow();
-    const NPWindow& window = p_plugin->getWindow();
-    GC gc;
-    XGCValues gcv;
-    unsigned int i_control_height, i_control_width;
-
-    if( p_plugin->b_toolbar )
-        p_plugin->getToolbarSize( &i_control_width, &i_control_height );
-    else
-        i_control_height = i_control_width = 0;
-
-    Window video = p_plugin->getVideoWindow();
-    Display *p_display = ((NPSetWindowCallbackStruct *)window.ws_info)->display;
-
-    gcv.foreground = BlackPixel( p_display, 0 );
-    gc = XCreateGC( p_display, video, GCForeground, &gcv );
-
-    XFillRectangle( p_display, video, gc,
-                    0, 0, window.width, window.height - i_control_height);
-
-    gcv.foreground = WhitePixel( p_display, 0 );
-    XChangeGC( p_display, gc, GCForeground, &gcv );
-
-    if( p_plugin->psz_text )
-        XDrawString( p_display, video, gc,
-                     window.width / 2 - 40, (window.height - i_control_height) / 2,
-                     p_plugin->psz_text, strlen(p_plugin->psz_text) );
-    XFreeGC( p_display, gc );
-
-    p_plugin->redrawToolbar();
-}
-
-static void ControlHandler( Widget w, XtPointer closure, XEvent *event )
-{
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(closure);
-    const NPWindow& window = p_plugin->getWindow();
-
-    int i_height = window.height;
-    int i_width = window.width;
-    int i_xPos = event->xbutton.x;
-    int i_yPos = event->xbutton.y;
-
-    if( p_plugin && p_plugin->b_toolbar )
-    {
-        int i_playing;
-
-        libvlc_media_player_t *p_md = p_plugin->getMD();
-
-        i_playing = p_plugin->playlist_isplaying();
-
-        vlc_toolbar_clicked_t clicked;
-        clicked = p_plugin->getToolbarButtonClicked( i_xPos, i_yPos );
-        switch( clicked )
-        {
-            case clicked_Play:
-            case clicked_Pause:
-            {
-                if( i_playing == 1 )
-                    p_plugin->playlist_pause();
-                else
-                    p_plugin->playlist_play();
-            }
-            break;
-
-            case clicked_Stop:
-            {
-                p_plugin->playlist_stop();
-            }
-            break;
-
-            case clicked_Fullscreen:
-            {
-                p_plugin->set_fullscreen( 1 );
-            }
-            break;
-
-            case clicked_Mute:
-            case clicked_Unmute:
-            {
-                if( p_md )
-                    libvlc_audio_toggle_mute( p_md );
-            }
-            break;
-
-            case clicked_timeline:
-            {
-                /* if a movie is loaded */
-                if( p_md )
-                {
-                    int64_t f_length;
-                    f_length = libvlc_media_player_get_length( p_md ) / 100;
-
-                    f_length = (float)f_length *
-                            ( ((float)i_xPos-4.0 ) / ( ((float)i_width-8.0)/100) );
-
-                    libvlc_media_player_set_time( p_md, f_length );
-                }
-            }
-            break;
-
-            case clicked_Time:
-            {
-                /* Not implemented yet*/
-            }
-            break;
-
-            default: /* button_Unknown */
-            break;
-        }
-    }
-    Redraw( w, closure, event );
-}
-
-static void Resize ( Widget w, XtPointer closure, XEvent *event )
-{
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(closure);
-    Window control = p_plugin->getControlWindow();
-    const NPWindow& window = p_plugin->getWindow();
-    Window  drawable   = p_plugin->getVideoWindow();
-    Display *p_display = ((NPSetWindowCallbackStruct *)window.ws_info)->display;
-
-    int i_ret;
-    Window root_return, parent_return, * children_return;
-    Window base_window;
-    unsigned int i_nchildren;
-    unsigned int i_control_height, i_control_width;
-
-    if( p_plugin->b_toolbar )
-    {
-        p_plugin->getToolbarSize( &i_control_width, &i_control_height );
-    }
-    else
-    {
-        i_control_height = i_control_width = 0;
-    }
-
-#ifdef X11_RESIZE_DEBUG
-    XWindowAttributes attr;
-
-    if( event && event->type == ConfigureNotify )
-    {
-        fprintf( stderr, "vlcshell::Resize() ConfigureNotify %d x %d, "
-                 "send_event ? %s\n", event->xconfigure.width,
-                 event->xconfigure.height,
-                 event->xconfigure.send_event ? "TRUE" : "FALSE" );
-    }
-#endif /* X11_RESIZE_DEBUG */
-
-    if( ! p_plugin->setSize(window.width, (window.height - i_control_height)) )
-    {
-        /* size already set */
-        return;
-    }
-
-    i_ret = XResizeWindow( p_display, drawable,
-                           window.width, (window.height - i_control_height) );
-
-#ifdef X11_RESIZE_DEBUG
-    fprintf( stderr,
-             "vlcshell::Resize() XResizeWindow(owner) returned %d\n", i_ret );
-
-    XGetWindowAttributes ( p_display, drawable, &attr );
-
-    /* X is asynchronous, so the current size reported here is not
-       necessarily the requested size as the Resize request may not
-       yet have been handled by the plugin host */
-    fprintf( stderr, "vlcshell::Resize() current (owner) size %d x %d\n",
-             attr.width, attr.height );
-#endif /* X11_RESIZE_DEBUG */
-
-    XQueryTree( p_display, drawable,
-                &root_return, &parent_return, &children_return,
-                &i_nchildren );
-
-    if( i_nchildren > 0 )
-    {
-        /* XXX: Make assumptions related to the window parenting structure in
-           vlc/modules/video_output/x11/xcommon.c */
-        base_window = children_return[i_nchildren - 1];
-
-#ifdef X11_RESIZE_DEBUG
-        fprintf( stderr, "vlcshell::Resize() got %d children\n", i_nchildren );
-        fprintf( stderr, "vlcshell::Resize() got base_window %p\n",
-                 base_window );
-#endif /* X11_RESIZE_DEBUG */
-
-        i_ret = XResizeWindow( p_display, base_window,
-                window.width, ( window.height - i_control_height ) );
-
-#ifdef X11_RESIZE_DEBUG
-        fprintf( stderr,
-                 "vlcshell::Resize() XResizeWindow(base) returned %d\n",
-                 i_ret );
-
-        XGetWindowAttributes( p_display, base_window, &attr );
-
-        fprintf( stderr, "vlcshell::Resize() new size %d x %d\n",
-                 attr.width, attr.height );
-#endif /* X11_RESIZE_DEBUG */
-    }
-}
-
-#endif /* XP_UNIX */

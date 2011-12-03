@@ -39,9 +39,8 @@ jref NPP_GetJavaClass( void );
 #endif
 void NPP_Shutdown( void );
 
-NPError NPP_New( NPMIMEType pluginType, NPP instance, NPuint16_t mode,
-                 NPint16_t argc, char* argn[], char* argv[],
-                 NPSavedData* saved );
+NPError NPP_New( NPMIMEType pluginType, NPP instance, uint16_t mode, NPint16_t argc,
+                 char* argn[], char* argv[], NPSavedData* saved );
 
 NPError NPP_Destroy( NPP instance, NPSavedData** save );
 
