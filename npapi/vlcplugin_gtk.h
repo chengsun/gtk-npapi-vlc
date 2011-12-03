@@ -58,7 +58,8 @@ private:
     void set_player_window();
 
     unsigned int     i_width, i_height;
-    GtkWidget *parent, *parent_vbox, *video;
+    GtkWidget *parent, *parent_vbox, *video, *toolbar;
+    GtkWidget *time_slider;
 };
 
 #endif /* __VLCPLUGIN_GTK_H__ */

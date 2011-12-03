@@ -11,7 +11,8 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode),
     parent(NULL),
     parent_vbox(NULL),
-    video(NULL)
+    video(NULL),
+    toolbar(NULL)
 {
 }
 
@@ -47,17 +48,85 @@ int  VlcPluginGtk::get_fullscreen()
 
 void VlcPluginGtk::show_toolbar()
 {
-    /* TODO */
+    gtk_box_pack_start(GTK_BOX(parent_vbox), toolbar, false, false, 0);
+    gtk_widget_show_all(toolbar);
 }
 
 void VlcPluginGtk::hide_toolbar()
 {
-    /* TODO */
+    gtk_widget_hide(toolbar);
+    gtk_container_remove(GTK_CONTAINER(parent_vbox), toolbar);
+}
+
+struct tool_actions_t
+{
+    const gchar *stock_id;
+    vlc_toolbar_clicked_t clicked;
+};
+static const tool_actions_t tool_actions[] = {
+    {GTK_STOCK_MEDIA_PLAY, clicked_Play},
+    {GTK_STOCK_MEDIA_PAUSE, clicked_Pause},
+    {GTK_STOCK_MEDIA_STOP, clicked_Stop},
+    {"", clicked_Unknown},
+    {"gtk-volume-muted", clicked_Mute},
+    {"gtk-volume-unmuted", clicked_Unmute}
+};
+
+void VlcPluginGtk::toolbar_handler(GtkToolButton *btn, gpointer user_data)
+{
+    VlcPluginBase *plugin = (VlcPluginBase *) user_data;
+    const gchar *stock_id = gtk_tool_button_get_stock_id(btn);
+    for (int i = 0; i < sizeof(tool_actions)/sizeof(tool_actions_t); ++i) {
+        if (!strcmp(stock_id, tool_actions[i].stock_id)) {
+            plugin->control_handler(tool_actions[i].clicked);
+            return;
+        }
+    }
+    fprintf(stderr, "WARNING: No idea what you just clicked on (%s)\n", stock_id?stock_id:"NULL");
+}
+
+bool VlcPluginGtk::time_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
+{
+    VlcPluginBase *plugin = (VlcPluginBase *) user_data;
+    libvlc_media_player_set_position(plugin->getMD(), value/100.0);
+    return false;
+}
+
+bool VlcPluginGtk::vol_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
+{
+    VlcPluginBase *plugin = (VlcPluginBase *) user_data;
+    libvlc_audio_set_volume(plugin->getMD(), value);
+    return false;
 }
 
 void VlcPluginGtk::update_controls()
 {
-    /* TODO */
+    GtkToolItem *toolbutton;
+
+    /* play/pause button */
+    const gchar *stock_id = playlist_isplaying() ? GTK_STOCK_MEDIA_PAUSE : GTK_STOCK_MEDIA_PLAY;
+    toolbutton = gtk_toolbar_get_nth_item(GTK_TOOLBAR(toolbar), 0);
+    if (strcmp(gtk_tool_button_get_stock_id(GTK_TOOL_BUTTON(toolbutton)), stock_id)) {
+        gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(toolbutton), stock_id);
+        g_object_ref(toolbutton);
+        gtk_container_remove(GTK_CONTAINER(toolbar), GTK_WIDGET(toolbutton));
+        gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolbutton, 0);
+        g_object_unref(toolbutton);
+    }
+    fprintf(stderr, "\n\n\ncurr stock id = %s\n\n\n", gtk_tool_button_get_stock_id(GTK_TOOL_BUTTON(toolbutton)));
+
+    /* time slider */
+    if (!libvlc_media_player ||
+            !libvlc_media_player_is_seekable(libvlc_media_player)) {
+        gtk_widget_set_sensitive(time_slider, false);
+        gtk_range_set_value(GTK_RANGE(time_slider), 0);
+    } else {
+        gtk_widget_set_sensitive(time_slider, true);
+        gdouble timepos = 100*libvlc_media_player_get_position(libvlc_media_player);
+        gtk_range_set_value(GTK_RANGE(time_slider), timepos);
+    }
+
+    gtk_widget_show_all(toolbar);
 }
 
 bool VlcPluginGtk::create_windows()
@@ -79,6 +148,45 @@ bool VlcPluginGtk::create_windows()
     gtk_box_pack_start(GTK_BOX(parent_vbox), video, true, true, 0);
 
     gtk_widget_show_all(parent);
+
+    toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    GtkToolItem *toolitem;
+    /* play/pause */
+    toolitem = gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_PLAY);
+    gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(toolitem),
+           GTK_STOCK_MEDIA_PAUSE);
+    g_signal_connect(G_OBJECT(toolitem), "clicked", G_CALLBACK(toolbar_handler), this);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolitem, -1);
+    /* stop */
+    toolitem = gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_STOP);
+    g_signal_connect(G_OBJECT(toolitem), "clicked", G_CALLBACK(toolbar_handler), this);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolitem, -1);
+
+    /* time slider */
+    toolitem = gtk_tool_item_new();
+    time_slider = gtk_hscale_new_with_range(0, 100, 10);
+    gtk_scale_set_draw_value(GTK_SCALE(time_slider), false);
+    g_signal_connect(G_OBJECT(time_slider), "change-value", G_CALLBACK(time_slider_handler), this);
+    gtk_container_add(GTK_CONTAINER(toolitem), time_slider);
+    gtk_tool_item_set_expand(toolitem, true);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolitem, -1);
+    
+    /* volume slider */
+    GtkWidget *vol_menu = gtk_menu_new();
+    toolitem = gtk_tool_item_new();
+    GtkWidget *vol_slider = gtk_hscale_new_with_range(0, 200, 10);
+    gtk_scale_set_draw_value(GTK_SCALE(vol_slider), false);
+    g_signal_connect(G_OBJECT(vol_slider), "change-value", G_CALLBACK(vol_slider_handler), this);
+    gtk_range_set_value(GTK_RANGE(vol_slider), 100);
+    gtk_widget_set_size_request(vol_slider, 100, -1);
+    gtk_container_add(GTK_CONTAINER(toolitem), vol_slider);
+    gtk_tool_item_set_expand(toolitem, false);
+    gtk_menu_tool_button_set_menu(GTK_MENU_TOOL_BUTTON(toolitem), vol_menu);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolitem, -1);
+
+    update_controls();
+    show_toolbar();
 
     return true;
 }
