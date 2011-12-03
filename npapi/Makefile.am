@@ -12,8 +12,9 @@ AM_CPPFLAGS = $(LIBVLC_CFLAGS)
 libvlcplugin_la_SOURCES = \
 	vlcshell.cpp \
 	vlcshell.h \
-	vlcplugin.cpp \
 	vlcplugin.h \
+	vlcplugin_base.cpp \
+	vlcplugin_base.h \
 	control/npolibvlc.cpp \
 	control/npolibvlc.h \
 	control/nporuntime.cpp \
@@ -41,16 +42,28 @@ if !HAVE_WIN32
 
 # Unix (x11) platforms
 #
-AM_CPPFLAGS += -DXP_UNIX $(X_CFLAGS) \
-	$(XPM_CFLAGS) \
-	-DDATA_PATH=\"$(pkgdatadir)\"
-libvlcplugin_la_LIBADD += $(X_LIBS) $(X_PRE_LIBS) \
-	$(XT_LIBS) -lX11 -lSM -lICE -lXpm \
-	$(XPM_LIBS) $(MOZILLA_LIBS)
-
 npvlc_LTLIBRARIES = libvlcplugin.la
 
-SOURCES_support = support/npunix.cpp
+AM_CPPFLAGS += -DXP_UNIX -DDATA_PATH=\"$(pkgdatadir)\"
+libvlcplugin_la_LIBADD += $(MOZILLA_LIBS)
+
+if USE_GTK
+AM_CPPFLAGS += $(GTK_CFLAGS) -DUSE_GTK
+libvlcplugin_la_LIBADD += $(GTK_LIBS)
+SOURCES_support = \
+	support/npunix.cpp \
+	vlcplugin_gtk.cpp \
+	vlcplugin_gtk.h
+else # !USE_GTK
+AM_CPPFLAGS += $(X_CFLAGS) $(XPM_CFLAGS)
+libvlcplugin_la_LIBADD += $(X_LIBS) $(X_PRE_LIBS) \
+	$(XT_LIBS) -lX11 -lSM -lICE -lXpm \
+	$(XPM_LIBS)
+SOURCES_support = \
+	support/npunix.cpp \
+	vlcplugin_xlib.cpp \
+	vlcplugin_xlib.h
+endif # !USE_GTK
 
 else # Win32
 
@@ -61,7 +74,10 @@ lib_LTLIBRARIES = npvlc.la
 
 AM_CPPFLAGS += -DXP_WIN -DXP_WIN32 \
 	-DXPCOM_GLUE -DHAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
-SOURCES_support = support/npwin.cpp \
+SOURCES_support = \
+	support/npwin.cpp \
+	vlcplugin_win.cpp \
+	vlcplugin_win.h \
 	../common/win32_fullscreen.cpp \
 	../common/win32_fullscreen.h
 

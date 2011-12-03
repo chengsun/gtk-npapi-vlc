@@ -23,7 +23,7 @@ AC_SUBST(COPYRIGHT_YEARS)
 COPYRIGHT_MESSAGE="Copyright © ${COPYRIGHT_YEARS} the VideoLAN team"
 AC_SUBST(COPYRIGHT_MESSAGE)
 
-AC_CONFIG_SRCDIR(npapi/vlcplugin.cpp)
+AC_CONFIG_SRCDIR(npapi/vlcshell.cpp)
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_MACRO_DIR(m4)
 AC_CANONICAL_BUILD
@@ -180,13 +180,22 @@ test "$found" = 0 && AC_MSG_RESULT([no])
 
 CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS}"
 
+AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ interface [default=yes]]),, [with_gtk=yes])
+AM_CONDITIONAL(USE_GTK, [ test "x$with_gtk" = "xyes" ])
 AC_CHECK_HEADERS(npapi.h)
 AC_CHECK_HEADERS(npruntime.h, [
   dnl if found
-  AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin"],[
-    PKG_CHECK_MODULES(XPM, [xpm xt],, [
-      AC_MSG_ERROR([Please install the libXpm and libXt development files.])
-    ])
+  AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
+    AM_COND_IF(USE_GTK,
+        [
+          PKG_CHECK_MODULES(GTK, [gtk+-2.0],, [
+            AC_MSG_ERROR([GTK+ >=2 not found. Re-run configure with --without-gtk.])
+          ])
+        ], [
+          PKG_CHECK_MODULES(XPM, [xpm xt],, [
+            AC_MSG_ERROR([Please install the libXpm and libXt development files, or re-run configure with --with-gtk])
+          ])
+        ])
   ])],[
   dnl if not found
   AC_MSG_ERROR([Please install the Mozilla development tools, required headers were not found.])
@@ -213,14 +222,13 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   const char *NPP_GetMIMEDescription(void);
 ])],[
   AC_MSG_RESULT(yes)
-  AC_DEFINE(NPP_GET_MIME_CONST, [const], [Wether NPP_GetMIMEDescription returns const])
+  AC_DEFINE(NPP_GET_MIME_CONST, [const], [Whether NPP_GetMIMEDescription returns const])
 ],[
   AC_MSG_RESULT(no)
-  AC_DEFINE(NPP_GET_MIME_CONST, [], [Wether NPP_GetMIMEDescription returns const])
+  AC_DEFINE(NPP_GET_MIME_CONST, [], [Whether NPP_GetMIMEDescription returns const])
 ])
 
 AC_LANG_POP(C++)
-
 
 AM_COND_IF([HAVE_WIN32], [
   ACTIVEX_CPPFLAGS="${CPPFLAGS} -DUNICODE -D_UNICODE -D_MIDL_USE_GUIDDEF_"
