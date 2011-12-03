@@ -162,7 +162,7 @@ private:
     HWND hVolumeSlider;
 
 private:
-    void SetVideoPosScrollPosByVideoPos(int CurPos);
+    void SetVideoPosScrollPosByVideoPos(libvlc_time_t CurPos);
     static bool handle_position_changed_event_enabled;
     static void handle_position_changed_event(const libvlc_event_t* event, void *param);
     //static void handle_time_changed_event(const libvlc_event_t* event, void *param);

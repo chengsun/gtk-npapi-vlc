@@ -677,7 +677,7 @@ void VLCFullScreenWnd::SetVideoPosScrollRangeByVideoLen()
     }
 }
 
-void VLCFullScreenWnd::SetVideoPosScrollPosByVideoPos(int CurScrollPos)
+void VLCFullScreenWnd::SetVideoPosScrollPosByVideoPos(libvlc_time_t CurScrollPos)
 {
     SendMessage(hVideoPosScroll, (UINT)PBM_SETPOS, (WPARAM) (CurScrollPos >> VideoPosShiftBits), 0);
 }
