@@ -50,6 +50,7 @@ private:
     static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
     HHOOK _hMouseHook;
+    DWORD _MouseHookThreadId;
     void MouseHook(bool SetHook);
 
     libvlc_media_player_t* getMD() const;
@@ -60,7 +61,7 @@ private:
 
 private:
     VLCHolderWnd(HWND hWnd, VLCWindowsManager* WM)
-        : _hMouseHook(NULL), _hWnd(hWnd)
+        : _hMouseHook(NULL), _MouseHookThreadId(0), _hWnd(hWnd)
          , _WindowsManager(WM){};
 
 public:

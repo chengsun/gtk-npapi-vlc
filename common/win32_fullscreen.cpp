@@ -181,16 +181,24 @@ LRESULT CALLBACK VLCHolderWnd::MouseHookProc(int nCode, WPARAM wParam, LPARAM lP
 void VLCHolderWnd::MouseHook(bool SetHook)
 {
     if(SetHook){
-        HWND hChildWnd = GetWindow(getHWND(), GW_CHILD);
-        if(!_hMouseHook && hChildWnd){
+        const HWND hChildWnd = GetWindow(getHWND(), GW_CHILD);
+        const DWORD WndThreadID = (hChildWnd) ? GetWindowThreadProcessId(hChildWnd, NULL) : 0;
+        if( _hMouseHook &&( !hChildWnd || WndThreadID != _MouseHookThreadId) ){
+            //unhook if something changed
+            MouseHook(false);
+        }
+
+        if(!_hMouseHook && hChildWnd && WndThreadID){
+            _MouseHookThreadId = WndThreadID;
             _hMouseHook =
                 SetWindowsHookEx(WH_MOUSE, VLCHolderWnd::MouseHookProc,
-                                 NULL, GetWindowThreadProcessId(hChildWnd, NULL));
+                                 NULL, WndThreadID);
         }
     }
     else{
         if(_hMouseHook){
             UnhookWindowsHookEx(_hMouseHook);
+            _MouseHookThreadId=0;
             _hMouseHook = 0;
         }
     }
@@ -205,13 +213,15 @@ void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
     //So we try catch events,
     //(suppose wnd will be ever created),
     //and then try set mouse hook.
-    if(!_hMouseHook){
+    const HWND hChildWnd = GetWindow(getHWND(), GW_CHILD);
+    const DWORD WndThreadID = (hChildWnd) ? GetWindowThreadProcessId(hChildWnd, NULL) : 0;
+    //if no hook, or window thread has changed
+    if(!_hMouseHook || (hChildWnd && WndThreadID != _MouseHookThreadId)){
         //libvlc events arrives from separate thread,
         //so we need post message to main thread, to notify it.
         PostMessage(getHWND(), WM_TRY_SET_MOUSE_HOOK, 0, 0);
     }
 }
-
 
 void VLCHolderWnd::LibVlcAttach()
 {
