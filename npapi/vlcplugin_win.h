@@ -55,6 +55,7 @@ public:
     void hide_toolbar();
 
     void update_controls();
+    void popup_menu();
 
     WNDPROC             getWindowProc()
                             { return pf_wndproc; };

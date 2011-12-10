@@ -34,21 +34,6 @@ int  VlcPluginMac::get_fullscreen()
     return r;
 }
 
-void VlcPluginMac::show_toolbar()
-{
-    // TODO
-}
-
-void VlcPluginMac::hide_toolbar()
-{
-    // TODO
-}
-
-void VlcPluginMac::update_controls()
-{
-    // TODO
-}
-
 bool VlcPluginMac::create_windows()
 {
     return true;

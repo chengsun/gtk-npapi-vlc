@@ -43,21 +43,6 @@ int  VlcPluginXlib::get_fullscreen()
     return r;
 }
 
-void VlcPluginXlib::show_toolbar()
-{
-    /* TODO */
-}
-
-void VlcPluginXlib::hide_toolbar()
-{
-    /* TODO */
-}
-
-void VlcPluginXlib::update_controls()
-{
-    /* TODO */
-}
-
 bool VlcPluginXlib::create_windows()
 {
 

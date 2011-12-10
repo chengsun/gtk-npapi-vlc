@@ -285,6 +285,7 @@ public:
     virtual bool destroy_windows() = 0;
 
     virtual void update_controls() = 0;
+    virtual void popup_menu() = 0;
 
     static bool canUseEventListener();
 

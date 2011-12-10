@@ -12,8 +12,7 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     parent(NULL),
     parent_vbox(NULL),
     video(NULL),
-    toolbar(NULL),
-    popup_menu(NULL)
+    toolbar(NULL)
 {
 }
 
@@ -99,20 +98,10 @@ static void menu_handler(GtkMenuItem *menuitem, gpointer user_data)
     fprintf(stderr, "WARNING: No idea what menu item you just clicked on (%s)\n", stock_id?stock_id:"NULL");
 }
 
-void VlcPluginGtk::do_popup_menu(GtkWidget *widget, GdkEventButton *event)
+void VlcPluginGtk::popup_menu()
 {
-    int button, event_time;
-
-    if (event) {
-        button = event->button;
-        event_time = event->time;
-    } else {
-        button = 0;
-        event_time = gtk_get_current_event_time();
-    }
-
     /* construct menu */
-    GtkWidget *popup_menu = gtk_menu_new();
+    GtkWidget *popupmenu = gtk_menu_new();
     GtkWidget *menuitem;
 
     /* play/pause */
@@ -121,25 +110,24 @@ void VlcPluginGtk::do_popup_menu(GtkWidget *widget, GdkEventButton *event)
                         GTK_STOCK_MEDIA_PAUSE :
                         GTK_STOCK_MEDIA_PLAY, NULL);
     g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
-    gtk_menu_shell_append(GTK_MENU_SHELL(popup_menu), menuitem);
+    gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
     /* stop */
     menuitem = gtk_image_menu_item_new_from_stock(
                                 GTK_STOCK_MEDIA_STOP, NULL);
     g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
-    gtk_menu_shell_append(GTK_MENU_SHELL(popup_menu), menuitem);
+    gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
 
-    gtk_widget_show_all(popup_menu);
-
-    gtk_menu_attach_to_widget(GTK_MENU(popup_menu), widget, NULL);
-    gtk_menu_popup(GTK_MENU(popup_menu), NULL, NULL, NULL, NULL,
-                   button, event_time);
+    gtk_widget_show_all(popupmenu);
+    gtk_menu_attach_to_widget(GTK_MENU(popupmenu), video, NULL);
+    gtk_menu_popup(GTK_MENU(popupmenu), NULL, NULL, NULL, NULL,
+                   0, gtk_get_current_event_time());
 }
 
 static bool video_button_handler(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     if (event->button == 3 && event->type == GDK_BUTTON_PRESS) {
-        plugin->do_popup_menu(widget, event);
+        plugin->popup_menu();
         return true;
     }
     return false;
@@ -147,7 +135,7 @@ static bool video_button_handler(GtkWidget *widget, GdkEventButton *event, gpoin
 
 static bool video_popup_handler(GtkWidget *widget, gpointer user_data) {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
-    plugin->do_popup_menu(widget, NULL);
+    plugin->popup_menu();
     return true;
 }
 
