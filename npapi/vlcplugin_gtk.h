@@ -51,9 +51,6 @@ public:
     void hide_toolbar();
 
     void update_controls();
-    static void toolbar_handler(GtkToolButton *, gpointer);
-    static bool time_slider_handler(GtkRange *, GtkScrollType, gdouble, gpointer);
-    static bool vol_slider_handler(GtkRange *, GtkScrollType, gdouble, gpointer);
 private:
     void set_player_window();
 
