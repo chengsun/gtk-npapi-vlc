@@ -12,7 +12,8 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     parent(NULL),
     parent_vbox(NULL),
     video(NULL),
-    toolbar(NULL)
+    toolbar(NULL),
+    popup_menu(NULL)
 {
 }
 
@@ -24,6 +25,7 @@ void VlcPluginGtk::set_player_window()
 {
     libvlc_media_player_set_xwindow(libvlc_media_player,
                                     (uint32_t)getXid(video));
+    libvlc_video_set_mouse_input(libvlc_media_player, 0);
 }
 
 void VlcPluginGtk::toggle_fullscreen()
@@ -82,6 +84,71 @@ static void toolbar_handler(GtkToolButton *btn, gpointer user_data)
         }
     }
     fprintf(stderr, "WARNING: No idea what toolbar button you just clicked on (%s)\n", stock_id?stock_id:"NULL");
+}
+
+static void menu_handler(GtkMenuItem *menuitem, gpointer user_data)
+{
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    const gchar *stock_id = gtk_menu_item_get_label(GTK_MENU_ITEM(menuitem));
+    for (int i = 0; i < sizeof(tool_actions)/sizeof(tool_actions_t); ++i) {
+        if (!strcmp(stock_id, tool_actions[i].stock_id)) {
+            plugin->control_handler(tool_actions[i].clicked);
+            return;
+        }
+    }
+    fprintf(stderr, "WARNING: No idea what menu item you just clicked on (%s)\n", stock_id?stock_id:"NULL");
+}
+
+void VlcPluginGtk::do_popup_menu(GtkWidget *widget, GdkEventButton *event)
+{
+    int button, event_time;
+
+    if (event) {
+        button = event->button;
+        event_time = event->time;
+    } else {
+        button = 0;
+        event_time = gtk_get_current_event_time();
+    }
+
+    /* construct menu */
+    GtkWidget *popup_menu = gtk_menu_new();
+    GtkWidget *menuitem;
+
+    /* play/pause */
+    menuitem = gtk_image_menu_item_new_from_stock(
+                        playlist_isplaying() ?
+                        GTK_STOCK_MEDIA_PAUSE :
+                        GTK_STOCK_MEDIA_PLAY, NULL);
+    g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
+    gtk_menu_shell_append(GTK_MENU_SHELL(popup_menu), menuitem);
+    /* stop */
+    menuitem = gtk_image_menu_item_new_from_stock(
+                                GTK_STOCK_MEDIA_STOP, NULL);
+    g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
+    gtk_menu_shell_append(GTK_MENU_SHELL(popup_menu), menuitem);
+
+    gtk_widget_show_all(popup_menu);
+
+    gtk_menu_attach_to_widget(GTK_MENU(popup_menu), widget, NULL);
+    gtk_menu_popup(GTK_MENU(popup_menu), NULL, NULL, NULL, NULL,
+                   button, event_time);
+}
+
+static bool video_button_handler(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    if (event->button == 3 && event->type == GDK_BUTTON_PRESS) {
+        plugin->do_popup_menu(widget, event);
+        return true;
+    }
+    return false;
+}
+
+static bool video_popup_handler(GtkWidget *widget, gpointer user_data) {
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    plugin->do_popup_menu(widget, NULL);
+    return true;
 }
 
 static bool time_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
@@ -144,6 +211,11 @@ bool VlcPluginGtk::create_windows()
 
     video = gtk_drawing_area_new();
     gtk_widget_modify_bg(video, GTK_STATE_NORMAL, &color_black);
+    gtk_widget_add_events(video,
+            GDK_BUTTON_PRESS_MASK
+          | GDK_BUTTON_RELEASE_MASK);
+    g_signal_connect(G_OBJECT(video), "button-press-event", G_CALLBACK(video_button_handler), this);
+    g_signal_connect(G_OBJECT(video), "popup-menu", G_CALLBACK(video_popup_handler), this);
     gtk_box_pack_start(GTK_BOX(parent_vbox), video, true, true, 0);
 
     gtk_widget_show_all(parent);

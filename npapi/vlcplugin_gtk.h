@@ -51,12 +51,13 @@ public:
     void hide_toolbar();
 
     void update_controls();
+    void do_popup_menu(GtkWidget *,GdkEventButton *);
 private:
     void set_player_window();
 
     unsigned int     i_width, i_height;
-    GtkWidget *parent, *parent_vbox, *video, *toolbar;
-    GtkWidget *time_slider;
+    GtkWidget *parent, *parent_vbox, *video;
+    GtkWidget *toolbar, *popup_menu, *time_slider;
 };
 
 #endif /* __VLCPLUGIN_GTK_H__ */
