@@ -48,29 +48,22 @@ void VlcPluginGtk::set_fullscreen(int yes)
     /* note that the xid of video_container changes after reparenting */
     Display *display = get_display();
     g_signal_handler_block(video_container, video_container_size_handler_id);
-    if (yes) {
-        XUnmapWindow(display, video_xwindow);
-        XReparentWindow(display, video_xwindow,
-                        gdk_x11_get_default_root_xwindow(), 0,0);
 
+    XUnmapWindow(display, video_xwindow);
+    XReparentWindow(display, video_xwindow,
+                    gdk_x11_get_default_root_xwindow(), 0,0);
+    if (yes) {
         gtk_widget_reparent(GTK_WIDGET(parent_vbox), GTK_WIDGET(fullscreen_win));
         gtk_widget_show(fullscreen_win);
         gtk_window_fullscreen(GTK_WINDOW(fullscreen_win));
-
-        XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
-        XMapWindow(display, video_xwindow);
     } else {
-        XUnmapWindow(display, video_xwindow);
-        XReparentWindow(display, video_xwindow,
-                        gdk_x11_get_default_root_xwindow(), 0,0);
-
         gtk_widget_hide(fullscreen_win);
         gtk_widget_reparent(GTK_WIDGET(parent_vbox), GTK_WIDGET(parent));
         gtk_widget_show_all(GTK_WIDGET(parent));
-
-        XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
-        XMapWindow(display, video_xwindow);
     }
+    XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
+    XMapWindow(display, video_xwindow);
+
 //    libvlc_set_fullscreen(libvlc_media_player, yes);
     g_signal_handler_unblock(video_container, video_container_size_handler_id);
     gtk_widget_queue_resize_no_redraw(video_container);
