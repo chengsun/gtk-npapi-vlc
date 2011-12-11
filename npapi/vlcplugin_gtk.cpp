@@ -105,7 +105,8 @@ static const tool_actions_t tool_actions[] = {
     {GTK_STOCK_MEDIA_PAUSE, clicked_Pause},
     {GTK_STOCK_MEDIA_STOP, clicked_Stop},
     {"gtk-volume-muted", clicked_Mute},
-    {"gtk-volume-unmuted", clicked_Unmute}
+    {"gtk-volume-unmuted", clicked_Unmute},
+    {GTK_STOCK_FULLSCREEN, clicked_Fullscreen}
 };
 
 static void toolbar_handler(GtkToolButton *btn, gpointer user_data)
@@ -152,7 +153,14 @@ void VlcPluginGtk::popup_menu()
                                 GTK_STOCK_MEDIA_STOP, NULL);
     g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
     gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
+    /* set fullscreen */
+    menuitem = gtk_image_menu_item_new_from_stock(
+                                GTK_STOCK_FULLSCREEN, NULL);
+    g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
+    gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
 
+
+    /* show menu */
     gtk_widget_show_all(popupmenu);
     gtk_menu_attach_to_widget(GTK_MENU(popupmenu), video_container, NULL);
     gtk_menu_popup(GTK_MENU(popupmenu), NULL, NULL, NULL, NULL,

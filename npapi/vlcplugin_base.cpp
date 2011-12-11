@@ -891,7 +891,7 @@ void VlcPluginBase::control_handler(vlc_toolbar_clicked_t clicked)
 
         case clicked_Fullscreen:
         {
-            set_fullscreen( 1 );
+            toggle_fullscreen();
         }
         break;
 
