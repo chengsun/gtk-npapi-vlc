@@ -30,6 +30,7 @@
 #include "vlcplugin_base.h"
 
 #include <gtk/gtk.h>
+#include <X11/Xlib.h>
 
 class VlcPluginGtk : public VlcPluginBase
 {
@@ -52,12 +53,19 @@ public:
     void update_controls();
     void popup_menu();
 
+    void resize_video_xwindow(GdkRectangle *rect);
 private:
     void set_player_window();
+    Display *get_display();
 
     unsigned int     i_width, i_height;
-    GtkWidget *parent, *parent_vbox, *video;
-    GtkWidget *toolbar, *time_slider;
+    GtkWidget *parent, *parent_vbox, *video_container;
+    GtkWidget *toolbar, *popupmenu, *time_slider;
+    GtkWidget *fullscreen_win;
+    gulong video_container_size_handler_id;
+
+    Window video_xwindow;
+    bool is_fullscreen;
 };
 
 #endif /* __VLCPLUGIN_GTK_H__ */

@@ -2,7 +2,7 @@
 #include <gdk/gdkx.h>
 #include <cstring>
 
-static uint32_t getXid(GtkWidget *widget) {
+static uint32_t get_xid(GtkWidget *widget) {
     GdkDrawable *video_drawable = gtk_widget_get_window(widget);
     return (uint32_t)gdk_x11_drawable_get_xid(video_drawable);
 }
@@ -11,40 +11,76 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode),
     parent(NULL),
     parent_vbox(NULL),
-    video(NULL),
-    toolbar(NULL)
+    video_container(NULL),
+    toolbar(NULL),
+    popupmenu(NULL),
+    fullscreen_win(NULL),
+    is_fullscreen(false)
 {
+    memset(&video_xwindow, 0, sizeof(Window));
 }
 
 VlcPluginGtk::~VlcPluginGtk()
 {
 }
 
+Display *VlcPluginGtk::get_display()
+{
+    return ( (NPSetWindowCallbackStruct *)
+             npwindow.ws_info )->display;
+}
+
 void VlcPluginGtk::set_player_window()
 {
     libvlc_media_player_set_xwindow(libvlc_media_player,
-                                    (uint32_t)getXid(video));
+                                    video_xwindow);
     libvlc_video_set_mouse_input(libvlc_media_player, 0);
 }
 
 void VlcPluginGtk::toggle_fullscreen()
 {
-    if (playlist_isplaying())
-        libvlc_toggle_fullscreen(libvlc_media_player);
+    set_fullscreen(!get_fullscreen());
 }
 
 void VlcPluginGtk::set_fullscreen(int yes)
 {
-    if (playlist_isplaying())
-        libvlc_set_fullscreen(libvlc_media_player, yes);
+    /* we have to reparent windows */
+    /* note that the xid of video_container changes after reparenting */
+    Display *display = get_display();
+    g_signal_handler_block(video_container, video_container_size_handler_id);
+    if (yes) {
+        XUnmapWindow(display, video_xwindow);
+        XReparentWindow(display, video_xwindow,
+                        gdk_x11_get_default_root_xwindow(), 0,0);
+
+        gtk_widget_reparent(GTK_WIDGET(parent_vbox), GTK_WIDGET(fullscreen_win));
+        gtk_widget_show(fullscreen_win);
+        gtk_window_fullscreen(GTK_WINDOW(fullscreen_win));
+
+        XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
+        XMapWindow(display, video_xwindow);
+    } else {
+        XUnmapWindow(display, video_xwindow);
+        XReparentWindow(display, video_xwindow,
+                        gdk_x11_get_default_root_xwindow(), 0,0);
+
+        gtk_widget_hide(fullscreen_win);
+        gtk_widget_reparent(GTK_WIDGET(parent_vbox), GTK_WIDGET(parent));
+        gtk_widget_show_all(GTK_WIDGET(parent));
+
+        XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
+        XMapWindow(display, video_xwindow);
+    }
+//    libvlc_set_fullscreen(libvlc_media_player, yes);
+    g_signal_handler_unblock(video_container, video_container_size_handler_id);
+    gtk_widget_queue_resize_no_redraw(video_container);
+
+    is_fullscreen = yes;
 }
 
 int  VlcPluginGtk::get_fullscreen()
 {
-    int r = 0;
-    if (playlist_isplaying())
-        r = libvlc_get_fullscreen(libvlc_media_player);
-    return r;
+    return is_fullscreen;
 }
 
 void VlcPluginGtk::show_toolbar()
@@ -57,6 +93,13 @@ void VlcPluginGtk::hide_toolbar()
 {
     gtk_widget_hide(toolbar);
     gtk_container_remove(GTK_CONTAINER(parent_vbox), toolbar);
+}
+
+void VlcPluginGtk::resize_video_xwindow(GdkRectangle *rect)
+{
+    Display *display = get_display();
+    XResizeWindow(display, video_xwindow,
+                  rect->width, rect->height);
 }
 
 struct tool_actions_t
@@ -118,7 +161,7 @@ void VlcPluginGtk::popup_menu()
     gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
 
     gtk_widget_show_all(popupmenu);
-    gtk_menu_attach_to_widget(GTK_MENU(popupmenu), video, NULL);
+    gtk_menu_attach_to_widget(GTK_MENU(popupmenu), video_container, NULL);
     gtk_menu_popup(GTK_MENU(popupmenu), NULL, NULL, NULL, NULL,
                    0, gtk_get_current_event_time());
 }
@@ -130,12 +173,21 @@ static bool video_button_handler(GtkWidget *widget, GdkEventButton *event, gpoin
         plugin->popup_menu();
         return true;
     }
+    if (event->button == 1 && event->type == GDK_2BUTTON_PRESS) {
+        plugin->toggle_fullscreen();
+    }
     return false;
 }
 
 static bool video_popup_handler(GtkWidget *widget, gpointer user_data) {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     plugin->popup_menu();
+    return true;
+}
+
+static bool video_size_handler(GtkWidget *widget, GdkRectangle *rect, gpointer user_data) {
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    plugin->resize_video_xwindow(rect);
     return true;
 }
 
@@ -151,6 +203,12 @@ static bool vol_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble va
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     libvlc_audio_set_volume(plugin->getMD(), value);
     return false;
+}
+
+static void fullscreen_win_visibility_handler(GtkWidget *widget, gpointer user_data)
+{
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    plugin->set_fullscreen(gtk_widget_get_visible(widget));
 }
 
 void VlcPluginGtk::update_controls()
@@ -185,8 +243,6 @@ void VlcPluginGtk::update_controls()
 
 bool VlcPluginGtk::create_windows()
 {
-    Display *p_display = ( (NPSetWindowCallbackStruct *)
-                           npwindow.ws_info )->display;
     Window socket = (Window) npwindow.window;
     GdkColor color_black;
     gdk_color_parse("black", &color_black);
@@ -197,17 +253,40 @@ bool VlcPluginGtk::create_windows()
     parent_vbox = gtk_vbox_new(false, 0);
     gtk_container_add(GTK_CONTAINER(parent), parent_vbox);
 
-    video = gtk_drawing_area_new();
-    gtk_widget_modify_bg(video, GTK_STATE_NORMAL, &color_black);
-    gtk_widget_add_events(video,
+    video_container = gtk_drawing_area_new();
+    gtk_widget_modify_bg(video_container, GTK_STATE_NORMAL, &color_black);
+    gtk_widget_add_events(video_container,
             GDK_BUTTON_PRESS_MASK
           | GDK_BUTTON_RELEASE_MASK);
-    g_signal_connect(G_OBJECT(video), "button-press-event", G_CALLBACK(video_button_handler), this);
-    g_signal_connect(G_OBJECT(video), "popup-menu", G_CALLBACK(video_popup_handler), this);
-    gtk_box_pack_start(GTK_BOX(parent_vbox), video, true, true, 0);
+    g_signal_connect(G_OBJECT(video_container), "button-press-event", G_CALLBACK(video_button_handler), this);
+    g_signal_connect(G_OBJECT(video_container), "popup-menu", G_CALLBACK(video_popup_handler), this);
+    gtk_box_pack_start(GTK_BOX(parent_vbox), video_container, true, true, 0);
 
     gtk_widget_show_all(parent);
 
+    /* fullscreen top-level */
+    fullscreen_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_decorated(GTK_WINDOW(fullscreen_win), false);
+    g_signal_connect(G_OBJECT(fullscreen_win), "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), this);
+    g_signal_connect(G_OBJECT(fullscreen_win), "show", G_CALLBACK(fullscreen_win_visibility_handler), this);
+    g_signal_connect(G_OBJECT(fullscreen_win), "hide", G_CALLBACK(fullscreen_win_visibility_handler), this);
+
+    /* actual video window */
+    /* libvlc is handed this window's xid. A raw X window is used because
+     * GTK+ is incapable of reparenting without changing xid
+     */
+    Display *display = get_display();
+    int blackColor = BlackPixel(display, DefaultScreen(display));
+    video_xwindow = XCreateSimpleWindow(display, get_xid(video_container), 0, 0,
+                   1, 1,
+                   0, blackColor, blackColor);
+    XMapWindow(display, video_xwindow);
+
+    /* connect video_container resizes to video_xwindow */
+    video_container_size_handler_id = g_signal_connect(
+                G_OBJECT(video_container), "size-allocate",
+                G_CALLBACK(video_size_handler), this);
+    gtk_widget_queue_resize_no_redraw(video_container);
 
     /*** TOOLBAR ***/
 
@@ -255,25 +334,6 @@ bool VlcPluginGtk::resize_windows()
     req.width = npwindow.width;
     req.height = npwindow.height;
     gtk_widget_size_request(parent, &req);
-#if 0
-    Window root_return, parent_return, *children_return;
-    unsigned int i_nchildren;
-    XQueryTree( p_display, npvideo,
-                &root_return, &parent_return, &children_return,
-                &i_nchildren );
-
-    if( i_nchildren > 0 )
-    {
-        /* XXX: Make assumptions related to the window parenting structure in
-           vlc/modules/video_output/x11/xcommon.c */
-        Window base_window = children_return[i_nchildren - 1];
-
-        i_ret = XResizeWindow( p_display, base_window,
-                npwindow.width, ( npwindow.height - i_tb_height ) );
-    }
-
-    return true;
-#endif
 }
 
 bool VlcPluginGtk::destroy_windows()
