@@ -163,6 +163,7 @@ bool VlcPluginWin::resize_windows()
     /* Redraw window */
     InvalidateRect( drawable, NULL, TRUE );
     UpdateWindow( drawable );
+    return true;
 }
 
 bool VlcPluginWin::destroy_windows()
@@ -173,4 +174,5 @@ bool VlcPluginWin::destroy_windows()
     setWindowProc(NULL);
 
     npwindow.window = NULL;
+    return true;
 }
