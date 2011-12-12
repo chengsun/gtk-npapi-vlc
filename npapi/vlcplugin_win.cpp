@@ -101,22 +101,22 @@ void VlcPluginWin::set_player_window()
 
 void VlcPluginWin::toggle_fullscreen()
 {
-    if (playlist_isplaying())
-        libvlc_toggle_fullscreen(libvlc_media_player);
+    _WindowsManager.ToggleFullScreen();
 }
 
 void VlcPluginWin::set_fullscreen(int yes)
 {
-    if (playlist_isplaying())
-        libvlc_set_fullscreen(libvlc_media_player,yes);
+    if(yes){
+        _WindowsManager.StartFullScreen();
+    }
+    else{
+        _WindowsManager.EndFullScreen();
+    }
 }
 
 int  VlcPluginWin::get_fullscreen()
 {
-    int r = 0;
-    if (playlist_isplaying())
-        r = libvlc_get_fullscreen(libvlc_media_player);
-    return r;
+    return _WindowsManager.IsFullScreen();
 }
 
 void VlcPluginWin::show_toolbar()
