@@ -168,6 +168,8 @@ bool VlcPluginWin::resize_windows()
 
 bool VlcPluginWin::destroy_windows()
 {
+    _WindowsManager.DestroyWindows();
+
     /* reset WNDPROC */
     HWND oldwin = (HWND)npwindow.window;
     SetWindowLongPtr( oldwin, GWLP_WNDPROC, (LONG_PTR)(getWindowProc()) );
