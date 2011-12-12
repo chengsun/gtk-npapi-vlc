@@ -191,7 +191,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\npapi\vlcplugin.cpp"
+				RelativePath="..\..\..\npapi\vlcplugin_base.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\npapi\vlcplugin_win.cpp"
 				>
 			</File>
 			<File
@@ -221,7 +225,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\npapi\vlcplugin.h"
+				RelativePath="..\..\..\npapi\vlcplugin_base.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\npapi\vlcplugin_win.h"
 				>
 			</File>
 			<File
