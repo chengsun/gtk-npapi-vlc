@@ -210,7 +210,7 @@ public:
     char*               getAbsoluteURL(const char *url);
     NPWindow&           getWindow()
                             { return npwindow; };
-    void                setWindow(const NPWindow &window);
+    virtual void        setWindow(const NPWindow &window);
 
     NPClass*            getScriptClass()
                             { return p_scriptClass; };
