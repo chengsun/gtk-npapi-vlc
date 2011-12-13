@@ -353,10 +353,11 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
                 /* resize / move notification */
                 p_plugin->resize_windows();
             } else {
-                /* we've already been created, but
-                 * our xembed socket has just changed. */
-                /* FIXME */
-                fprintf(stderr, "WARNING: plugin already created, but socket changed.\n");
+                //plugin parent window was changed, notify plugin about it
+                p_plugin->destroy_windows();
+                p_plugin->setWindow(*window);
+                p_plugin->create_windows();
+                p_plugin->resize_windows();
             }
         }
     } else {
