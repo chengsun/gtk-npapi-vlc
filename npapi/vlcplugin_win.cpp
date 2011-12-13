@@ -83,15 +83,7 @@ VlcPluginWin::VlcPluginWin(NPP instance, NPuint16_t mode) :
 
 VlcPluginWin::~VlcPluginWin()
 {
-    HWND win = (HWND)getWindow().window;
-    WNDPROC winproc = getWindowProc();
-    if( winproc )
-    {
-        /* reset WNDPROC */
-        SetWindowLongPtr( win, GWLP_WNDPROC, (LONG_PTR)winproc );
-    }
-
-    _WindowsManager.DestroyWindows();
+    destroy_windows();
 }
 
 void VlcPluginWin::set_player_window()
