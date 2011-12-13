@@ -170,11 +170,17 @@ bool VlcPluginWin::destroy_windows()
 {
     _WindowsManager.DestroyWindows();
 
-    /* reset WNDPROC */
     HWND oldwin = (HWND)npwindow.window;
-    SetWindowLongPtr( oldwin, GWLP_WNDPROC, (LONG_PTR)(getWindowProc()) );
-    setWindowProc(NULL);
+    if(oldwin){
+        WNDPROC winproc = getWindowProc();
+        if( winproc )
+        {
+            /* reset WNDPROC */
+            SetWindowLongPtr( oldwin, GWLP_WNDPROC, (LONG_PTR)winproc );
+            setWindowProc(NULL);
+        }
+        npwindow.window = NULL;
+    }
 
-    npwindow.window = NULL;
     return true;
 }
