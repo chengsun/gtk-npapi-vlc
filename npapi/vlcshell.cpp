@@ -353,7 +353,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
                 /* resize / move notification */
                 p_plugin->resize_windows();
             } else {
-                //plugin parent window was changed, notify plugin about it
+                /* plugin parent window was changed, notify plugin about it */
                 p_plugin->destroy_windows();
                 p_plugin->setWindow(*window);
                 p_plugin->create_windows();

@@ -163,7 +163,8 @@ bool VlcPluginWin::destroy_windows()
     _WindowsManager.DestroyWindows();
 
     HWND oldwin = (HWND)npwindow.window;
-    if(oldwin){
+    if( oldwin )
+    {
         WNDPROC winproc = getWindowProc();
         if( winproc )
         {
