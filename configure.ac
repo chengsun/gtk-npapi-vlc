@@ -180,32 +180,40 @@ test "$found" = 0 && AC_MSG_RESULT([no])
 
 CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS}"
 
-AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ interface [default=yes]]),, [with_gtk=yes])
-AM_CONDITIONAL(USE_GTK, [ test "x$with_gtk" = "xyes" ])
 AC_CHECK_HEADERS(npapi.h)
 AC_CHECK_HEADERS(npruntime.h, [
-  dnl if found
-  AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
-    AM_COND_IF(USE_GTK,
-        [
-          PKG_CHECK_MODULES(GTK, [gtk+-2.0],, [
-            AC_MSG_ERROR([GTK+ >=2 not found. Re-run configure with --without-gtk.])
-          ])
-        ], [
-          PKG_CHECK_MODULES(XPM, [xpm xt],, [
-            AC_MSG_ERROR([Please install the libXpm and libXt development files, or re-run configure with --with-gtk])
-          ])
-        ])
-  ])],[
-  dnl if not found
-  AC_MSG_ERROR([Please install the Mozilla development tools, required headers were not found.])
+    dnl if found
+  ],[
+    dnl if not found
+    AC_MSG_ERROR([Please install the Mozilla development tools, required headers were not found.])
   ], [
-  #include <stdint.h>
-  #if HAVE_NPAPI_H
-   #include <npapi.h>
-  #endif
+    #include <stdint.h>
+    #if HAVE_NPAPI_H
+     #include <npapi.h>
+    #endif
   ]
 )
+
+AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ interface [default=auto]]),, [with_gtk=yes])
+gtk_found=no
+AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
+  AS_IF([ test "x$with_gtk" != "xno" ],
+    [
+       PKG_CHECK_MODULES(GTK, [gtk+-2.0],
+       [gtk_found=yes],
+       [
+         AC_MSG_WARN([GTK+ >=2 not found. Re-run configure with --without-gtk.])
+         PKG_CHECK_MODULES(XPM, [xpm],, [
+           AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+         ])
+       ])
+    ], [
+      PKG_CHECK_MODULES(XPM, [xpm],, [
+        AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+      ])
+    ])
+])
+AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
 
 AC_MSG_CHECKING([if NPP_GetMIMEDescription() returns const])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
