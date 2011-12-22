@@ -25,7 +25,8 @@
 #include <gdk/gdkx.h>
 #include <cstring>
 
-static uint32_t get_xid(GtkWidget *widget) {
+static uint32_t get_xid(GtkWidget *widget)
+{
     GdkDrawable *video_drawable = gtk_widget_get_window(widget);
     return (uint32_t)gdk_x11_drawable_get_xid(video_drawable);
 }
