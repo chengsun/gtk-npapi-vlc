@@ -278,13 +278,13 @@ public:
 
     bool  player_has_vout();
 
-    virtual void toggle_fullscreen() = 0;
-    virtual void set_fullscreen( int ) = 0;
-    virtual int  get_fullscreen() = 0;
-
     virtual bool create_windows() = 0;
     virtual bool resize_windows() = 0;
     virtual bool destroy_windows() = 0;
+
+    virtual void toggle_fullscreen() = 0;
+    virtual void set_fullscreen(bool) = 0;
+    virtual bool get_fullscreen() = 0;
 
     virtual void update_controls() = 0;
     virtual void popup_menu() = 0;
@@ -319,14 +319,5 @@ protected:
 
     static void eventAsync(void *);
 };
-
-/*******************************************************************************
- * Plugin properties.
- ******************************************************************************/
-#define PLUGIN_NAME         "VLC Web Plugin"
-#define PLUGIN_DESCRIPTION \
-    "Version %s, copyright 1996-2011 VideoLAN and Authors" \
-    "<br />" \
-    "<a href=\"http://www.videolan.org/vlc/\">http://www.videolan.org/vlc/</a>"
 
 #endif
