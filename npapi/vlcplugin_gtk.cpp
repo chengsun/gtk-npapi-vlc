@@ -13,7 +13,6 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     parent_vbox(NULL),
     video_container(NULL),
     toolbar(NULL),
-    popupmenu(NULL),
     fullscreen_win(NULL),
     is_fullscreen(false)
 {

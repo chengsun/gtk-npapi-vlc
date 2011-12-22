@@ -60,7 +60,7 @@ private:
 
     unsigned int     i_width, i_height;
     GtkWidget *parent, *parent_vbox, *video_container;
-    GtkWidget *toolbar, *popupmenu, *time_slider;
+    GtkWidget *toolbar, *time_slider;
     GtkWidget *fullscreen_win;
     gulong video_container_size_handler_id;
 
