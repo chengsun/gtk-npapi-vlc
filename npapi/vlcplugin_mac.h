@@ -1,5 +1,5 @@
 /*****************************************************************************
- * vlcplugin_mac.h: a VLC plugin for Mozilla
+ * vlcplugin_mac.h: a VLC plugin for Mozilla (Mac interface)
  *****************************************************************************
  * Copyright (C) 2011 the VideoLAN team
  * $Id$

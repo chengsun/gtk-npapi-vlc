@@ -1,5 +1,5 @@
 /*****************************************************************************
- * vlcplugin_win.h: a VLC plugin for Mozilla
+ * vlcplugin_win.h: a VLC plugin for Mozilla (Windows interface)
  *****************************************************************************
  * Copyright (C) 2011 the VideoLAN team
  * $Id$

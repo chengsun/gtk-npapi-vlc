@@ -1,5 +1,5 @@
 /*****************************************************************************
- * vlcplugin_xlib.h: a VLC plugin for Mozilla
+ * vlcplugin_xlib.h: a VLC plugin for Mozilla (X interface)
  *****************************************************************************
  * Copyright (C) 2011 the VideoLAN team
  * $Id$
