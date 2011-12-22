@@ -370,7 +370,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
     /* now display toolbar if asked through parameters */
     if( p_plugin->b_toolbar )
     {
-        p_plugin->show_toolbar();
+        p_plugin->set_toolbar_visible(true);
     }
 
 

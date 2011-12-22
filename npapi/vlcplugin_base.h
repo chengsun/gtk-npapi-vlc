@@ -283,8 +283,11 @@ public:
     virtual bool destroy_windows() = 0;
 
     virtual void toggle_fullscreen() = 0;
-    virtual void set_fullscreen(bool) = 0;
-    virtual bool get_fullscreen() = 0;
+    virtual void set_fullscreen(int) = 0;
+    virtual int get_fullscreen() = 0;
+
+    virtual void set_toolbar_visible(bool) = 0;
+    virtual bool get_toolbar_visible() = 0;
 
     virtual void update_controls() = 0;
     virtual void popup_menu() = 0;

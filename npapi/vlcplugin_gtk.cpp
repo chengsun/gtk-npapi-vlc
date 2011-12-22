@@ -38,7 +38,8 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     video_container(NULL),
     toolbar(NULL),
     fullscreen_win(NULL),
-    is_fullscreen(false)
+    is_fullscreen(false),
+    is_toolbar_visible(false)
 {
     memset(&video_xwindow, 0, sizeof(Window));
 }
@@ -65,7 +66,7 @@ void VlcPluginGtk::toggle_fullscreen()
     set_fullscreen(!get_fullscreen());
 }
 
-void VlcPluginGtk::set_fullscreen(int yes)
+void VlcPluginGtk::do_set_fullscreen(bool yes)
 {
     /* we have to reparent windows */
     /* note that the xid of video_container changes after reparenting */
@@ -76,12 +77,18 @@ void VlcPluginGtk::set_fullscreen(int yes)
     XReparentWindow(display, video_xwindow,
                     gdk_x11_get_default_root_xwindow(), 0,0);
     if (yes) {
-        gtk_widget_reparent(GTK_WIDGET(parent_vbox), GTK_WIDGET(fullscreen_win));
-        gtk_widget_show(fullscreen_win);
+        g_object_ref(G_OBJECT(parent_vbox));
+        gtk_container_remove(GTK_CONTAINER(parent), parent_vbox);
+        gtk_container_add(GTK_CONTAINER(fullscreen_win), parent_vbox);
+        g_object_unref(G_OBJECT(parent_vbox));
+        gtk_widget_show_all(fullscreen_win);
         gtk_window_fullscreen(GTK_WINDOW(fullscreen_win));
     } else {
         gtk_widget_hide(fullscreen_win);
-        gtk_widget_reparent(GTK_WIDGET(parent_vbox), GTK_WIDGET(parent));
+        g_object_ref(G_OBJECT(parent_vbox));
+        gtk_container_remove(GTK_CONTAINER(fullscreen_win), parent_vbox);
+        gtk_container_add(GTK_CONTAINER(parent), parent_vbox);
+        g_object_unref(G_OBJECT(parent_vbox));
         gtk_widget_show_all(GTK_WIDGET(parent));
     }
     XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
@@ -94,21 +101,44 @@ void VlcPluginGtk::set_fullscreen(int yes)
     is_fullscreen = yes;
 }
 
-int  VlcPluginGtk::get_fullscreen()
+void VlcPluginGtk::set_fullscreen(int yes)
+{
+    if (yes == is_fullscreen) return;
+    if (yes) {
+        gtk_widget_show(fullscreen_win);
+    } else {
+        gtk_widget_hide(fullscreen_win);
+    }
+}
+
+int VlcPluginGtk::get_fullscreen()
 {
     return is_fullscreen;
 }
 
-void VlcPluginGtk::show_toolbar()
+void VlcPluginGtk::set_toolbar_visible(bool yes)
 {
-    gtk_box_pack_start(GTK_BOX(parent_vbox), toolbar, false, false, 0);
-    gtk_widget_show_all(toolbar);
+    if (yes == is_toolbar_visible) return;
+
+    if (yes) {
+        gtk_box_pack_start(GTK_BOX(parent_vbox), toolbar, false, false, 0);
+        gtk_widget_show_all(toolbar);
+        update_controls();
+        g_object_unref(G_OBJECT(toolbar));
+
+        gtk_container_resize_children(GTK_CONTAINER(parent));
+        gtk_container_resize_children(GTK_CONTAINER(parent_vbox));
+    } else {
+        g_object_ref(G_OBJECT(toolbar));
+        gtk_widget_hide(toolbar);
+        gtk_container_remove(GTK_CONTAINER(parent_vbox), toolbar);
+    }
+    is_toolbar_visible = yes;
 }
 
-void VlcPluginGtk::hide_toolbar()
+bool VlcPluginGtk::get_toolbar_visible()
 {
-    gtk_widget_hide(toolbar);
-    gtk_container_remove(GTK_CONTAINER(parent_vbox), toolbar);
+    return is_toolbar_visible;
 }
 
 void VlcPluginGtk::resize_video_xwindow(GdkRectangle *rect)
@@ -149,6 +179,10 @@ static void menu_handler(GtkMenuItem *menuitem, gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     const gchar *stock_id = gtk_menu_item_get_label(GTK_MENU_ITEM(menuitem));
+    if (!strcmp(stock_id, VLCPLUGINGTK_MENU_TOOLBAR)) {
+        plugin->set_toolbar_visible(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menuitem)));
+        return;
+    }
     for (int i = 0; i < sizeof(tool_actions)/sizeof(tool_actions_t); ++i) {
         if (!strcmp(stock_id, tool_actions[i].stock_id)) {
             plugin->control_handler(tool_actions[i].clicked);
@@ -181,7 +215,12 @@ void VlcPluginGtk::popup_menu()
                                 GTK_STOCK_FULLSCREEN, NULL);
     g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
     gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
-
+    /* toolbar */
+    menuitem = gtk_check_menu_item_new_with_label(
+                                VLCPLUGINGTK_MENU_TOOLBAR);
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menuitem), get_toolbar_visible());
+    g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
+    gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
 
     /* show menu */
     gtk_widget_show_all(popupmenu);
@@ -232,37 +271,39 @@ static bool vol_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble va
 static void fullscreen_win_visibility_handler(GtkWidget *widget, gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
-    plugin->set_fullscreen(gtk_widget_get_visible(widget));
+    plugin->do_set_fullscreen(gtk_widget_get_visible(widget));
 }
 
 void VlcPluginGtk::update_controls()
 {
-    GtkToolItem *toolbutton;
+    if (get_toolbar_visible()) {
+        GtkToolItem *toolbutton;
 
-    /* play/pause button */
-    const gchar *stock_id = playlist_isplaying() ? GTK_STOCK_MEDIA_PAUSE : GTK_STOCK_MEDIA_PLAY;
-    toolbutton = gtk_toolbar_get_nth_item(GTK_TOOLBAR(toolbar), 0);
-    if (strcmp(gtk_tool_button_get_stock_id(GTK_TOOL_BUTTON(toolbutton)), stock_id)) {
-        gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(toolbutton), stock_id);
-        /* work around firefox not displaying the icon properly after change */
-        g_object_ref(toolbutton);
-        gtk_container_remove(GTK_CONTAINER(toolbar), GTK_WIDGET(toolbutton));
-        gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolbutton, 0);
-        g_object_unref(toolbutton);
+        /* play/pause button */
+        const gchar *stock_id = playlist_isplaying() ? GTK_STOCK_MEDIA_PAUSE : GTK_STOCK_MEDIA_PLAY;
+        toolbutton = gtk_toolbar_get_nth_item(GTK_TOOLBAR(toolbar), 0);
+        if (strcmp(gtk_tool_button_get_stock_id(GTK_TOOL_BUTTON(toolbutton)), stock_id)) {
+            gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(toolbutton), stock_id);
+            /* work around firefox not displaying the icon properly after change */
+            g_object_ref(toolbutton);
+            gtk_container_remove(GTK_CONTAINER(toolbar), GTK_WIDGET(toolbutton));
+            gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolbutton, 0);
+            g_object_unref(toolbutton);
+        }
+
+        /* time slider */
+        if (!libvlc_media_player ||
+                !libvlc_media_player_is_seekable(libvlc_media_player)) {
+            gtk_widget_set_sensitive(time_slider, false);
+            gtk_range_set_value(GTK_RANGE(time_slider), 0);
+        } else {
+            gtk_widget_set_sensitive(time_slider, true);
+            gdouble timepos = 100*libvlc_media_player_get_position(libvlc_media_player);
+            gtk_range_set_value(GTK_RANGE(time_slider), timepos);
+        }
+
+        gtk_widget_show_all(toolbar);
     }
-
-    /* time slider */
-    if (!libvlc_media_player ||
-            !libvlc_media_player_is_seekable(libvlc_media_player)) {
-        gtk_widget_set_sensitive(time_slider, false);
-        gtk_range_set_value(GTK_RANGE(time_slider), 0);
-    } else {
-        gtk_widget_set_sensitive(time_slider, true);
-        gdouble timepos = 100*libvlc_media_player_get_position(libvlc_media_player);
-        gtk_range_set_value(GTK_RANGE(time_slider), timepos);
-    }
-
-    gtk_widget_show_all(toolbar);
 }
 
 bool VlcPluginGtk::create_windows()
@@ -290,6 +331,7 @@ bool VlcPluginGtk::create_windows()
 
     /* fullscreen top-level */
     fullscreen_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_modify_bg(video_container, GTK_STATE_NORMAL, &color_black);
     gtk_window_set_decorated(GTK_WINDOW(fullscreen_win), false);
     g_signal_connect(G_OBJECT(fullscreen_win), "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), this);
     g_signal_connect(G_OBJECT(fullscreen_win), "show", G_CALLBACK(fullscreen_win_visibility_handler), this);
@@ -315,6 +357,7 @@ bool VlcPluginGtk::create_windows()
     /*** TOOLBAR ***/
 
     toolbar = gtk_toolbar_new();
+    g_object_ref(G_OBJECT(toolbar));
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
     GtkToolItem *toolitem;
     /* play/pause */
@@ -345,9 +388,6 @@ bool VlcPluginGtk::create_windows()
     gtk_container_add(GTK_CONTAINER(toolitem), vol_slider);
     gtk_tool_item_set_expand(toolitem, false);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolitem, -1);
-
-    update_controls();
-    show_toolbar();
 
     return true;
 }

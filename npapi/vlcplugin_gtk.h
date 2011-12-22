@@ -29,24 +29,25 @@
 #include <gtk/gtk.h>
 #include <X11/Xlib.h>
 
+#define VLCPLUGINGTK_MENU_TOOLBAR "Show toolbar"
+
 class VlcPluginGtk : public VlcPluginBase
 {
 public:
     VlcPluginGtk(NPP, NPuint16_t);
     virtual ~VlcPluginGtk();
 
-    int                 setSize(unsigned width, unsigned height);
-
-    void toggle_fullscreen();
-    void set_fullscreen( int );
-    int  get_fullscreen();
-
     bool create_windows();
     bool resize_windows();
     bool destroy_windows();
 
-    void show_toolbar();
-    void hide_toolbar();
+    void toggle_fullscreen();
+    void set_fullscreen(int);
+    int get_fullscreen();
+    void do_set_fullscreen(bool);
+
+    void set_toolbar_visible(bool);
+    bool get_toolbar_visible();
     void update_controls();
     void popup_menu();
 
@@ -62,7 +63,7 @@ private:
     gulong video_container_size_handler_id;
 
     Window video_xwindow;
-    bool is_fullscreen;
+    bool is_fullscreen, is_toolbar_visible;
 };
 
 #endif /* __VLCPLUGIN_GTK_H__ */

@@ -81,14 +81,15 @@ int  VlcPluginWin::get_fullscreen()
     return _WindowsManager.IsFullScreen();
 }
 
-void VlcPluginWin::show_toolbar()
+void VlcPluginWin::set_toolbar_visible(bool)
 {
     /* TODO */
 }
 
-void VlcPluginWin::hide_toolbar()
+bool VlcPluginWin::get_toolbar_visible()
 {
     /* TODO */
+    return false;
 }
 
 void VlcPluginWin::update_controls()

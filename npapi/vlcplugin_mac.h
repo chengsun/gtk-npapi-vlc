@@ -47,10 +47,10 @@ public:
     bool resize_windows();
     bool destroy_windows();
 
-    void show_toolbar()     {/* STUB */};
-    void hide_toolbar()     {/* STUB */};
-    void update_controls()  {/* STUB */};
-    void popup_menu()       {/* STUB */};
+    void set_toolbar_visible(bool)  { /* STUB */ }
+    bool get_toolbar_visible()  { return false; }
+    void update_controls()      {/* STUB */}
+    void popup_menu()           {/* STUB */}
 private:
     void set_player_window();
 

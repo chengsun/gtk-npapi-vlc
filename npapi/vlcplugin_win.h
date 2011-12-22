@@ -52,6 +52,9 @@ public:
     void show_toolbar();
     void hide_toolbar();
 
+    void set_toolbar_visible(bool);
+    bool get_toolbar_visible();
+
     void update_controls();
     void popup_menu(){};
 
