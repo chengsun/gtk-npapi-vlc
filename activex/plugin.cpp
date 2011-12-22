@@ -1245,6 +1245,7 @@ bool VLCPlugin::playlist_select( int idx )
         if( isPlaying() )
             playlist_stop();
         player_unregister_events();
+        _WindowsManager.LibVlcDetach();
         libvlc_media_player_release( _p_mplayer );
         _p_mplayer = NULL;
     }
