@@ -161,17 +161,21 @@ then
 dnl pkg-config
 dnl As we want to do a loop due to the number of name possible for the .pc
 dnl we can't use the pkg-config macros.
-  for i in "${with_mozilla_pkg}" libxul {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin; do
+  for i in "${with_mozilla_pkg}" npapi-sdk {seamonkey,iceape,xulrunner,firefox,iceweasel,mozilla}-plugin libxul; do
     if test -n "$i"; then
       echo "Trying to find $i package" >&AS_MESSAGE_LOG_FD
-      if $PKG_CONFIG --exists --print-errors "$i >= 1.9.2" 2>&AS_MESSAGE_LOG_FD
+      AS_IF([test $i = npapi-sdk], [moz_ver=0.27], [moz_ver=1.9.2])
+      AC_MSG_CHECKING([for $i >= $moz_ver])
+      if $PKG_CONFIG --exists --print-errors "$i >= $moz_ver" 2>&AS_MESSAGE_LOG_FD
       then
         echo "Using $i pkg-config package." >&AS_MESSAGE_LOG_FD
         MOZILLA_CFLAGS=$(eval $PKG_CONFIG --cflags "$i" )
         MOZILLA_LIBS=$(eval $PKG_CONFIG --libs "$i" )
-        AC_MSG_RESULT([yes (${i})])
+        AC_MSG_RESULT([yes])
         found=1
         break
+      else
+        AC_MSG_RESULT([no])
       fi
     fi
   done
