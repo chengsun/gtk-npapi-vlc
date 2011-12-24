@@ -91,6 +91,7 @@ void VlcPluginGtk::do_set_fullscreen(bool yes)
         g_object_unref(G_OBJECT(parent_vbox));
         gtk_widget_show_all(GTK_WIDGET(parent));
     }
+    XSync(get_display(), false);
     XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
     XMapWindow(display, video_xwindow);
 
@@ -125,9 +126,6 @@ void VlcPluginGtk::set_toolbar_visible(bool yes)
         gtk_widget_show_all(toolbar);
         update_controls();
         g_object_unref(G_OBJECT(toolbar));
-
-        gtk_container_resize_children(GTK_CONTAINER(parent));
-        gtk_container_resize_children(GTK_CONTAINER(parent_vbox));
     } else {
         g_object_ref(G_OBJECT(toolbar));
         gtk_widget_hide(toolbar);
@@ -146,6 +144,7 @@ void VlcPluginGtk::resize_video_xwindow(GdkRectangle *rect)
     Display *display = get_display();
     XResizeWindow(display, video_xwindow,
                   rect->width, rect->height);
+    XSync(display, false);
 }
 
 struct tool_actions_t
