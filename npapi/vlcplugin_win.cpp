@@ -53,16 +53,6 @@ static LRESULT CALLBACK Manage( HWND p_hwnd, UINT i_msg, WPARAM wpar, LPARAM lpa
             EndPaint( p_hwnd, &paintstruct );
             return 0L;
         }
-        case WM_SIZE:{
-            int new_client_width = LOWORD(lpar);
-            int new_client_height = HIWORD(lpar);
-            //first child will be resized to client area
-            HWND hChildWnd = GetWindow(p_hwnd, GW_CHILD);
-            if(hChildWnd){
-                MoveWindow(hChildWnd, 0, 0, new_client_width, new_client_height, FALSE);
-            }
-            return 0L;
-        }
         case WM_LBUTTONDBLCLK:{
             p_plugin->toggle_fullscreen();
             return 0L;
@@ -145,11 +135,13 @@ bool VlcPluginWin::create_windows()
 
 bool VlcPluginWin::resize_windows()
 {
-    /* TODO */
     HWND drawable = (HWND) (getWindow().window);
-    /* Redraw window */
-    InvalidateRect( drawable, NULL, TRUE );
-    UpdateWindow( drawable );
+    RECT rect;
+    GetClientRect(drawable, &rect);
+    if(!_WindowsManager.IsFullScreen() && _WindowsManager.getHolderWnd()){
+        HWND hHolderWnd = _WindowsManager.getHolderWnd()->getHWND();
+        MoveWindow(hHolderWnd, 0, 0, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+    }
     return true;
 }
 
