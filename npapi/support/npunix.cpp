@@ -56,6 +56,7 @@
 #include "npfunctions.h"
 #endif
 
+#include <cstring>
 #include "../vlcshell.h"
 
 /*
@@ -77,6 +78,7 @@
  ***********************************************************************/
 
 static NPNetscapeFuncs   gNetscapeFuncs;    /* Netscape Function table */
+static const char       *gUserAgent;        /* User agent string */
 
 /***********************************************************************
  *
@@ -101,14 +103,56 @@ NPN_Version(int* plugin_major, int* plugin_minor,
     *netscape_minor = gNetscapeFuncs.version & 0xFF;
 }
 
+
+/* in many browsers NPN_PluginThreadAsyncCall is missing/broken */
+
+/* GTK workaround */
+#ifdef USE_GTK
+struct AsyncCallWorkaroundData
+{
+    void (*func)(void *);
+    void *data;
+};
+
+static gboolean AsyncCallWorkaroundCallback(void *userData)
+{
+    AsyncCallWorkaroundData *data = (AsyncCallWorkaroundData *) userData;
+    data->func(data->data);
+    delete data;
+    return false;
+}
+#endif
+
 void
 NPN_PluginThreadAsyncCall(NPP plugin,
                           void (*func)(void *),
                           void *userData)
 {
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) >= 20)
-    return (*gNetscapeFuncs.pluginthreadasynccall)(plugin, func, userData);
-#endif
+    bool workaround = false;
+
+    const int minor = gNetscapeFuncs.version & 0xFF;
+    if (gUserAgent && (strstr(gUserAgent, "Opera")))
+        workaround = true;
+
+    if (!gNetscapeFuncs.pluginthreadasynccall)
+        workaround = true;
+
+    if (workaround) {
+#       ifdef USE_GTK
+            AsyncCallWorkaroundData *data = new AsyncCallWorkaroundData;
+            data->func = func;
+            data->data = userData;
+            g_idle_add(AsyncCallWorkaroundCallback, (void *)data);
+            return;
+#       endif
+    }
+
+#   if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) >= 20)
+        return (*gNetscapeFuncs.pluginthreadasynccall)(plugin, func, userData);
+#   endif
+
+    // otherwise nothing we can do...
+    fprintf(stderr, "WARNING: could not call NPN_PluginThreadAsyncCall\n");
 }
 
 NPError
@@ -649,6 +693,7 @@ Private_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
 {
     NPError ret;
     PLUGINDEBUGSTR("New");
+    gUserAgent = NPN_UserAgent(instance);
     ret = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
     return ret; 
 }
