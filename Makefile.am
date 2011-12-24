@@ -7,7 +7,10 @@ AUTOMAKE_OPTIONS = \
 	no-dist-gzip
 
 DIST_SUBDIRS= share npapi activex common
-SUBDIRS = npapi
+SUBDIRS =
+if BUILD_NPAPI
+SUBDIRS += npapi
+endif
 if BUILD_ACTIVEX
 SUBDIRS += activex
 endif

@@ -124,11 +124,6 @@ AM_CONDITIONAL(HAS_MIDL_COMPILER, test "${MIDL}" != "no")
 AM_CONDITIONAL(HAS_WIDL_COMPILER, test "${WIDL}" != "no")
 
 dnl
-dnl ActiveX
-AC_ARG_ENABLE(activex, AS_HELP_STRING(--disable-activex, Do not build ActiveX plugin))
-AM_CONDITIONAL(BUILD_ACTIVEX, test "${SYS}" = "mingw32" -a "${enable_activex}" != "no")
-
-dnl
 dnl Buggy glibc prevention. Purposedly not cached.
 dnl See sourceware.org bugs 5058 and 5443.
 dnl Ubuntu alone has 20 bug numbers for this...
@@ -154,20 +149,25 @@ dnl libraries checks
 AC_PATH_XTRA
 PKG_CHECK_MODULES([LIBVLC], [libvlc >= 1.1.0])
 
+
+dnl
+dnl ActiveX
+AC_ARG_ENABLE(activex, AS_HELP_STRING([--enable-activex], [ActiveX plugin [default=yes (on Windows)]]))
+AM_CONDITIONAL(BUILD_ACTIVEX, test "${SYS}" = "mingw32" -a "${enable_activex}" != "no")
+
+
 dnl
 dnl NPAPI headers
-AC_ARG_WITH(mozilla-pkg,
-  [  --with-mozilla-pkg=PKG  look for PKG.pc to build the mozilla plugin.])
+AC_ARG_ENABLE(npapi, AS_HELP_STRING([--enable-npapi], [NPAPI/Mozilla plugin [default=yes]]))
 AC_ARG_VAR([MOZILLA_CFLAGS], [C compiler flags for Mozilla, overriding pkg-config])
 AC_ARG_VAR([MOZILLA_LIBS], [linker flags for Mozilla, overriding pkg-config])
 
+AS_IF([test "x${enable_npapi}" != x"no"],[
 
 AC_LANG_PUSH(C++)
 AC_MSG_CHECKING([Mozilla headers])
 
 found=0
-if test -z "$MOZILLA_CFLAGS" -a -z "$MOZILLA_LIBS" -a -n "$PKG_CONFIG"
-then
 dnl pkg-config
 dnl As we want to do a loop due to the number of name possible for the .pc
 dnl we can't use the pkg-config macros.
@@ -189,7 +189,7 @@ dnl we can't use the pkg-config macros.
       fi
     fi
   done
-fi
+
 test "$found" = 0 && AC_MSG_RESULT([no])
 
 CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS}"
@@ -208,28 +208,6 @@ AC_CHECK_HEADERS(npruntime.h, [
   ]
 )
 
-dnl
-dnl GTK+ for linux toolbar
-AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ interface [default=auto]]),, [with_gtk=yes])
-gtk_found=no
-AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
-  AS_IF([ test "x$with_gtk" != "xno" ],
-    [
-       PKG_CHECK_MODULES(GTK, [gtk+-2.0],
-       [gtk_found=yes],
-       [
-         AC_MSG_WARN([GTK+ >=2 not found. Re-run configure with --without-gtk.])
-         PKG_CHECK_MODULES(XPM, [xpm],, [
-           AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
-         ])
-       ])
-    ], [
-      PKG_CHECK_MODULES(XPM, [xpm],, [
-        AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
-      ])
-    ])
-])
-AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
 
 dnl
 dnl check the const-ness of GetMIMEDesc, since it changed in latest npapi headers
@@ -255,6 +233,34 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 ])
 
 AC_LANG_POP(C++)
+
+])
+dnl end of NPAPI
+AM_CONDITIONAL(BUILD_NPAPI, test "${enable_npapi}" != "no")
+
+dnl
+dnl GTK+ for linux toolbar
+AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ toolbars in NPAPI plugin [default=auto]]),, [with_gtk=yes])
+gtk_found=no
+AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
+  AS_IF([ test "x$with_gtk" != "xno" ],
+    [
+       PKG_CHECK_MODULES(GTK, [gtk+-2.0],
+       [gtk_found=yes],
+       [
+         AC_MSG_WARN([GTK+ >=2 not found. Re-run configure with --without-gtk.])
+         PKG_CHECK_MODULES(XPM, [xpm],, [
+           AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+         ])
+       ])
+    ], [
+      PKG_CHECK_MODULES(XPM, [xpm],, [
+        AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+      ])
+    ])
+])
+AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
+
 
 dnl
 dnl final flags for ActiveX
