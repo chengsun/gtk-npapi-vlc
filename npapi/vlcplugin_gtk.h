@@ -54,7 +54,7 @@ public:
     void resize_video_xwindow(GdkRectangle *rect);
 private:
     void set_player_window();
-    Display *get_display();
+    Display *get_display() { return display; }
 
     unsigned int     i_width, i_height;
     GtkWidget *parent, *parent_vbox, *video_container;
@@ -62,6 +62,7 @@ private:
     GtkWidget *fullscreen_win;
     gulong video_container_size_handler_id;
 
+    Display *display;
     Window video_xwindow;
     bool is_fullscreen, is_toolbar_visible;
 };

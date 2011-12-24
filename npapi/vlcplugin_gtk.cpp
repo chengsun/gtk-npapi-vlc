@@ -48,12 +48,6 @@ VlcPluginGtk::~VlcPluginGtk()
 {
 }
 
-Display *VlcPluginGtk::get_display()
-{
-    return ( (NPSetWindowCallbackStruct *)
-             npwindow.ws_info )->display;
-}
-
 void VlcPluginGtk::set_player_window()
 {
     libvlc_media_player_set_xwindow(libvlc_media_player,
@@ -307,6 +301,8 @@ void VlcPluginGtk::update_controls()
 
 bool VlcPluginGtk::create_windows()
 {
+    display = ( (NPSetWindowCallbackStruct *) npwindow.ws_info )->display;
+
     Window socket = (Window) npwindow.window;
     GdkColor color_black;
     gdk_color_parse("black", &color_black);
