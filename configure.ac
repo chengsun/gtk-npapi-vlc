@@ -1,15 +1,15 @@
 dnl Autoconf settings for npapi-vlc
 
-AC_COPYRIGHT([Copyright 2002-2011 the VideoLAN team])
+AC_COPYRIGHT([Copyright 2002-2011 VLC authors and VideoLAN])
 
-AC_INIT(npapi-vlc, 1.2.0-git)
+AC_INIT(npapi-vlc, 1.2.0-rc)
 VERSION_MAJOR="1"
 AC_SUBST(VERSION_MAJOR)
 VERSION_MINOR="2"
 AC_SUBST(VERSION_MINOR)
 VERSION_REVISION="0"
 AC_SUBST(VERSION_REVISION)
-VERSION_EXTRA="-git"
+VERSION_EXTRA="-rc"
 AC_SUBST(VERSION_EXTRA)
 dnl Win32 need s a numerical version_extra.
 case $( echo ${VERSION_EXTRA}|wc -m ) in
@@ -18,9 +18,9 @@ case $( echo ${VERSION_EXTRA}|wc -m ) in
        *) if test ${VERSION_EXTRA} = "-git"; then VERSION_EXTRA_RC="666"; else VERSION_EXTRA_RC="99"; fi
 esac
 AC_SUBST(VERSION_EXTRA_RC)
-COPYRIGHT_YEARS="2002-2010"
+COPYRIGHT_YEARS="2002-2011"
 AC_SUBST(COPYRIGHT_YEARS)
-COPYRIGHT_MESSAGE="Copyright © ${COPYRIGHT_YEARS} the VideoLAN team"
+COPYRIGHT_MESSAGE="Copyright © ${COPYRIGHT_YEARS} VLC authors and VideoLAN"
 AC_SUBST(COPYRIGHT_MESSAGE)
 
 AC_CONFIG_SRCDIR(npapi/vlcshell.cpp)
@@ -95,11 +95,36 @@ case "${host_os}" in
     SYS=mingw32
     AC_CHECK_TOOL(WINDRES, windres, :)
     AC_DEFINE([_WIN32_WINNT], 0x0501, [Define to '0x0501' for Windows XP APIs.])
+    AC_DEFINE([_WIN32_IE], 0x0600, [Define to '0x0600' for IE6.0 APIs.])
     AC_DEFINE([_WIN32], 1, [Define to 1 if targetting Windows.])
     ;;
 esac
 AM_CONDITIONAL(HAVE_DARWIN, test "${SYS}" = "darwin")
 AM_CONDITIONAL(HAVE_WIN32, test "${SYS}" = "mingw32")
+
+dnl
+dnl Check widl/midl tools for win32
+WIDL="no"
+MIDL="no"
+AS_IF([test "${SYS}" = "mingw32"],[
+    AC_CHECK_PROGS(MIDL, [midl], no)
+
+    dnl FIXME
+    dnl AC_CHECK_PROGS(WIDL, [widl], no)
+    dnl
+
+    AC_LANG_PUSH(C++)
+    AC_CHECK_HEADER(ole2.h,,[AC_MSG_ERROR([required OLE header ole2.h is missing from your system])])
+    AC_CHECK_HEADER(olectl.h,,[AC_MSG_ERROR([required OLE header olectl.h is missing from your system])])
+    AC_CHECK_HEADERS(objsafe.h,,,[#include <ole2.h>])
+    AC_LANG_POP(C++)
+])
+
+AM_CONDITIONAL(HAS_MIDL_COMPILER, test "${MIDL}" != "no")
+AM_CONDITIONAL(HAS_WIDL_COMPILER, test "${WIDL}" != "no")
+
+dnl
+dnl ActiveX
 AC_ARG_ENABLE(activex, AS_HELP_STRING(--disable-activex, Do not build ActiveX plugin))
 AM_CONDITIONAL(BUILD_ACTIVEX, test "${SYS}" = "mingw32" -a "${enable_activex}" != "no")
 
@@ -124,28 +149,13 @@ work-around for this. Check with your distribution vendor on how to update the
 glibc run-time.])
 ])
 
+dnl
+dnl libraries checks
 AC_PATH_XTRA
 PKG_CHECK_MODULES([LIBVLC], [libvlc >= 1.1.0])
 
-WIDL="no"
-MIDL="no"
-AS_IF([test "${SYS}" = "mingw32"],[
-    AC_CHECK_PROGS(MIDL, [midl], no)
-
-    dnl FIXME
-    dnl AC_CHECK_PROGS(WIDL, [widl], no)
-    dnl
-
-    AC_LANG_PUSH(C++)
-    AC_CHECK_HEADER(ole2.h,,[AC_MSG_ERROR([required OLE header ole2.h is missing from your system])])
-    AC_CHECK_HEADER(olectl.h,,[AC_MSG_ERROR([required OLE header olectl.h is missing from your system])])
-    AC_CHECK_HEADERS(objsafe.h,,,[#include <ole2.h>])
-    AC_LANG_POP(C++)
-])
-
-AM_CONDITIONAL(HAS_MIDL_COMPILER, test "${MIDL}" != "no")
-AM_CONDITIONAL(HAS_WIDL_COMPILER, test "${WIDL}" != "no")
-
+dnl
+dnl NPAPI headers
 AC_ARG_WITH(mozilla-pkg,
   [  --with-mozilla-pkg=PKG  look for PKG.pc to build the mozilla plugin.])
 AC_ARG_VAR([MOZILLA_CFLAGS], [C compiler flags for Mozilla, overriding pkg-config])
@@ -198,6 +208,8 @@ AC_CHECK_HEADERS(npruntime.h, [
   ]
 )
 
+dnl
+dnl GTK+ for linux toolbar
 AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ interface [default=auto]]),, [with_gtk=yes])
 gtk_found=no
 AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
@@ -219,6 +231,8 @@ AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
 ])
 AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
 
+dnl
+dnl check the const-ness of GetMIMEDesc, since it changed in latest npapi headers
 AC_MSG_CHECKING([if NPP_GetMIMEDescription() returns const])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
    #ifdef WIN32
@@ -242,6 +256,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 
 AC_LANG_POP(C++)
 
+dnl
+dnl final flags for ActiveX
 AM_COND_IF([HAVE_WIN32], [
   ACTIVEX_CPPFLAGS="${CPPFLAGS} -DUNICODE -D_UNICODE -D_MIDL_USE_GUIDDEF_"
   ACTIVEX_CXXFLAGS="${CXXFLAGS} -fno-exceptions"
