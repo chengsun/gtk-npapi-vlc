@@ -41,8 +41,6 @@ public:
     VlcPluginWin(NPP, NPuint16_t);
     virtual ~VlcPluginWin();
 
-    int                 setSize(unsigned width, unsigned height);
-
     void toggle_fullscreen();
     void set_fullscreen( int );
     int  get_fullscreen();
@@ -64,12 +62,7 @@ protected:
 private:
     void set_player_window(){};
 
-    unsigned int     i_width, i_height;
-    unsigned int     i_tb_width, i_tb_height;
-
     VLCWindowsManager _WindowsManager;
-
-    int i_last_position;
 };
 
 #endif /* __VLCPLUGIN_WIN_H__ */
