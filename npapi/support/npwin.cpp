@@ -212,6 +212,13 @@ void NPN_Version(int* plugin_major, int* plugin_minor, int* netscape_major, int*
     *netscape_minor = LOBYTE(g_pNavigatorFuncs->version);
 }
 
+void NPN_PluginThreadAsyncCall(NPP plugin, void (*func)(void *), void *userData)
+{
+#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) >= 20)
+    (g_pNavigatorFuncs->pluginthreadasynccall)(plugin, func, userData);
+#endif
+}
+
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *result)
 {
     return g_pNavigatorFuncs->getvalue(instance, variable, result);

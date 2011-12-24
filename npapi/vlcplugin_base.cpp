@@ -375,7 +375,7 @@ void VlcPluginBase::eventAsync(void *param)
 void VlcPluginBase::event_callback(const libvlc_event_t* event,
                 NPVariant *npparams, uint32_t npcount)
 {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_WIN)
     events.callback(event, npparams, npcount);
     NPN_PluginThreadAsyncCall(getBrowser(), eventAsync, this);
 #else
