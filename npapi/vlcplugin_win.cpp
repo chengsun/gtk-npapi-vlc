@@ -177,3 +177,7 @@ bool VlcPluginWin::destroy_windows()
 
     return true;
 }
+void VlcPluginWin::on_media_player_release()
+{
+    _WindowsManager.LibVlcDetach();
+}

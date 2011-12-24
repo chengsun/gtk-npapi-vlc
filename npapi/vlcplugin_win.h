@@ -62,6 +62,9 @@ public:
     void                setWindowProc(WNDPROC wndproc)
                             { pf_wndproc = wndproc; };
 
+protected:
+    virtual void on_media_player_release();
+
 private:
     void set_player_window();
 
