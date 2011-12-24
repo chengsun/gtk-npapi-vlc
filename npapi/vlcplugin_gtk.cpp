@@ -330,7 +330,7 @@ bool VlcPluginGtk::create_windows()
 
     /* fullscreen top-level */
     fullscreen_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_widget_modify_bg(video_container, GTK_STATE_NORMAL, &color_black);
+    gtk_widget_modify_bg(fullscreen_win, GTK_STATE_NORMAL, &color_black);
     gtk_window_set_decorated(GTK_WINDOW(fullscreen_win), false);
     g_signal_connect(G_OBJECT(fullscreen_win), "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), this);
     g_signal_connect(G_OBJECT(fullscreen_win), "show", G_CALLBACK(fullscreen_win_visibility_handler), this);
