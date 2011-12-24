@@ -279,18 +279,17 @@ bool EventObj::insert(const NPString &name, NPObject *listener, bool bubble)
     if( !event )
         return false;
 
-    lr_l::iterator iter;
-    for( iter = _llist.begin(); iter != _llist.end(); ++iter )
-        if( iter->listener() == listener && iter->bubble() == bubble )
-            break;
-
-    if( iter == _llist.end() )
-    {
-        _llist.push_back(Listener(event, listener, bubble));
-        return true;
+    for(lr_l::iterator iter = _llist.begin(); iter != _llist.end(); ++iter ){
+        if(iter->listener() == listener &&
+           event->libvlc_type == iter->event_type() &&
+           iter->bubble() == bubble)
+        {
+            return false;
+        }
     }
 
-    return false;
+    _llist.push_back(Listener(event, listener, bubble));
+    return true;
 }
 
 bool EventObj::remove(const NPString &name, NPObject *listener, bool bubble)
