@@ -153,7 +153,7 @@ private:
     };
     libvlc_event_manager_t *_em; /* libvlc media_player event manager */
 public:
-    EventObj(): _em(NULL)  { /* deferred to init() */ }
+    EventObj(): _em(NULL), _already_in_deliver(false) { /* deferred to init() */ }
     bool init();
     ~EventObj();
 
@@ -172,6 +172,7 @@ private:
     ev_l _elist; /* scheduled events list for delivery to browser */
 
     plugin_lock_t lock;
+    bool _already_in_deliver;
 };
 
 typedef enum vlc_toolbar_clicked_e {

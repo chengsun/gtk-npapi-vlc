@@ -203,7 +203,11 @@ EventObj::~EventObj()
 
 void EventObj::deliver(NPP browser)
 {
+    if(_already_in_deliver)
+        return;
+
     plugin_lock(&lock);
+    _already_in_deliver = true;
 
     for( ev_l::iterator iter = _elist.begin(); iter != _elist.end(); ++iter )
     {
@@ -237,6 +241,7 @@ void EventObj::deliver(NPP browser)
     }
     _elist.clear();
 
+    _already_in_deliver = false;
     plugin_unlock(&lock);
 }
 
