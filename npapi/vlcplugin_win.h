@@ -63,10 +63,11 @@ public:
                             { pf_wndproc = wndproc; };
 
 protected:
+    virtual void on_media_player_new();
     virtual void on_media_player_release();
 
 private:
-    void set_player_window();
+    void set_player_window(){};
 
     unsigned int     i_width, i_height;
     unsigned int     i_tb_width, i_tb_height;

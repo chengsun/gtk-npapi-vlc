@@ -86,11 +86,6 @@ VlcPluginWin::~VlcPluginWin()
     destroy_windows();
 }
 
-void VlcPluginWin::set_player_window()
-{
-    _WindowsManager.LibVlcAttach(libvlc_media_player);
-}
-
 void VlcPluginWin::toggle_fullscreen()
 {
     _WindowsManager.ToggleFullScreen();
@@ -177,6 +172,12 @@ bool VlcPluginWin::destroy_windows()
 
     return true;
 }
+
+void VlcPluginWin::on_media_player_new()
+{
+    _WindowsManager.LibVlcAttach(libvlc_media_player);
+}
+
 void VlcPluginWin::on_media_player_release()
 {
     _WindowsManager.LibVlcDetach();
