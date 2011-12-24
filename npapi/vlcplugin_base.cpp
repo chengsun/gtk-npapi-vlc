@@ -650,6 +650,7 @@ bool VlcPluginBase::playlist_select( int idx )
         if( playlist_isplaying() )
             playlist_stop();
         events.unhook_manager( this );
+        on_media_player_release();
         libvlc_media_player_release( libvlc_media_player );
         libvlc_media_player = NULL;
     }
@@ -657,6 +658,7 @@ bool VlcPluginBase::playlist_select( int idx )
     libvlc_media_player = libvlc_media_player_new_from_media( p_m );
     if( libvlc_media_player )
     {
+        on_media_player_new();
         set_player_window();
 
         libvlc_event_manager_t *p_em;

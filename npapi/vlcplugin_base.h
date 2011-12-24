@@ -293,6 +293,11 @@ public:
     void event_callback(const libvlc_event_t *, NPVariant *, uint32_t);
 
 protected:
+    // called after libvlc_media_player_new_from_media
+    virtual void on_media_player_new()     {};
+    // called before libvlc_media_player_release
+    virtual void on_media_player_release() {};
+
     bool playlist_select(int);
     virtual void set_player_window() = 0;
 
