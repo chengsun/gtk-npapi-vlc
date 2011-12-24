@@ -57,11 +57,6 @@ public:
     void update_controls();
     void popup_menu(){};
 
-    WNDPROC             getWindowProc()
-                            { return pf_wndproc; };
-    void                setWindowProc(WNDPROC wndproc)
-                            { pf_wndproc = wndproc; };
-
 protected:
     virtual void on_media_player_new();
     virtual void on_media_player_release();
@@ -72,7 +67,6 @@ private:
     unsigned int     i_width, i_height;
     unsigned int     i_tb_width, i_tb_height;
 
-    WNDPROC pf_wndproc;
     VLCWindowsManager _WindowsManager;
 
     int i_last_position;
