@@ -125,6 +125,8 @@ void VlcPluginGtk::set_toolbar_visible(bool yes)
         gtk_widget_hide(toolbar);
         gtk_container_remove(GTK_CONTAINER(parent_vbox), toolbar);
     }
+    resize_windows();
+    gtk_container_resize_children(GTK_CONTAINER(parent));
     is_toolbar_visible = yes;
 }
 

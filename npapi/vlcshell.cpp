@@ -351,6 +351,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
         } else {
             if (window->window == curr_window.window) {
                 /* resize / move notification */
+                p_plugin->setWindow(*window);
                 p_plugin->resize_windows();
             } else {
                 /* plugin parent window was changed, notify plugin about it */
