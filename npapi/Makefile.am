@@ -49,7 +49,7 @@ libvlcplugin_la_LIBADD += $(MOZILLA_LIBS)
 
 if USE_GTK
 AM_CPPFLAGS += $(GTK_CFLAGS) -DUSE_GTK
-libvlcplugin_la_LIBADD += $(GTK_LIBS)
+libvlcplugin_la_LIBADD += $(GTK_LIBS) $(X_LIBS) $(X_PRE_LIBS) -lX11
 SOURCES_support = \
 	support/npunix.cpp \
 	vlcplugin_gtk.cpp \
