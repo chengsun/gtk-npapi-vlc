@@ -82,7 +82,7 @@ NPError NPP_GetValue( NPP instance, NPPVariable variable, void *value )
 
     /* plugin instance variables */
 
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(instance->pdata);
+    VlcPluginBase *p_plugin = reinterpret_cast<VlcPluginBase *>(instance->pdata);
     if( NULL == p_plugin )
     {
         /* plugin has not been initialized yet ! */
@@ -132,7 +132,7 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
         return false;
     }
 
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(instance->pdata);
+    VlcPluginBase *p_plugin = reinterpret_cast<VlcPluginBase *>(instance->pdata);
     if( p_plugin == NULL )
     {
         return false;
@@ -277,7 +277,7 @@ NPError NPP_New( NPMIMEType pluginType, NPP instance,
         return NPERR_INVALID_INSTANCE_ERROR;
     }
 
-    VlcPlugin * p_plugin = new VlcPlugin( instance, mode );
+    VlcPluginBase *p_plugin = new VlcPlugin( instance, mode );
     if( NULL == p_plugin )
     {
         return NPERR_OUT_OF_MEMORY_ERROR;
@@ -300,7 +300,7 @@ NPError NPP_Destroy( NPP instance, NPSavedData** save )
     if( NULL == instance )
         return NPERR_INVALID_INSTANCE_ERROR;
 
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(instance->pdata);
+    VlcPluginBase *p_plugin = reinterpret_cast<VlcPluginBase *>(instance->pdata);
     if( NULL == p_plugin )
         return NPERR_NO_ERROR;
 
@@ -322,7 +322,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
     }
 
     /* NPP_SetWindow may be called before NPP_New (Opera) */
-    VlcPlugin* p_plugin = reinterpret_cast<VlcPlugin*>(instance->pdata);
+    VlcPluginBase *p_plugin = reinterpret_cast<VlcPluginBase *>(instance->pdata);
     if( NULL == p_plugin )
     {
         /* we should probably show a splash screen here */
@@ -399,7 +399,7 @@ NPError NPP_NewStream( NPP instance, NPMIMEType type, NPStream *stream,
         return NPERR_INVALID_INSTANCE_ERROR;
     }
 
-    VlcPlugin *p_plugin = reinterpret_cast<VlcPlugin *>(instance->pdata);
+    VlcPluginBase *p_plugin = reinterpret_cast<VlcPluginBase *>(instance->pdata);
     if( NULL == p_plugin )
     {
         return NPERR_INVALID_INSTANCE_ERROR;
@@ -450,7 +450,7 @@ void NPP_StreamAsFile( NPP instance, NPStream *stream, const char* fname )
         return;
     }
 
-    VlcPlugin *p_plugin = reinterpret_cast<VlcPlugin *>(instance->pdata);
+    VlcPluginBase *p_plugin = reinterpret_cast<VlcPluginBase *>(instance->pdata);
     if( NULL == p_plugin )
     {
         return;
