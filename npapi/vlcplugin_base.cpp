@@ -351,7 +351,7 @@ VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     i_npmode(mode),
     b_stream(0),
     b_autoplay(1),
-    b_toolbar(0),
+    b_toolbar(1),
     psz_text(NULL),
     psz_target(NULL),
     playlist_index(-1),
