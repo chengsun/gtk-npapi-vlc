@@ -363,6 +363,7 @@ VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     psz_baseURL(NULL)
 {
     memset(&npwindow, 0, sizeof(NPWindow));
+    _instances.insert(this);
 }
 
 static bool boolValue(const char *value) {
@@ -371,9 +372,14 @@ static bool boolValue(const char *value) {
              !strcasecmp(value, "yes") );
 }
 
+std::set<VlcPluginBase*> VlcPluginBase::_instances;
+
 void VlcPluginBase::eventAsync(void *param)
 {
     VlcPluginBase *plugin = (VlcPluginBase*)param;
+    if(_instances.find(plugin) == _instances.end())
+        return;
+
     plugin->events.deliver(plugin->getBrowser());
     plugin->update_controls();
 }
@@ -580,6 +586,8 @@ VlcPluginBase::~VlcPluginBase()
         libvlc_media_list_release( libvlc_media_list );
     if( libvlc_instance )
         libvlc_release( libvlc_instance );
+
+    _instances.erase(this);
 }
 
 void VlcPluginBase::setWindow(const NPWindow &window)

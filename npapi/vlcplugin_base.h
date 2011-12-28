@@ -77,6 +77,7 @@
 #include <npfunctions.h>
 
 #include <vector>
+#include <set>
 #include <assert.h>
 
 #include "control/nporuntime.h"
@@ -321,6 +322,9 @@ protected:
     NPWindow  npwindow;
 
     static void eventAsync(void *);
+
+private:
+    static std::set<VlcPluginBase*> _instances;
 };
 
 #endif
