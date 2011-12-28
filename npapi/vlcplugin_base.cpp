@@ -391,11 +391,7 @@ void VlcPluginBase::event_callback(const libvlc_event_t* event,
     events.callback(event, npparams, npcount);
     NPN_PluginThreadAsyncCall(getBrowser(), eventAsync, this);
 #else
-#ifdef _MSC_VER
-#pragma message("NPN_PluginThreadAsyncCall not implemented yet.")
-#else
-#warning NPN_PluginThreadAsyncCall not implemented yet.
-#endif //_MSC_VER
+#   warning NPN_PluginThreadAsyncCall not implemented yet.
     printf("No NPN_PluginThreadAsyncCall(), doing nothing.\n");
 #endif
 }
