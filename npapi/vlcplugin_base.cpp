@@ -52,7 +52,7 @@
 #include <cstring>
 
 /*****************************************************************************
- * utilitiy functions
+ * utility functions
  *****************************************************************************/
 static void plugin_lock_init(plugin_lock_t *lock)
 {
