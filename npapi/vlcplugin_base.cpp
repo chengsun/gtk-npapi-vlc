@@ -377,7 +377,7 @@ std::set<VlcPluginBase*> VlcPluginBase::_instances;
 void VlcPluginBase::eventAsync(void *param)
 {
     VlcPluginBase *plugin = (VlcPluginBase*)param;
-    if(_instances.find(plugin) == _instances.end())
+    if( _instances.find(plugin) == _instances.end() )
         return;
 
     plugin->events.deliver(plugin->getBrowser());
