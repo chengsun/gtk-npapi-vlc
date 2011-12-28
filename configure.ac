@@ -247,13 +247,13 @@ AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
     [
        PKG_CHECK_MODULES(GTK, [gtk+-2.0], [gtk_found=yes])
     ])
-])
-AS_IF([ test "x$gtk_found" == "xno" ],
-  [
-    PKG_CHECK_MODULES(XPM, [xpm],, [
-      AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+  AS_IF([ test "x$gtk_found" == "xno" ],
+    [
+      PKG_CHECK_MODULES(XPM, [xpm],, [
+        AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+      ])
     ])
-  ])
+])
 AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
 
 
