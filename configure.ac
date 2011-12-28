@@ -245,20 +245,15 @@ gtk_found=no
 AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
   AS_IF([ test "x$with_gtk" != "xno" ],
     [
-       PKG_CHECK_MODULES(GTK, [gtk+-2.0],
-       [gtk_found=yes],
-       [
-         AC_MSG_WARN([GTK+ >=2 not found. Re-run configure with --without-gtk.])
-         PKG_CHECK_MODULES(XPM, [xpm],, [
-           AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
-         ])
-       ])
-    ], [
-      PKG_CHECK_MODULES(XPM, [xpm],, [
-        AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
-      ])
+       PKG_CHECK_MODULES(GTK, [gtk+-2.0], [gtk_found=yes])
     ])
 ])
+AS_IF([ test "x$gtk_found" == "xno" ],
+  [
+    PKG_CHECK_MODULES(XPM, [xpm],, [
+      AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+    ])
+  ])
 AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
 
 
@@ -268,7 +263,7 @@ AM_COND_IF([HAVE_WIN32], [
   ACTIVEX_CPPFLAGS="${CPPFLAGS} -DUNICODE -D_UNICODE -D_MIDL_USE_GUIDDEF_"
   ACTIVEX_CXXFLAGS="${CXXFLAGS} -fno-exceptions"
 
-  AC_ARG_VAR([ACTIVEX_LIBS], [linker flags for Activex])
+  AC_ARG_VAR([ACTIVEX_LIBS], [linker flags for ActiveX])
   ACTIVEX_LIBS="${ACTIVEX_LIBS} -lole32 -loleaut32 -luuid -lshlwapi -lgdi32"
 ])
 
