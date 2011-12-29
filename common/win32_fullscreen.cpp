@@ -173,7 +173,7 @@ LRESULT CALLBACK VLCHolderWnd::MouseHookProc(int nCode, WPARAM wParam, LPARAM lP
             case WM_LBUTTONDBLCLK:{
                 MOUSEHOOKSTRUCT* mhs = reinterpret_cast<MOUSEHOOKSTRUCT*>(lParam);
 
-                //try find HolderWnd and notify it
+                //try to find HolderWnd and notify it
                 HWND hNotifyWnd = mhs->hwnd;
                 LRESULT SMRes = ::SendMessage(hNotifyWnd, WM_MOUSE_EVENT_NOTIFY, wParam, 0);
                 while( hNotifyWnd && WM_MOUSE_EVENT_NOTIFY_SUCCESS != SMRes){
@@ -353,7 +353,7 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
             SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
             break;
         case WM_SHOWWINDOW:{
-            if(FALSE==wParam){ //hidding
+            if(FALSE==wParam){ //hiding
                 break;
             }
 
@@ -403,16 +403,16 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
                 LoadImage(hDllModule, MAKEINTRESOURCE(8),
                           IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
 
-            const int ControlsHeigth = 21+2;
-            const int ButtonsWidth = ControlsHeigth;
+            const int ControlsHeight = 21+2;
+            const int ButtonsWidth = ControlsHeight;
             const int ControlsSpace = 5;
-            const int ScrollVOffset = (ControlsHeigth-GetSystemMetrics(SM_CXHSCROLL))/2;
+            const int ScrollVOffset = (ControlsHeight-GetSystemMetrics(SM_CXHSCROLL))/2;
 
             int HorizontalOffset = ControlsSpace;
             int ControlWidth = ButtonsWidth;
             fs_data->hFSButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("End Full Screen"), WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
-                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeigth, hWnd, (HMENU)ID_FS_SWITCH_FS, 0, 0);
+                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_SWITCH_FS, 0, 0);
             fs_data->hFSButtonBitmap =
                 LoadImage(hDllModule, MAKEINTRESOURCE(3),
                           IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
@@ -423,7 +423,7 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
             ControlWidth = ButtonsWidth;
             fs_data->hPlayPauseButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("Play/Pause"), WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
-                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeigth, hWnd, (HMENU)ID_FS_PLAY_PAUSE, 0, 0);
+                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_PLAY_PAUSE, 0, 0);
             fs_data->hPlayBitmap =
                 LoadImage(hDllModule, MAKEINTRESOURCE(4),
                           IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
@@ -437,7 +437,7 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
             int VideoPosControlHeight = 12;
             fs_data->hVideoPosScroll =
                 CreateWindow(PROGRESS_CLASS, TEXT("Video Position"), WS_CHILD|WS_DISABLED|WS_VISIBLE|SBS_HORZ|SBS_TOPALIGN|PBS_SMOOTH,
-                             HorizontalOffset, ControlsSpace+(ControlsHeigth-VideoPosControlHeight)/2, ControlWidth, VideoPosControlHeight, hWnd, (HMENU)ID_FS_VIDEO_POS_SCROLL, 0, 0);
+                             HorizontalOffset, ControlsSpace+(ControlsHeight-VideoPosControlHeight)/2, ControlWidth, VideoPosControlHeight, hWnd, (HMENU)ID_FS_VIDEO_POS_SCROLL, 0, 0);
             HMODULE hThModule = LoadLibrary(TEXT("UxTheme.dll"));
             if(hThModule){
                 FARPROC proc = GetProcAddress(hThModule, "SetWindowTheme");
@@ -453,7 +453,7 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
             ControlWidth = ButtonsWidth;
             fs_data->hMuteButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("Mute"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX|BS_PUSHLIKE|BS_BITMAP, //BS_FLAT
-                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeigth, hWnd, (HMENU)ID_FS_MUTE, 0, 0);
+                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_MUTE, 0, 0);
             fs_data->hVolumeBitmap =
                 LoadImage(hDllModule, MAKEINTRESOURCE(6),
                           IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS|LR_SHARED);
@@ -473,9 +473,9 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
             SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
 
             int ControlWndWidth = HorizontalOffset;
-            int ControlWndHeigth = ControlsSpace+ControlsHeigth+ControlsSpace;
+            int ControlWndHeight = ControlsSpace+ControlsHeight+ControlsSpace;
             SetWindowPos(hWnd, HWND_TOPMOST, (GetSystemMetrics(SM_CXSCREEN)-ControlWndWidth)/2, 0,
-                         ControlWndWidth, ControlWndHeigth, SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE);
+                         ControlWndWidth, ControlWndHeight, SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE);
 
             //new message blinking timer
             SetTimer(hWnd, 2, 500, NULL);
@@ -502,7 +502,8 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
                     RECT ControlWndRect;
                     GetWindowRect(fs_data->hControlsWnd, &ControlWndRect);
                     if(PtInRect(&ControlWndRect, MousePoint)||GetCapture()==fs_data->hVolumeSlider){
-                        fs_data->NeedShowControls();//not allow close control window while mouse within
+                        //do not allow control window to close while mouse is within
+                        fs_data->NeedShowControls();
                     }
                     else{
                         fs_data->NeedHideControls();
@@ -514,7 +515,8 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
                     if((HANDLE)lResult == fs_data->hFSButtonBitmap){
                         if(fs_data->_WindowsManager->getNewMessageFlag()){
                             SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hNewMessageBitmap);
-                            fs_data->NeedShowControls();//not allow close controll window while new message exist
+                            //do not allow control window to close while there are new messages
+                            fs_data->NeedShowControls();
                         }
                     }
                     else{
