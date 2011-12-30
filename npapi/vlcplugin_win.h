@@ -63,8 +63,10 @@ protected:
     virtual void on_media_player_release();
 
 private:
+    static LRESULT CALLBACK NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void set_player_window(){};
 
+    WNDPROC _NPWndProc;
     VLCWindowsManager _WindowsManager;
 };
 

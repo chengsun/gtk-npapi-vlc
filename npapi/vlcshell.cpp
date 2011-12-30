@@ -138,7 +138,7 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
         return false;
     }
 
-#ifndef __x86_64__  
+#ifndef __x86_64__
     EventRecord *myEvent = (EventRecord*)event;
 
     switch( myEvent->what )
@@ -362,12 +362,14 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             }
         }
     } else {
+        /* NOTE: on Windows, Opera does not call NPP_SetWindow
+         * on window destruction. */
         if (curr_window.window) {
             /* we've been destroyed */
             p_plugin->destroy_windows();
         }
     }
-    
+
     /* now display toolbar if asked through parameters */
     if( p_plugin->b_toolbar )
     {

@@ -50,8 +50,22 @@ BOOL WINAPI DllMain(HANDLE hModule, DWORD fdwReason, LPVOID lpReserved )
 };
 
 
+LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LONG_PTR ud = GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    if( ud ) {
+        VlcPluginWin *p_plugin = reinterpret_cast<VlcPluginWin *>(ud);
+
+        /* delegate to default handler */
+        return CallWindowProc( p_plugin->_NPWndProc, hWnd,
+                               uMsg, wParam, lParam);
+    }
+    else
+        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
 VlcPluginWin::VlcPluginWin(NPP instance, NPuint16_t mode) :
-    VlcPluginBase(instance, mode),
+    VlcPluginBase(instance, mode), _NPWndProc(0),
     _WindowsManager(DllGetModule())
 {
 }
@@ -105,8 +119,14 @@ bool VlcPluginWin::create_windows()
         return false;
 
     /* attach our plugin object */
-    SetWindowLongPtr(drawable, GWLP_USERDATA,
-                     (LONG_PTR)this);
+    SetWindowLongPtr(drawable, GWLP_USERDATA, (LONG_PTR)this);
+
+    /* Some browsers (mainly opera) do not implement NPAPI correctly,
+     * so we will need track some events via native window messages,
+     * rather than via NPP_SetWindow. */
+    _NPWndProc = (WNDPROC) SetWindowLongPtr( drawable,
+                                             GWLP_WNDPROC,
+                                             (LONG_PTR)NPWndProcR );
 
     /* change window style to our liking */
     LONG style = GetWindowLong(drawable, GWL_STYLE);
@@ -133,6 +153,15 @@ bool VlcPluginWin::resize_windows()
 bool VlcPluginWin::destroy_windows()
 {
     _WindowsManager.DestroyWindows();
+
+    HWND hWnd = (HWND)npwindow.window;
+    if( hWnd && _NPWndProc){
+        /* reset WNDPROC */
+        SetWindowLongPtr( hWnd, GWLP_WNDPROC, (LONG_PTR)_NPWndProc );
+    }
+    _NPWndProc = 0;
+    npwindow.window = 0;
+
     SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
     return true;
 }
