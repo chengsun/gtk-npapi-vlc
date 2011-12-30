@@ -56,6 +56,13 @@ LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, L
     if( ud ) {
         VlcPluginWin *p_plugin = reinterpret_cast<VlcPluginWin *>(ud);
 
+        switch( uMsg ){
+            case WM_DESTROY:
+                // Opera does not call NPP_SetWindow on window destruction...
+                p_plugin->destroy_windows();
+                break;
+        }
+
         /* delegate to default handler */
         return CallWindowProc( p_plugin->_NPWndProc, hWnd,
                                uMsg, wParam, lParam);
