@@ -101,6 +101,9 @@ bool VlcPluginWin::create_windows()
 {
     HWND drawable = (HWND) (getWindow().window);
 
+    if( GetWindowLongPtr(drawable, GWLP_USERDATA) )
+        return false;
+
     /* attach our plugin object */
     SetWindowLongPtr(drawable, GWLP_USERDATA,
                      (LONG_PTR)this);
