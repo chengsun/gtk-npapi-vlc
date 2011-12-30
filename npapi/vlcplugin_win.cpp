@@ -133,6 +133,7 @@ bool VlcPluginWin::resize_windows()
 bool VlcPluginWin::destroy_windows()
 {
     _WindowsManager.DestroyWindows();
+    SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
     return true;
 }
 
