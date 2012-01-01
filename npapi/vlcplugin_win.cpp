@@ -62,6 +62,15 @@ LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, L
                 GetClientRect(hWnd, &rect);
                 FillRect((HDC)wParam, &rect, (HBRUSH) (COLOR_WINDOW+1));
                 return 1;
+            case WM_LBUTTONDBLCLK:
+                /*if we get WM_LBUTTONDBLCLK here,
+                * it mean that fullscreen mode is on,
+                * and fullscreen window is on another display.
+                * So user can see browser window and
+                * plugin drawable (i.e. this) window,
+                * and might want switch fullscreen off*/
+                p_plugin->set_fullscreen(false);
+                return 0;
             case WM_DESTROY:
                 // Opera does not call NPP_SetWindow on window destruction...
                 p_plugin->destroy_windows();
