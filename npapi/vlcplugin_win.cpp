@@ -57,6 +57,11 @@ LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, L
         VlcPluginWin *p_plugin = reinterpret_cast<VlcPluginWin *>(ud);
 
         switch( uMsg ){
+            case WM_ERASEBKGND:
+                RECT rect;
+                GetClientRect(hWnd, &rect);
+                FillRect((HDC)wParam, &rect, (HBRUSH) (COLOR_WINDOW+1));
+                return 1;
             case WM_DESTROY:
                 // Opera does not call NPP_SetWindow on window destruction...
                 p_plugin->destroy_windows();
