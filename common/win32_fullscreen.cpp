@@ -839,10 +839,6 @@ void VLCWindowsManager::CreateWindows(HWND hWindowedParentWnd)
     if(!_HolderWnd){
         _HolderWnd = VLCHolderWnd::CreateHolderWindow(hWindowedParentWnd, this);
     }
-
-    if(!_FSWnd){
-        _FSWnd= VLCFullScreenWnd::CreateFSWindow(this);
-    }
 }
 
 void VLCWindowsManager::DestroyWindows()
