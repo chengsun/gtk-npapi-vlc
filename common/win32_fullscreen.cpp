@@ -20,6 +20,9 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <windows.h>
 #include <commctrl.h>
@@ -892,9 +895,28 @@ void VLCWindowsManager::StartFullScreen()
             _FSWnd= VLCFullScreenWnd::CreateFSWindow(this);
         }
 
+        RECT FSRect = { 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
+
+        HMONITOR hMonitor = MonitorFromWindow(_hWindowedParentWnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO MonInfo;
+        memset(&MonInfo, 0, sizeof(MonInfo));
+        MonInfo.cbSize = sizeof(MonInfo);
+        if( GetMonitorInfo(hMonitor, &MonInfo) ) {
+            FSRect = MonInfo.rcMonitor;
+        }
+
+#ifdef _DEBUG
+        //to simplify debugging in fullscreen mode
+        UINT FSFlags = SWP_NOZORDER;
+#else
+        UINT FSFlags = 0;
+#endif
+
         SetParent(_HolderWnd->getHWND(), _FSWnd->getHWND());
-        SetWindowPos(_FSWnd->getHWND(), HWND_TOPMOST, 0, 0,
-                     GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), 0/** SWP_NOZORDER**/);
+        SetWindowPos(_FSWnd->getHWND(), HWND_TOPMOST,
+                     FSRect.left, FSRect.top,
+                     FSRect.right - FSRect.left, FSRect.bottom - FSRect.top,
+                     FSFlags);
 
         ShowWindow(_FSWnd->getHWND(), SW_SHOW);
         ShowWindow(_hWindowedParentWnd, SW_HIDE);
