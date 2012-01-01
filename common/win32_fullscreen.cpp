@@ -846,15 +846,15 @@ void VLCWindowsManager::CreateWindows(HWND hWindowedParentWnd)
 
 void VLCWindowsManager::DestroyWindows()
 {
-    if(_FSWnd){
-        _FSWnd->DestroyWindow();
-    }
-    _FSWnd = 0;
-
     if(_HolderWnd){
         _HolderWnd->DestroyWindow();
     }
     _HolderWnd = 0;
+
+    if(_FSWnd){
+        _FSWnd->DestroyWindow();
+    }
+    _FSWnd = 0;
 }
 
 void VLCWindowsManager::LibVlcAttach(libvlc_media_player_t* p_md)
