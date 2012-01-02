@@ -59,7 +59,7 @@ void VLCHolderWnd::RegisterWndClassName(HINSTANCE hInstance)
         wClass.hInstance      = _hinstance;
         wClass.hIcon          = NULL;
         wClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
-        wClass.hbrBackground  = (HBRUSH)(COLOR_3DFACE+1);
+        wClass.hbrBackground  = (HBRUSH)GetStockObject(BLACK_BRUSH);
         wClass.lpszMenuName   = NULL;
         wClass.lpszClassName  = getClassName();
 
