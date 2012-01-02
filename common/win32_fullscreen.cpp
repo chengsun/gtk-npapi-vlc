@@ -919,7 +919,6 @@ void VLCWindowsManager::StartFullScreen()
                      FSFlags);
 
         ShowWindow(_FSWnd->getHWND(), SW_SHOW);
-        ShowWindow(_hWindowedParentWnd, SW_HIDE);
     }
 }
 
@@ -935,7 +934,6 @@ void VLCWindowsManager::EndFullScreen()
         GetClientRect(_hWindowedParentWnd, &WindowedParentRect);
         MoveWindow(_HolderWnd->getHWND(), 0, 0, WindowedParentRect.right, WindowedParentRect.bottom, FALSE);
 
-        ShowWindow(_hWindowedParentWnd, SW_SHOW);
         ShowWindow(_FSWnd->getHWND(), SW_HIDE);
 
         if(_FSWnd){
