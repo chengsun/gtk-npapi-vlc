@@ -37,6 +37,7 @@ END
 5 BITMAP DISCARDABLE "../share/pixmaps/win32/pause.bmp"
 6 BITMAP DISCARDABLE "../share/pixmaps/win32/volume.bmp"
 7 BITMAP DISCARDABLE "../share/pixmaps/win32/volume-muted.bmp"
+8 ICON   DISCARDABLE "../share/pixmaps/win32/vlc.ico"
 
 1 TYPELIB "axvlc.tlb"
 
