@@ -120,6 +120,19 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             MoveWindow(hWnd, 0, 0,
                        (ParentClientRect.right-ParentClientRect.left),
                        (ParentClientRect.bottom-ParentClientRect.top), FALSE);
+
+            h_data->_hConeIcon = LoadIcon( h_data->_WindowsManager->getHModule(), MAKEINTRESOURCE(8) );
+            break;
+        }
+        case WM_PAINT:{
+            PAINTSTRUCT PaintStruct;
+            HDC hDC = BeginPaint(hWnd, &PaintStruct);
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+            int IconX = ((rect.right - rect.left) - GetSystemMetrics(SM_CXICON))/2;
+            int IconY = ((rect.bottom - rect.top) - GetSystemMetrics(SM_CYICON))/2;
+            DrawIcon(hDC, IconX, IconY, h_data->_hConeIcon);
+            EndPaint(hWnd, &PaintStruct);
             break;
         }
         case WM_NCDESTROY:

@@ -61,14 +61,15 @@ private:
 
 private:
     VLCHolderWnd(HWND hWnd, VLCWindowsManager* WM)
-        : _hMouseHook(NULL), _MouseHookThreadId(0), _hWnd(hWnd)
-         , _WindowsManager(WM){};
+        : _hMouseHook(NULL), _MouseHookThreadId(0), _hWnd(hWnd),
+        _WindowsManager(WM), _hConeIcon(0){};
 
 public:
     HWND getHWND() const {return _hWnd;}
 
 private:
     HWND _hWnd;
+    HICON _hConeIcon;
     VLCWindowsManager* _WindowsManager;
 };
 
