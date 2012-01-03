@@ -397,6 +397,7 @@ bool VlcPluginGtk::create_windows()
     toolbar = gtk_toolbar_new();
     g_object_ref(G_OBJECT(toolbar));
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar), GTK_ICON_SIZE_SMALL_TOOLBAR);
     GtkToolItem *toolitem;
     /* play/pause */
     toolitem = gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_PLAY);
