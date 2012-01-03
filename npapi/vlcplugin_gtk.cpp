@@ -269,6 +269,16 @@ static bool video_expose_handler(GtkWidget *widget, GdkEvent *event, gpointer us
         winheight  = gdk_window_get_height(window),
         iconwidth  = gdk_pixbuf_get_width(cone_icon),
         iconheight = gdk_pixbuf_get_height(cone_icon);
+    double widthratio  = (double) winwidth / iconwidth,
+           heightratio = (double) winheight / iconheight;
+    double sizeratio = widthratio < heightratio ? widthratio : heightratio;
+    if (sizeratio < 1.0) {
+        cone_icon = gdk_pixbuf_scale_simple(cone_icon, iconwidth * sizeratio, iconheight * sizeratio, GDK_INTERP_BILINEAR);
+        if (!cone_icon) return false;
+        iconwidth  = gdk_pixbuf_get_width(cone_icon);
+        iconheight = gdk_pixbuf_get_height(cone_icon);
+    }
+
     cairo_t *cr = gdk_cairo_create(window);
     gdk_cairo_set_source_pixbuf(cr, cone_icon,
             (winwidth-iconwidth)/2.0, (winheight-iconheight)/2.0);
