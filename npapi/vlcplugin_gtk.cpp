@@ -445,6 +445,10 @@ bool VlcPluginGtk::destroy_windows()
     /* destroy x window */
     XDestroyWindow(display, video_xwindow);
 
+    /* destroy GTK top-levels */
+    gtk_widget_destroy(parent);
+    gtk_widget_destroy(fullscreen_win);
+
     /* free colors */
     Colormap colormap = DefaultColormap(display, DefaultScreen(display));
     XFreeColors(display, colormap, &bg_color.pixel, 1, 0);
