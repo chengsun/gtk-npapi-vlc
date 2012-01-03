@@ -343,17 +343,17 @@ bool VlcPluginGtk::create_windows()
     display = ( (NPSetWindowCallbackStruct *) npwindow.ws_info )->display;
 
     Window socket = (Window) npwindow.window;
-    GdkColor color_black;
-    gdk_color_parse("black", &color_black);
+    GdkColor color_bg;
+    gdk_color_parse(psz_bgcolor, &color_bg);
 
     parent = gtk_plug_new(socket);
-    gtk_widget_modify_bg(parent, GTK_STATE_NORMAL, &color_black);
+    gtk_widget_modify_bg(parent, GTK_STATE_NORMAL, &color_bg);
 
     parent_vbox = gtk_vbox_new(false, 0);
     gtk_container_add(GTK_CONTAINER(parent), parent_vbox);
 
     video_container = gtk_drawing_area_new();
-    gtk_widget_modify_bg(video_container, GTK_STATE_NORMAL, &color_black);
+    gtk_widget_modify_bg(video_container, GTK_STATE_NORMAL, &color_bg);
     gtk_widget_add_events(video_container,
             GDK_BUTTON_PRESS_MASK
           | GDK_BUTTON_RELEASE_MASK);
@@ -366,7 +366,7 @@ bool VlcPluginGtk::create_windows()
 
     /* fullscreen top-level */
     fullscreen_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_widget_modify_bg(fullscreen_win, GTK_STATE_NORMAL, &color_black);
+    gtk_widget_modify_bg(fullscreen_win, GTK_STATE_NORMAL, &color_bg);
     gtk_window_set_decorated(GTK_WINDOW(fullscreen_win), false);
     g_signal_connect(G_OBJECT(fullscreen_win), "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), this);
     g_signal_connect(G_OBJECT(fullscreen_win), "show", G_CALLBACK(fullscreen_win_visibility_handler), this);
@@ -377,10 +377,14 @@ bool VlcPluginGtk::create_windows()
      * GTK+ is incapable of reparenting without changing xid
      */
     Display *display = get_display();
-    int blackColor = BlackPixel(display, DefaultScreen(display));
+    Colormap colormap = DefaultColormap(display, DefaultScreen(display));
+    bg_color.red   = color_bg.red;
+    bg_color.green = color_bg.green;
+    bg_color.blue  = color_bg.blue;
+    XAllocColor(display, colormap, &bg_color);
     video_xwindow = XCreateSimpleWindow(display, get_xid(video_container), 0, 0,
                    1, 1,
-                   0, blackColor, blackColor);
+                   0, bg_color.pixel, bg_color.pixel);
 
     /* connect video_container resizes to video_xwindow */
     video_container_size_handler_id = g_signal_connect(
@@ -436,5 +440,7 @@ bool VlcPluginGtk::resize_windows()
 
 bool VlcPluginGtk::destroy_windows()
 {
-    /* TODO */
+    Display *display = get_display();
+    Colormap colormap = DefaultColormap(display, DefaultScreen(display));
+    XFreeColors(display, colormap, &bg_color.pixel, 1, 0);
 }

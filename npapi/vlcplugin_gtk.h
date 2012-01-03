@@ -66,6 +66,7 @@ private:
 
     Display *display;
     Window video_xwindow;
+    XColor bg_color;
     bool is_fullscreen, is_toolbar_visible;
 };
 
