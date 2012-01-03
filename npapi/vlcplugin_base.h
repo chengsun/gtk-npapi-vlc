@@ -316,10 +316,11 @@ protected:
 
     /* browser reference */
     NPP     p_browser;
-    char*   psz_baseURL;
+    char    *psz_baseURL;
 
     /* display settings */
     NPWindow  npwindow;
+    char    *psz_bgcolor;
 
     static void eventAsync(void *);
 

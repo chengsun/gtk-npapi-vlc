@@ -354,6 +354,7 @@ VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     b_toolbar(1),
     psz_text(NULL),
     psz_target(NULL),
+    psz_bgcolor("#000000"),
     playlist_index(-1),
     libvlc_instance(NULL),
     libvlc_media_list(NULL),
@@ -503,6 +504,10 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         else if( !strcmp( argn[i], "toolbar" ) )
         {
             b_toolbar = boolValue(argv[i]);
+        }
+        else if( !strcmp( argn[i], "bgcolor" ) )
+        {
+            psz_bgcolor = argv[i];
         }
     }
 
