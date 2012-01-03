@@ -441,6 +441,11 @@ bool VlcPluginGtk::resize_windows()
 bool VlcPluginGtk::destroy_windows()
 {
     Display *display = get_display();
+
+    /* destroy x window */
+    XDestroyWindow(display, video_xwindow);
+
+    /* free colors */
     Colormap colormap = DefaultColormap(display, DefaultScreen(display));
     XFreeColors(display, colormap, &bg_color.pixel, 1, 0);
 }
