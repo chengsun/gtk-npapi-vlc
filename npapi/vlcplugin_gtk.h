@@ -52,6 +52,8 @@ public:
     void popup_menu();
 
     void resize_video_xwindow(GdkRectangle *rect);
+
+    GdkPixbuf *cone_icon;
 private:
     void set_player_window();
     Display *get_display() { return display; }

@@ -42,6 +42,12 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     is_toolbar_visible(false)
 {
     memset(&video_xwindow, 0, sizeof(Window));
+    GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+    cone_icon = gdk_pixbuf_copy(gtk_icon_theme_load_icon(
+                    icon_theme, "vlc", 128, GTK_ICON_LOOKUP_FORCE_SIZE, NULL));
+    if (!cone_icon) {
+        fprintf(stderr, "WARNING: could not load VLC icon\n");
+    }
 }
 
 VlcPluginGtk::~VlcPluginGtk()
@@ -69,7 +75,7 @@ void VlcPluginGtk::do_set_fullscreen(bool yes)
 
     XUnmapWindow(display, video_xwindow);
     XReparentWindow(display, video_xwindow,
-                    gdk_x11_get_default_root_xwindow(), 0,0);
+                    gdk_x11_get_default_root_xwindow(), 0, 0);
     if (yes) {
         g_object_ref(G_OBJECT(parent_vbox));
         gtk_container_remove(GTK_CONTAINER(parent), parent_vbox);
@@ -86,12 +92,12 @@ void VlcPluginGtk::do_set_fullscreen(bool yes)
         gtk_widget_show_all(GTK_WIDGET(parent));
     }
     XSync(get_display(), false);
-    XReparentWindow(display, video_xwindow, get_xid(video_container), 0,0);
-    XMapWindow(display, video_xwindow);
+    XReparentWindow(display, video_xwindow, get_xid(video_container), 0, 0);
 
 //    libvlc_set_fullscreen(libvlc_media_player, yes);
     g_signal_handler_unblock(video_container, video_container_size_handler_id);
-    gtk_widget_queue_resize_no_redraw(video_container);
+    gtk_widget_queue_resize(video_container);
+    update_controls();
 
     is_fullscreen = yes;
 }
@@ -237,15 +243,38 @@ static bool video_button_handler(GtkWidget *widget, GdkEventButton *event, gpoin
     return false;
 }
 
-static bool video_popup_handler(GtkWidget *widget, gpointer user_data) {
+static bool video_popup_handler(GtkWidget *widget, gpointer user_data)
+{
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     plugin->popup_menu();
     return true;
 }
 
-static bool video_size_handler(GtkWidget *widget, GdkRectangle *rect, gpointer user_data) {
+static bool video_size_handler(GtkWidget *widget, GdkRectangle *rect, gpointer user_data)
+{
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     plugin->resize_video_xwindow(rect);
+    return true;
+}
+
+static bool video_expose_handler(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    GdkEventExpose *event_expose = (GdkEventExpose *) event;
+    GdkWindow *window = event_expose->window;
+    GdkPixbuf *cone_icon = plugin->cone_icon;
+    if (!cone_icon) return false;
+
+    int winwidth   = gdk_window_get_width(window),
+        winheight  = gdk_window_get_height(window),
+        iconwidth  = gdk_pixbuf_get_width(cone_icon),
+        iconheight = gdk_pixbuf_get_height(cone_icon);
+    cairo_t *cr = gdk_cairo_create(window);
+    gdk_cairo_set_source_pixbuf(cr, cone_icon,
+            (winwidth-iconwidth)/2.0, (winheight-iconheight)/2.0);
+    gdk_cairo_region(cr, event_expose->region);
+    cairo_fill(cr);
+
     return true;
 }
 
@@ -271,6 +300,14 @@ static void fullscreen_win_visibility_handler(GtkWidget *widget, gpointer user_d
 
 void VlcPluginGtk::update_controls()
 {
+    if (libvlc_media_player) {
+        if (!libvlc_media_player_is_playing(libvlc_media_player)) {
+            XUnmapWindow(display, video_xwindow);
+        } else {
+            XMapWindow(display, video_xwindow);
+        }
+    }
+
     if (get_toolbar_visible()) {
         GtkToolItem *toolbutton;
 
@@ -320,6 +357,7 @@ bool VlcPluginGtk::create_windows()
     gtk_widget_add_events(video_container,
             GDK_BUTTON_PRESS_MASK
           | GDK_BUTTON_RELEASE_MASK);
+    g_signal_connect(G_OBJECT(video_container), "expose-event", G_CALLBACK(video_expose_handler), this);
     g_signal_connect(G_OBJECT(video_container), "button-press-event", G_CALLBACK(video_button_handler), this);
     g_signal_connect(G_OBJECT(video_container), "popup-menu", G_CALLBACK(video_popup_handler), this);
     gtk_box_pack_start(GTK_BOX(parent_vbox), video_container, true, true, 0);
@@ -343,7 +381,6 @@ bool VlcPluginGtk::create_windows()
     video_xwindow = XCreateSimpleWindow(display, get_xid(video_container), 0, 0,
                    1, 1,
                    0, blackColor, blackColor);
-    XMapWindow(display, video_xwindow);
 
     /* connect video_container resizes to video_xwindow */
     video_container_size_handler_id = g_signal_connect(
