@@ -321,7 +321,7 @@ protected:
 
     /* display settings */
     NPWindow  npwindow;
-    char    *psz_bgcolor;
+    const char *psz_bgcolor;
 
     static void eventAsync(void *);
 

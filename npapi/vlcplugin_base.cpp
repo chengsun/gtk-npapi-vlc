@@ -495,7 +495,7 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         }
         else if( !strcmp( argn[i], "bgcolor" ) )
         {
-            psz_bgcolor = argv[i];
+            psz_bgcolor = strdup( argv[i] );
         }
     }
 
