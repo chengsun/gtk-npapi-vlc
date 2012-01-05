@@ -98,11 +98,13 @@ VlcPluginWin::~VlcPluginWin()
 
 void VlcPluginWin::toggle_fullscreen()
 {
+    if (!b_allowfullscreen) return;
     _WindowsManager.ToggleFullScreen();
 }
 
 void VlcPluginWin::set_fullscreen(int yes)
 {
+    if (!b_allowfullscreen) return;
     if(yes){
         _WindowsManager.StartFullScreen();
     }

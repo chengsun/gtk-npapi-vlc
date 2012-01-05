@@ -224,6 +224,7 @@ public:
     int      b_stream;
     int      b_autoplay;
     int      b_toolbar;
+    int      b_allowfullscreen;
     char *   psz_text;
     char *   psz_target;
 

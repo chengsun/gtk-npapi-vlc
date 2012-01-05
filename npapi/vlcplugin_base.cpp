@@ -352,6 +352,7 @@ VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     b_stream(0),
     b_autoplay(1),
     b_toolbar(1),
+    b_allowfullscreen(1),
     psz_text(NULL),
     psz_target(NULL),
     psz_bgcolor("#000000"),
@@ -464,16 +465,10 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         {
             b_autoplay = boolValue(argv[i]);
         }
-        else if( !strcmp( argn[i], "fullscreen" ) )
+        else if( !strcmp( argn[i], "fullscreen" )
+              || !strcmp( argn[i], "allowfullscreen" ) )
         {
-            if( boolValue(argv[i]) )
-            {
-                ppsz_argv[ppsz_argc++] = "--fullscreen";
-            }
-            else
-            {
-                ppsz_argv[ppsz_argc++] = "--no-fullscreen";
-            }
+            b_allowfullscreen = boolValue(argv[i]);
         }
         else if( !strcmp( argn[i], "mute" ) )
         {
@@ -587,7 +582,7 @@ VlcPluginBase::~VlcPluginBase()
 void VlcPluginBase::setWindow(const NPWindow &window)
 {
     npwindow = window;
-};
+}
 
 /*****************************************************************************
  * VlcPluginBase playlist replacement methods

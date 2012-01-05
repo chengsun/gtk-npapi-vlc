@@ -104,6 +104,7 @@ void VlcPluginGtk::do_set_fullscreen(bool yes)
 
 void VlcPluginGtk::set_fullscreen(int yes)
 {
+    if (!b_allowfullscreen) return;
     if (yes == is_fullscreen) return;
     if (yes) {
         gtk_widget_show(fullscreen_win);
@@ -212,10 +213,12 @@ void VlcPluginGtk::popup_menu()
     g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
     gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
     /* set fullscreen */
-    menuitem = gtk_image_menu_item_new_from_stock(
-                                GTK_STOCK_FULLSCREEN, NULL);
-    g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
-    gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
+    if (b_allowfullscreen) {
+        menuitem = gtk_image_menu_item_new_from_stock(
+                                    GTK_STOCK_FULLSCREEN, NULL);
+        g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
+        gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
+    }
     /* toolbar */
     menuitem = gtk_check_menu_item_new_with_label(
                                 VLCPLUGINGTK_MENU_TOOLBAR);

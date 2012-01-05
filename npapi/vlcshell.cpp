@@ -348,6 +348,25 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             p_plugin->setWindow(*window);
             p_plugin->create_windows();
             p_plugin->resize_windows();
+
+            /* now set plugin state to that requested in parameters */
+            p_plugin->set_toolbar_visible( p_plugin->b_toolbar );
+
+            /* handle streams properly */
+            if( !p_plugin->b_stream )
+            {
+                if( p_plugin->psz_target )
+                {
+                    if( p_plugin->playlist_add( p_plugin->psz_target ) != -1 )
+                    {
+                        if( p_plugin->b_autoplay )
+                        {
+                            p_plugin->playlist_play();
+                        }
+                    }
+                    p_plugin->b_stream = true;
+                }
+            }
         } else {
             if (window->window == curr_window.window) {
                 /* resize / move notification */
@@ -370,27 +389,6 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
         }
     }
 
-    /* now display toolbar if asked through parameters */
-    if( p_plugin->b_toolbar )
-    {
-        p_plugin->set_toolbar_visible(true);
-    }
-
-
-    if( !p_plugin->b_stream )
-    {
-        if( p_plugin->psz_target )
-        {
-            if( p_plugin->playlist_add( p_plugin->psz_target ) != -1 )
-            {
-                if( p_plugin->b_autoplay )
-                {
-                    p_plugin->playlist_play();
-                }
-            }
-            p_plugin->b_stream = true;
-        }
-    }
     return NPERR_NO_ERROR;
 }
 
