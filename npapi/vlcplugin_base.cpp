@@ -442,8 +442,6 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
     ppsz_argv[ppsz_argc++] = "--no-video-title-show";
     ppsz_argv[ppsz_argc++] = "--no-xlib";
 
-    const char *progid = NULL;
-
     /* parse plugin arguments */
     for( int i = 0; (i < argc) && (ppsz_argc < 32); i++ )
     {
@@ -495,11 +493,6 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
             {
                 ppsz_argv[ppsz_argc++] = "--no-loop";
             }
-        }
-        else if( !strcmp( argn[i], "version")
-              || !strcmp( argn[i], "progid") )
-        {
-            progid = argv[i];
         }
         else if( !strcmp( argn[i], "toolbar" ) )
         {
