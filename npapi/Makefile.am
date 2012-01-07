@@ -55,14 +55,12 @@ SOURCES_support = \
 	vlcplugin_gtk.cpp \
 	vlcplugin_gtk.h
 else # !USE_GTK
-AM_CPPFLAGS += $(X_CFLAGS) $(XPM_CFLAGS)
-libvlcplugin_la_LIBADD += $(X_LIBS) $(X_PRE_LIBS) \
-	$(XT_LIBS) -lX11 -lSM -lICE -lXpm \
-	$(XPM_LIBS)
+AM_CPPFLAGS += $(XCB_CFLAGS)
+libvlcplugin_la_LIBADD += $(XCB_LIBS)
 SOURCES_support = \
 	support/npunix.cpp \
-	vlcplugin_xlib.cpp \
-	vlcplugin_xlib.h
+	vlcplugin_xcb.cpp \
+	vlcplugin_xcb.h
 endif # !USE_GTK
 
 else # Win32

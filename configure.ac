@@ -249,8 +249,8 @@ AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
     ])
   AS_IF([ test "x$gtk_found" == "xno" ],
     [
-      PKG_CHECK_MODULES(XPM, [xpm],, [
-        AC_MSG_ERROR([Please install the libXpm development files, or re-run configure with --with-gtk])
+      PKG_CHECK_MODULES(XCB, [xcb],, [
+        AC_MSG_ERROR([Please install the libxcb development files, or re-run configure with --with-gtk])
       ])
     ])
 ])

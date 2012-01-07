@@ -7,8 +7,8 @@
 #       include "vlcplugin_gtk.h"
         typedef VlcPluginGtk VlcPlugin;
 #   else
-#       include "vlcplugin_xlib.h"
-        typedef VlcPluginXlib VlcPlugin;
+#       include "vlcplugin_xcb.h"
+        typedef VlcPluginXcb VlcPlugin;
 #   endif
 #elif defined(XP_WIN)
 #   include "vlcplugin_win.h"

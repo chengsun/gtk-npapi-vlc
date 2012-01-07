@@ -1,5 +1,5 @@
 /*****************************************************************************
- * vlcplugin_xlib.h: a VLC plugin for Mozilla (X interface)
+ * vlcplugin_xcb.h: a VLC plugin for Mozilla (X interface)
  *****************************************************************************
  * Copyright (C) 2011 the VideoLAN team
  * $Id$
@@ -24,18 +24,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#ifndef __VLCPLUGIN_XLIB_H__
-#define __VLCPLUGIN_XLIB_H__
+#ifndef __VLCPLUGIN_XCB_H__
+#define __VLCPLUGIN_XCB_H__
 
 #include "vlcplugin_base.h"
-#include <X11/Xlib.h>
+#include <xcb/xcb.h>
 #include "xembed.h"
 
-class VlcPluginXlib : public VlcPluginBase
+class VlcPluginXcb : public VlcPluginBase
 {
 public:
-    VlcPluginXlib(NPP, NPuint16_t);
-    virtual ~VlcPluginXlib();
+    VlcPluginXcb(NPP, NPuint16_t);
+    virtual ~VlcPluginXcb();
 
     int                 setSize(unsigned width, unsigned height);
 
@@ -52,14 +52,15 @@ public:
     void update_controls()      {/* STUB */}
     void popup_menu()           {/* STUB */}
 
-    Display *getDisplay();
-private:
     void set_player_window();
 
     unsigned int     i_width, i_height;
-    Window           npparent, npvideo;
+    xcb_connection_t *conn;
+    xcb_window_t parent, video;
+
+    pthread_t thread;
 
     int i_last_position;
 };
 
-#endif /* __VLCPLUGIN_XLIB_H__ */
+#endif /* __VLCPLUGIN_XCB_H__ */
