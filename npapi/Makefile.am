@@ -77,7 +77,9 @@ SOURCES_support = \
 	vlcplugin_win.cpp \
 	vlcplugin_win.h \
 	../common/win32_fullscreen.cpp \
-	../common/win32_fullscreen.h
+	../common/win32_fullscreen.h \
+	../common/win32_vlcwnd.cpp \
+	../common/win32_vlcwnd.h
 
 npvlc_la_DEPENDENCIES += $(DATA_npvlc_rc)
 npvlc_la_LDFLAGS += -Wl,--kill-at -Wl,$(DATA_npvlc_rc)

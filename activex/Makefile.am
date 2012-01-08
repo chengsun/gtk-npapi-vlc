@@ -74,6 +74,8 @@ axvlc_la_SOURCES = \
     axvlc_idl.h \
     ../common/win32_fullscreen.cpp \
     ../common/win32_fullscreen.h \
+    ../common/win32_vlcwnd.cpp \
+    ../common/win32_vlcwnd.h \
     $(NULL)
 
 axvlc_la_DEPENDENCIES = $(srcdir)/axvlc.def $(DATA_axvlc_rc)
