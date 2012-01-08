@@ -314,7 +314,11 @@ static void fullscreen_win_visibility_handler(GtkWidget *widget, gpointer user_d
 void VlcPluginGtk::update_controls()
 {
     if (libvlc_media_player) {
-        if (!libvlc_media_player_is_playing(libvlc_media_player)) {
+        libvlc_state_t state = libvlc_media_player_get_state(libvlc_media_player);
+        bool is_stopped = (state == libvlc_Stopped) ||
+                          (state == libvlc_Ended) ||
+                          (state == libvlc_Error);
+        if (is_stopped) {
             XUnmapWindow(display, video_xwindow);
         } else {
             XMapWindow(display, video_xwindow);
