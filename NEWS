@@ -10,10 +10,11 @@ Changes between 1.1.4 and 1.2.0-rc:
  * Port to Win64.
  * Interface for DVD control.
  * Update to recent NPAPI headers.
- * Removal of Xt dependency, allowing load on Chromium
+ * Removal of Xt and Xpm dependencies, allowing load on Chromium
  * Fix of the Secunia advisory SA41810
  * Fixes for numerous long-standing issues (notably #3374, #3419, #1553, #3729,
    #4286, #5138, #3819)
  * Support the bgcolor attribute to change the background color
  * Better support for multi-monitor fullscreen
+ * Move to Xcb libraries from Xlib when Gtk+ is not used on X11 platforms
 
