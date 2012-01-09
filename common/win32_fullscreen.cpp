@@ -28,8 +28,6 @@
 #include <commctrl.h>
 #include <uxtheme.h>
 
-#include <vlc/vlc.h>
-
 #include "win32_fullscreen.h"
 
 /////////////////////////////////
@@ -97,11 +95,6 @@ VLCHolderWnd* VLCHolderWnd::CreateHolderWindow(HWND hParentWnd, VLCWindowsManage
     return 0;
 }
 
-libvlc_media_player_t* VLCHolderWnd::getMD() const
-{
-    return _WindowsManager->getMD();
-}
-
 LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     VLCHolderWnd* h_data = reinterpret_cast<VLCHolderWnd*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
@@ -120,8 +113,6 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             MoveWindow(hWnd, 0, 0,
                        (ParentClientRect.right-ParentClientRect.left),
                        (ParentClientRect.bottom-ParentClientRect.top), FALSE);
-
-            h_data->_hConeIcon = LoadIcon( h_data->_WindowsManager->getHModule(), MAKEINTRESOURCE(8) );
             break;
         }
         case WM_PAINT:{
@@ -131,7 +122,7 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             GetClientRect(hWnd, &rect);
             int IconX = ((rect.right - rect.left) - GetSystemMetrics(SM_CXICON))/2;
             int IconY = ((rect.bottom - rect.top) - GetSystemMetrics(SM_CYICON))/2;
-            DrawIcon(hDC, IconX, IconY, h_data->_hConeIcon);
+            DrawIcon(hDC, IconX, IconY, h_data->RC().hBackgroundIcon);
             EndPaint(hWnd, &PaintStruct);
             break;
         }
@@ -384,7 +375,6 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
 #define ID_FS_VIDEO_POS_SCROLL 3
 #define ID_FS_MUTE 4
 #define ID_FS_VOLUME 5
-#define ID_FS_LABEL 5
 
 LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -395,13 +385,9 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
         case WM_CREATE:{
             CREATESTRUCT* CreateStruct = (CREATESTRUCT*)(lParam);
             fs_data = (VLCFullScreenWnd*)CreateStruct->lpCreateParams;
-            HMODULE hDllModule = fs_data->_WindowsManager->getHModule();
+            const VLCViewResources& rc = fs_data->RC();
 
             SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(fs_data));
-
-            fs_data->hNewMessageBitmap = (HICON)
-                LoadImage(hDllModule, MAKEINTRESOURCE(8),
-                          IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
 
             const int ControlsHeight = 21+2;
             const int ButtonsWidth = ControlsHeight;
@@ -413,24 +399,14 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
             fs_data->hFSButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("End Full Screen"), WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
                              HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_SWITCH_FS, 0, 0);
-            fs_data->hFSButtonBitmap =
-                LoadImage(hDllModule, MAKEINTRESOURCE(3),
-                          IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
-            SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hFSButtonBitmap);
-            //SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hNewMessageBitmap);
+            SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hDeFullscreenBitmap);
             HorizontalOffset+=ControlWidth+ControlsSpace;
 
             ControlWidth = ButtonsWidth;
             fs_data->hPlayPauseButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("Play/Pause"), WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
                              HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_PLAY_PAUSE, 0, 0);
-            fs_data->hPlayBitmap =
-                LoadImage(hDllModule, MAKEINTRESOURCE(4),
-                          IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
-            fs_data->hPauseBitmap =
-                LoadImage(hDllModule, MAKEINTRESOURCE(5),
-                          IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
-            SendMessage(fs_data->hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hPauseBitmap);
+            SendMessage(fs_data->hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPauseBitmap);
             HorizontalOffset+=ControlWidth+ControlsSpace;
 
             ControlWidth = 200;
@@ -454,13 +430,7 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
             fs_data->hMuteButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("Mute"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX|BS_PUSHLIKE|BS_BITMAP, //BS_FLAT
                              HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_MUTE, 0, 0);
-            fs_data->hVolumeBitmap =
-                LoadImage(hDllModule, MAKEINTRESOURCE(6),
-                          IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS|LR_SHARED);
-            fs_data->hVolumeMutedBitmap =
-                LoadImage(hDllModule, MAKEINTRESOURCE(7),
-                          IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS|LR_SHARED);
-            SendMessage(fs_data->hMuteButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hVolumeBitmap);
+            SendMessage(fs_data->hMuteButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hVolumeBitmap);
             HorizontalOffset+=ControlWidth+ControlsSpace;
 
             ControlWidth = 100;
@@ -511,16 +481,17 @@ LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg,
                     break;
                 }
                 case 2:{
+                    const VLCViewResources& rc = fs_data->RC();
                     LRESULT lResult = SendMessage(fs_data->hFSButton, BM_GETIMAGE, (WPARAM)IMAGE_BITMAP, 0);
-                    if((HANDLE)lResult == fs_data->hFSButtonBitmap){
+                    if((HANDLE)lResult == rc.hDeFullscreenBitmap){
                         if(fs_data->_WindowsManager->getNewMessageFlag()){
-                            SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hNewMessageBitmap);
+                            SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hNewMessageBitmap);
                             //do not allow control window to close while there are new messages
                             fs_data->NeedShowControls();
                         }
                     }
                     else{
-                        SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)fs_data->hFSButtonBitmap);
+                        SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hDeFullscreenBitmap);
                     }
 
                     break;
@@ -617,26 +588,6 @@ VLCFullScreenWnd::~VLCFullScreenWnd()
         ::DestroyWindow(hToolTipWnd);
         hToolTipWnd = 0;
     }
-
-    DestroyIcon(hNewMessageBitmap);
-    hNewMessageBitmap = 0;
-    DeleteObject(hFSButtonBitmap);
-    hFSButtonBitmap = 0;
-
-    DeleteObject(hPauseBitmap);
-    hPauseBitmap = 0;
-    DeleteObject(hPlayBitmap);
-    hPlayBitmap = 0;
-
-    DeleteObject(hVolumeBitmap);
-    hVolumeBitmap = 0;
-    DeleteObject(hVolumeMutedBitmap);
-    hVolumeMutedBitmap = 0;
-}
-
-libvlc_media_player_t* VLCFullScreenWnd::getMD() const
-{
-    return _WindowsManager->getMD();
 }
 
 void VLCFullScreenWnd::NeedShowControls()
@@ -652,7 +603,9 @@ void VLCFullScreenWnd::NeedShowControls()
                 SyncVolumeSliderWithVLCVolume();
             }
             if(hPlayPauseButton){
-                SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(IsPlaying()?hPauseBitmap:hPlayBitmap));
+                HANDLE hBmp = IsPlaying() ? RC().hPauseBitmap : RC().hPlayBitmap;
+                SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                            (WPARAM)IMAGE_BITMAP, (LPARAM)hBmp);
             }
         }
         ShowWindow(hControlsWnd, SW_SHOW);
@@ -719,8 +672,12 @@ void VLCFullScreenWnd::SyncVolumeSliderWithVLCVolume()
             SendMessage(hMuteButton, BM_SETCHECK, (WPARAM)(muted?BST_CHECKED:BST_UNCHECKED), 0);
         }
         LRESULT lResult = SendMessage(hMuteButton, BM_GETIMAGE, (WPARAM)IMAGE_BITMAP, 0);
-        if( (muted && ((HANDLE)lResult == hVolumeBitmap)) || (!muted&&((HANDLE)lResult == hVolumeMutedBitmap)) ){
-            SendMessage(hMuteButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)(muted?hVolumeMutedBitmap:hVolumeBitmap));
+        if( (muted && ((HANDLE)lResult == RC().hVolumeBitmap)) ||
+            (!muted&&((HANDLE)lResult == RC().hVolumeMutedBitmap)) )
+        {
+            HANDLE hBmp = muted ? RC().hVolumeMutedBitmap : RC().hVolumeBitmap ;
+            SendMessage(hMuteButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)hBmp);
         }
     }
 }
@@ -801,16 +758,20 @@ void VLCFullScreenWnd::handle_position_changed_event(const libvlc_event_t* event
 
 void VLCFullScreenWnd::handle_input_state_event(const libvlc_event_t* event)
 {
+    const VLCViewResources& rc = RC();
     switch( event->type )
     {
         case libvlc_MediaPlayerPlaying:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hPauseBitmap);
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPauseBitmap);
             break;
         case libvlc_MediaPlayerPaused:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hPlayBitmap);
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPlayBitmap);
             break;
         case libvlc_MediaPlayerStopped:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hPlayBitmap);
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPlayBitmap);
             break;
     }
 }
@@ -836,9 +797,9 @@ void VLCFullScreenWnd::OnLibVlcEvent(const libvlc_event_t* event)
 ///////////////////////
 //VLCWindowsManager
 ///////////////////////
-VLCWindowsManager::VLCWindowsManager(HMODULE hModule)
+VLCWindowsManager::VLCWindowsManager(HMODULE hModule, const VLCViewResources& rc)
     :_hModule(hModule), _hWindowedParentWnd(0), _p_md(0), _HolderWnd(0), _FSWnd(0),
-    _b_new_messages_flag(false), Last_WM_MOUSEMOVE_Pos(0)
+    _b_new_messages_flag(false), Last_WM_MOUSEMOVE_Pos(0), _rc(rc)
 {
     VLCHolderWnd::RegisterWndClassName(hModule);
     VLCFullScreenWnd::RegisterWndClassName(hModule);

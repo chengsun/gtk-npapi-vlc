@@ -361,6 +361,7 @@ private:
 
     // in place activated window (Plugin window)
     HWND _inplacewnd;
+    VLCViewResources  _ViewRC;
     VLCWindowsManager _WindowsManager;
 
     VLCPluginClass* _p_class;

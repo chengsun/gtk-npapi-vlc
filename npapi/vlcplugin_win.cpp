@@ -87,8 +87,35 @@ LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 VlcPluginWin::VlcPluginWin(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode), _NPWndProc(0),
-    _WindowsManager(DllGetModule())
+    _WindowsManager(DllGetModule(), _ViewRC)
 {
+    _ViewRC.hDeFullscreenBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(3),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hPlayBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(4),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hPauseBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(5),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hVolumeBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(6),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hVolumeMutedBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(7),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hBackgroundIcon =
+        (HICON) LoadImage(DllGetModule(), MAKEINTRESOURCE(8),
+                          IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+
+    _ViewRC.hFullscreenBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(9),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
 }
 
 VlcPluginWin::~VlcPluginWin()

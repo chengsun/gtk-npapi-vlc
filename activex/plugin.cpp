@@ -217,7 +217,7 @@ extern HMODULE DllGetModule();
 
 VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     _inplacewnd(NULL),
-    _WindowsManager(DllGetModule()),
+    _WindowsManager(DllGetModule(), _ViewRC),
     _p_class(p_class),
     _i_ref(1UL),
     _p_libvlc(NULL),
@@ -227,6 +227,34 @@ VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     _i_codepage(CP_ACP),
     _b_usermode(TRUE)
 {
+    _ViewRC.hDeFullscreenBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(3),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hPlayBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(4),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hPauseBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(5),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hVolumeBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(6),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hVolumeMutedBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(7),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
+    _ViewRC.hBackgroundIcon =
+        (HICON) LoadImage(DllGetModule(), MAKEINTRESOURCE(8),
+                          IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+
+    _ViewRC.hFullscreenBitmap =
+        LoadImage(DllGetModule(), MAKEINTRESOURCE(9),
+                  IMAGE_BITMAP, 0, 0, LR_LOADMAP3DCOLORS);
+
     p_class->AddRef();
 
     vlcOleControl = new VLCOleControl(this);

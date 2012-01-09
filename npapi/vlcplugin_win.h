@@ -67,6 +67,7 @@ private:
     void set_player_window(){};
 
     WNDPROC _NPWndProc;
+    VLCViewResources  _ViewRC;
     VLCWindowsManager _WindowsManager;
 };
 

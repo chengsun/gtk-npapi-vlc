@@ -26,6 +26,26 @@
 
 #ifdef _WIN32
 
+#include <vlc/vlc.h>
+
+struct VLCViewResources
+{
+    VLCViewResources()
+        :hNewMessageBitmap(0), hDeFullscreenBitmap(0), hPauseBitmap(0),
+         hPlayBitmap(0), hVolumeBitmap(0), hVolumeMutedBitmap(0),
+         hBackgroundIcon(0)
+    {};
+
+    HANDLE hNewMessageBitmap;
+    HANDLE hFullscreenBitmap;
+    HANDLE hDeFullscreenBitmap;
+    HANDLE hPauseBitmap;
+    HANDLE hPlayBitmap;
+    HANDLE hVolumeBitmap;
+    HANDLE hVolumeMutedBitmap;
+    HICON  hBackgroundIcon;
+};
+
 class VLCWindowsManager;
 ///////////////////////
 //VLCHolderWnd
@@ -53,7 +73,10 @@ private:
     DWORD _MouseHookThreadId;
     void MouseHook(bool SetHook);
 
-    libvlc_media_player_t* getMD() const;
+     VLCWindowsManager& WM()
+        {return *_WindowsManager;}
+    inline libvlc_media_player_t* getMD() const;
+    inline const VLCViewResources& RC() const;
 
 private:
     static HINSTANCE _hinstance;
@@ -62,14 +85,13 @@ private:
 private:
     VLCHolderWnd(HWND hWnd, VLCWindowsManager* WM)
         : _hMouseHook(NULL), _MouseHookThreadId(0), _hWnd(hWnd),
-        _WindowsManager(WM), _hConeIcon(0){};
+        _WindowsManager(WM){};
 
 public:
     HWND getHWND() const {return _hWnd;}
 
 private:
     HWND _hWnd;
-    HICON _hConeIcon;
     VLCWindowsManager* _WindowsManager;
 };
 
@@ -99,16 +121,17 @@ private:
 
 private:
     VLCFullScreenWnd(HWND hWnd, VLCWindowsManager* WM)
-        : _WindowsManager(WM), hControlsWnd(0), hToolTipWnd(0),
-         hNewMessageBitmap(0), hFSButtonBitmap(0), hFSButton(0),
-         hPauseBitmap(0), hPlayBitmap(0), hPlayPauseButton(0), hVideoPosScroll(0),
-         hVolumeBitmap(0), hVolumeMutedBitmap(0),hMuteButton(0),
-         hVolumeSlider(0), _hWnd(hWnd) {};
+        :_WindowsManager(WM), hControlsWnd(0), hToolTipWnd(0),
+         hFSButton(0), hPlayPauseButton(0), hVideoPosScroll(0),
+         hMuteButton(0), hVolumeSlider(0), _hWnd(hWnd) {};
 
     ~VLCFullScreenWnd();
 
 private:
-     libvlc_media_player_t* getMD() const;
+     VLCWindowsManager& WM()
+        {return *_WindowsManager;}
+    inline libvlc_media_player_t* getMD() const;
+    inline const VLCViewResources& RC() const;
 
     bool IsPlaying()
     {
@@ -146,18 +169,12 @@ private:
     HWND hControlsWnd;
     HWND hToolTipWnd;
 
-    HICON hNewMessageBitmap;
-    HANDLE hFSButtonBitmap;
     HWND hFSButton;
 
-    HANDLE hPauseBitmap;
-    HANDLE hPlayBitmap;
     HWND hPlayPauseButton;
 
     HWND hVideoPosScroll;
 
-    HANDLE hVolumeBitmap;
-    HANDLE hVolumeMutedBitmap;
     HWND hMuteButton;
     HWND hVolumeSlider;
 
@@ -181,7 +198,7 @@ private:
 class VLCWindowsManager
 {
 public:
-    VLCWindowsManager(HMODULE hModule);
+    VLCWindowsManager(HMODULE hModule, const VLCViewResources& rc);
     ~VLCWindowsManager();
 
     void CreateWindows(HWND hWindowedParentWnd);
@@ -199,6 +216,7 @@ public:
     VLCHolderWnd* getHolderWnd() const {return _HolderWnd;}
     VLCFullScreenWnd* getFullScreenWnd() const {return _FSWnd;}
     libvlc_media_player_t* getMD() const {return _p_md;}
+    const VLCViewResources& RC() const {return _rc;}
 
 public:
     void setNewMessageFlag(bool Yes)
@@ -215,6 +233,7 @@ private:
     void OnLibVlcEvent(const libvlc_event_t* event);
 
 private:
+    const VLCViewResources& _rc;
     HMODULE _hModule;
     HWND _hWindowedParentWnd;
 
@@ -228,6 +247,29 @@ private:
 private:
     DWORD Last_WM_MOUSEMOVE_Pos;
 };
+
+////////////////////////////
+//inlines
+////////////////////////////
+inline libvlc_media_player_t* VLCHolderWnd::getMD() const
+{
+    return _WindowsManager->getMD();
+}
+
+inline const VLCViewResources& VLCHolderWnd::RC() const
+{
+    return _WindowsManager->RC();
+}
+
+inline libvlc_media_player_t* VLCFullScreenWnd::getMD() const
+{
+    return _WindowsManager->getMD();
+}
+
+inline const VLCViewResources& VLCFullScreenWnd::RC() const
+{
+    return _WindowsManager->RC();
+}
 
 #endif //_WIN32
 
