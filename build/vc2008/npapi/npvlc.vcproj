@@ -206,6 +206,10 @@
 				RelativePath="..\..\..\common\win32_fullscreen.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\common\win32_vlcwnd.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -238,6 +242,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\common\win32_fullscreen.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\common\win32_vlcwnd.h"
 				>
 			</File>
 		</Filter>
