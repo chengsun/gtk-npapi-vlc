@@ -28,6 +28,8 @@
 
 #include <vlc/vlc.h>
 
+#include "win32_vlcwnd.h"
+
 struct VLCViewResources
 {
     VLCViewResources()
@@ -44,6 +46,86 @@ struct VLCViewResources
     HANDLE hVolumeBitmap;
     HANDLE hVolumeMutedBitmap;
     HICON  hBackgroundIcon;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//class VLCControlsWnd
+////////////////////////////////////////////////////////////////////////////////
+class VLCWindowsManager;
+class VLCControlsWnd: public VLCWnd
+{
+    enum{
+        xControlsSpace = 5
+    };
+
+    enum{
+        ID_FS_SWITCH_FS = 1,
+        ID_FS_PLAY_PAUSE = 2,
+        ID_FS_VIDEO_POS_SCROLL = 3,
+        ID_FS_MUTE = 4,
+        ID_FS_VOLUME = 5,
+    };
+
+protected:
+    VLCControlsWnd(HINSTANCE hInstance, VLCWindowsManager* WM);
+    bool Create(HWND hWndParent);
+
+public:
+    static VLCControlsWnd*
+        CreateControlsWindow(HINSTANCE hInstance,
+                             VLCWindowsManager* wm, HWND hWndParent);
+    ~VLCControlsWnd();
+
+    void NeedShowControls();
+
+    //libvlc events arrives from separate thread
+    void OnLibVlcEvent(const libvlc_event_t* event);
+
+protected:
+    virtual void PreRegisterWindowClass(WNDCLASS* wc);
+    virtual LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+private:
+    void SetVideoPosScrollRangeByVideoLen();
+    void SyncVideoPosScrollPosWithVideoPos();
+    void SetVideoPos(float Pos); //0-start, 1-end
+
+    void SyncVolumeSliderWithVLCVolume();
+    void SetVLCVolumeBySliderPos(int CurScrollPos);
+    void SetVideoPosScrollPosByVideoPos(libvlc_time_t CurScrollPos);
+    void UpdateButtons();
+
+    void NeedHideControls();
+
+    void handle_position_changed_event(const libvlc_event_t* event);
+    void handle_input_state_event(const libvlc_event_t* event);
+
+    bool IsPlaying()
+    {
+        libvlc_media_player_t* mp = MP();
+        if( mp )
+            return libvlc_media_player_is_playing(mp) != 0;
+        return false;
+    }
+
+private:
+    VLCWindowsManager* _wm;
+
+    VLCWindowsManager& WM() {return *_wm;}
+    inline const VLCViewResources& RC();
+    inline libvlc_media_player_t* MP() const;
+
+    void CreateToolTip();
+
+private:
+    HWND hToolTipWnd;
+    HWND hFSButton;
+    HWND hPlayPauseButton;
+    HWND hVideoPosScroll;
+    HWND hMuteButton;
+    HWND hVolumeSlider;
+
+    int VideoPosShiftBits;
 };
 
 class VLCWindowsManager;
@@ -111,21 +193,15 @@ private:
     static LPCTSTR getClassName(void) { return TEXT("VLC ActiveX Fullscreen Class"); };
     static LRESULT CALLBACK FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    static LPCTSTR getControlsClassName(void) { return TEXT("VLC ActiveX Fullscreen Controls Class"); };
-    static LRESULT CALLBACK FSControlsWndWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 private:
     static HINSTANCE _hinstance;
     static ATOM _fullscreen_wndclass_atom;
-    static ATOM _fullscreen_controls_wndclass_atom;
 
 private:
     VLCFullScreenWnd(HWND hWnd, VLCWindowsManager* WM)
-        :_WindowsManager(WM), hControlsWnd(0), hToolTipWnd(0),
-         hFSButton(0), hPlayPauseButton(0), hVideoPosScroll(0),
-         hMuteButton(0), hVolumeSlider(0), _hWnd(hWnd) {};
+        :_WindowsManager(WM), _hWnd(hWnd) {};
 
-    ~VLCFullScreenWnd();
+    ~VLCFullScreenWnd(){};
 
 private:
      VLCWindowsManager& WM()
@@ -133,28 +209,9 @@ private:
     inline libvlc_media_player_t* getMD() const;
     inline const VLCViewResources& RC() const;
 
-    bool IsPlaying()
-    {
-        libvlc_media_player_t* p_md = getMD();
-        int is_playing = 0;
-        if( p_md ){
-            is_playing = libvlc_media_player_is_playing(p_md);
-        }
-        return is_playing!=0;
-    }
-
-private:
-    void SetVideoPosScrollRangeByVideoLen();
-    void SyncVideoPosScrollPosWithVideoPos();
-    void SetVideoPos(float Pos); //0-start, 1-end
-
-    void SyncVolumeSliderWithVLCVolume();
-    void SetVLCVolumeBySliderPos(int CurScrollPos);
-
 public:
-    void NeedShowControls();
     //libvlc events arrives from separate thread
-    void OnLibVlcEvent(const libvlc_event_t* event);
+    void OnLibVlcEvent(const libvlc_event_t* event) {};
 
 private:
     void NeedHideControls();
@@ -164,24 +221,6 @@ private:
 
 private:
     VLCWindowsManager* _WindowsManager;
-
-private:
-    HWND hControlsWnd;
-    HWND hToolTipWnd;
-
-    HWND hFSButton;
-
-    HWND hPlayPauseButton;
-
-    HWND hVideoPosScroll;
-
-    HWND hMuteButton;
-    HWND hVolumeSlider;
-
-private:
-    void SetVideoPosScrollPosByVideoPos(libvlc_time_t CurPos);
-    void handle_position_changed_event(const libvlc_event_t* event);
-    void handle_input_state_event(const libvlc_event_t* event);
 
 public:
     HWND getHWND() const {return _hWnd;}
@@ -251,6 +290,16 @@ private:
 ////////////////////////////
 //inlines
 ////////////////////////////
+inline libvlc_media_player_t* VLCControlsWnd::MP() const
+{
+    return _wm->getMD();
+}
+
+inline const VLCViewResources& VLCControlsWnd::RC()
+{
+    return _wm->RC();
+}
+
 inline libvlc_media_player_t* VLCHolderWnd::getMD() const
 {
     return _WindowsManager->getMD();

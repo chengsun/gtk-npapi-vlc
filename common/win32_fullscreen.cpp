@@ -30,6 +30,548 @@
 
 #include "win32_fullscreen.h"
 
+////////////////////////////////////////////////////////////////////////////////
+//VLCControlsWnd members
+////////////////////////////////////////////////////////////////////////////////
+VLCControlsWnd*
+VLCControlsWnd::CreateControlsWindow(HINSTANCE hInstance,
+                                     VLCWindowsManager* wm, HWND hWndParent)
+{
+    VLCControlsWnd* wnd = new VLCControlsWnd(hInstance, wm);
+    if( wnd && wnd->Create(hWndParent) ) {
+        return wnd;
+    }
+    delete wnd;
+    return 0;
+}
+
+VLCControlsWnd::VLCControlsWnd(HINSTANCE hInstance, VLCWindowsManager* wm)
+    :VLCWnd(hInstance), _wm(wm),
+     hToolTipWnd(0), hFSButton(0), hPlayPauseButton(0),
+     hVideoPosScroll(0), hMuteButton(0), hVolumeSlider(0)
+{
+}
+
+VLCControlsWnd::~VLCControlsWnd()
+{
+    if(hToolTipWnd){
+        ::DestroyWindow(hToolTipWnd);
+        hToolTipWnd = 0;
+    }
+}
+
+bool VLCControlsWnd::Create(HWND hWndParent)
+{
+    return VLCWnd::CreateEx(WS_EX_TOPMOST, TEXT("VLC Controls Window"),
+                            WS_CHILD|WS_CLIPSIBLINGS,
+                            0, 0, 0, 0, hWndParent, 0);
+}
+
+void VLCControlsWnd::PreRegisterWindowClass(WNDCLASS* wc)
+{
+    wc->lpszClassName = TEXT("VLC Controls Class");
+    wc->hbrBackground = (HBRUSH)(COLOR_3DFACE+1);
+};
+
+void VLCControlsWnd::CreateToolTip()
+{
+    hToolTipWnd = CreateWindowEx(WS_EX_TOPMOST,
+            TOOLTIPS_CLASS,
+            NULL,
+            WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            hWnd(),
+            NULL,
+            hInstance(),
+            NULL);
+
+    SetWindowPos(hToolTipWnd,
+            HWND_TOPMOST,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+
+    TOOLINFO ti;
+    ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = TTF_SUBCLASS|TTF_IDISHWND;
+    ti.hwnd   = hWnd();
+    ti.hinst  = hInstance();
+
+    TCHAR HintText[100];
+    RECT ActivateTTRect;
+
+    //end fullscreen button tooltip
+    GetWindowRect(hFSButton, &ActivateTTRect);
+    GetWindowText(hFSButton, HintText, sizeof(HintText));
+    ti.uId = (UINT_PTR)hFSButton;
+    ti.rect = ActivateTTRect;
+    ti.lpszText = HintText;
+    SendMessage(hToolTipWnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
+
+    //play/pause button tooltip
+    GetWindowRect(hPlayPauseButton, &ActivateTTRect);
+    GetWindowText(hPlayPauseButton, HintText, sizeof(HintText));
+    ti.uId = (UINT_PTR)hPlayPauseButton;
+    ti.rect = ActivateTTRect;
+    ti.lpszText = HintText;
+    SendMessage(hToolTipWnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
+
+    //mute button tooltip
+    GetWindowRect(hMuteButton, &ActivateTTRect);
+    GetWindowText(hMuteButton, HintText, sizeof(HintText));
+    ti.uId = (UINT_PTR)hMuteButton;
+    ti.rect = ActivateTTRect;
+    ti.lpszText = HintText;
+    SendMessage(hToolTipWnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
+}
+
+LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch(uMsg){
+        case WM_CREATE:{
+            const int ControlsHeight = 21+3;
+            const int ButtonsWidth = ControlsHeight;
+            const int ScrollVOffset = (ControlsHeight-GetSystemMetrics(SM_CXHSCROLL))/2;
+
+            int HorizontalOffset = xControlsSpace;
+            int ControlWidth = ButtonsWidth;
+            hPlayPauseButton =
+                CreateWindow(TEXT("BUTTON"), TEXT("Play/Pause"),
+                             WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
+                             HorizontalOffset, xControlsSpace,
+                             ControlWidth, ControlsHeight, hWnd(),
+                             (HMENU)ID_FS_PLAY_PAUSE, 0, 0);
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPauseBitmap);
+            HorizontalOffset+=ControlWidth+xControlsSpace;
+
+            ControlWidth = 200;
+            int VideoPosControlHeight = 10;
+            hVideoPosScroll =
+                CreateWindow(PROGRESS_CLASS, TEXT("Video Position"),
+                             WS_CHILD|WS_DISABLED|WS_VISIBLE|SBS_HORZ|SBS_TOPALIGN|PBS_SMOOTH,
+                             HorizontalOffset, xControlsSpace+(ControlsHeight-VideoPosControlHeight)/2,
+                             ControlWidth, VideoPosControlHeight, hWnd(),
+                             (HMENU)ID_FS_VIDEO_POS_SCROLL, 0, 0);
+            HMODULE hThModule = LoadLibrary(TEXT("UxTheme.dll"));
+            if(hThModule){
+                FARPROC proc = GetProcAddress(hThModule, "SetWindowTheme");
+                typedef HRESULT (WINAPI* SetWindowThemeProc)(HWND, LPCWSTR, LPCWSTR);
+                if(proc){
+                    ((SetWindowThemeProc)proc)(hVideoPosScroll, L"", L"");
+                }
+                FreeLibrary(hThModule);
+            }
+            HorizontalOffset+=ControlWidth+xControlsSpace;
+
+            ControlWidth = ButtonsWidth;
+            hMuteButton =
+                CreateWindow(TEXT("BUTTON"), TEXT("Mute"),
+                             WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX|BS_PUSHLIKE|BS_BITMAP, //BS_FLAT
+                             HorizontalOffset, xControlsSpace,
+                             ControlWidth, ControlsHeight,
+                             hWnd(), (HMENU)ID_FS_MUTE, 0, 0);
+            SendMessage(hMuteButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,
+                        (LPARAM)RC().hVolumeBitmap);
+            HorizontalOffset+=ControlWidth+xControlsSpace;
+
+            ControlWidth = 100;
+            hVolumeSlider =
+                CreateWindow(TRACKBAR_CLASS, TEXT("Volume"),
+                             WS_CHILD|WS_VISIBLE|TBS_HORZ|TBS_BOTTOM|TBS_AUTOTICKS,
+                             HorizontalOffset, xControlsSpace,
+                             ControlWidth, ControlsHeight - 4, hWnd(),
+                             (HMENU)ID_FS_VOLUME, 0, 0);
+            HorizontalOffset+=ControlWidth+xControlsSpace;
+            SendMessage(hVolumeSlider, TBM_SETRANGE, FALSE, (LPARAM) MAKELONG (0, 100));
+            SendMessage(hVolumeSlider, TBM_SETTICFREQ, (WPARAM) 10, 0);
+
+            ControlWidth = ButtonsWidth;
+            hFSButton =
+                CreateWindow(TEXT("BUTTON"), TEXT("Toggle fullscreen"),
+                             WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
+                             HorizontalOffset, xControlsSpace,
+                             ControlWidth, ControlsHeight, hWnd(),
+                             (HMENU)ID_FS_SWITCH_FS, 0, 0);
+            SendMessage(hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP,
+                        (LPARAM)RC().hDeFullscreenBitmap);
+            HorizontalOffset+=ControlWidth+xControlsSpace;
+
+            RECT rect;
+            GetClientRect(GetParent(hWnd()), &rect);
+
+            int ControlWndWidth = HorizontalOffset;
+            int ControlWndHeight = xControlsSpace+ControlsHeight+xControlsSpace;
+            SetWindowPos(hWnd(), 0,
+                         0, (rect.bottom - rect.top) - ControlWndWidth,
+                         rect.right-rect.left, ControlWndHeight,
+                         SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE);
+
+            //new message blinking timer
+            SetTimer(hWnd(), 2, 500, NULL);
+
+            CreateToolTip();
+
+            break;
+        }
+        case WM_SHOWWINDOW:{
+            if(FALSE!=wParam){ //showing
+                UpdateButtons();
+            }
+            break;
+        }
+        case WM_LBUTTONUP:{
+            POINT BtnUpPoint = {LOWORD(lParam), HIWORD(lParam)};
+            RECT VideoPosRect;
+            GetWindowRect(hVideoPosScroll, &VideoPosRect);
+            ClientToScreen(hWnd(), &BtnUpPoint);
+            if(PtInRect(&VideoPosRect, BtnUpPoint)){
+                SetVideoPos(float(BtnUpPoint.x-VideoPosRect.left)/(VideoPosRect.right-VideoPosRect.left));
+            }
+            break;
+        }
+        case WM_TIMER:{
+            switch(wParam){
+                case 1:{
+                    POINT MousePoint;
+                    GetCursorPos(&MousePoint);
+                    RECT ControlWndRect;
+                    GetWindowRect(hWnd(), &ControlWndRect);
+                    if(PtInRect(&ControlWndRect, MousePoint)||GetCapture()==hVolumeSlider){
+                        //do not allow control window to close while mouse is within
+                        NeedShowControls();
+                    }
+                    else{
+                        NeedHideControls();
+                    }
+                    break;
+                }
+                case 2:{
+                    UpdateButtons();
+                    break;
+                }
+            }
+            break;
+        }
+        case WM_SETCURSOR:{
+            RECT VideoPosRect;
+            GetWindowRect(hVideoPosScroll, &VideoPosRect);
+            DWORD dwMsgPos = GetMessagePos();
+            POINT MsgPosPoint = {LOWORD(dwMsgPos), HIWORD(dwMsgPos)};
+            if(PtInRect(&VideoPosRect, MsgPosPoint)){
+                SetCursor(LoadCursor(NULL, IDC_HAND));
+                return TRUE;
+            }
+            else{
+                return VLCWnd::WindowProc(uMsg, wParam, lParam);
+            }
+            break;
+        }
+        case WM_NCDESTROY:
+            break;
+        case WM_COMMAND:{
+            WORD NCode = HIWORD(wParam);
+            WORD Control = LOWORD(wParam);
+            switch(NCode){
+                case BN_CLICKED:{
+                    switch(Control){
+                        case ID_FS_SWITCH_FS:
+                            WM().ToggleFullScreen();
+                            break;
+                        case ID_FS_PLAY_PAUSE:{
+                            libvlc_media_player_t* mp = MP();
+                            if( mp ){
+                                if( IsPlaying() )
+                                    libvlc_media_player_pause(mp);
+                                else
+                                    libvlc_media_player_play(mp);
+                            }
+                            break;
+                        }
+                        case ID_FS_MUTE:{
+                            libvlc_media_player_t* mp = MP();
+                            if( mp ){
+                                libvlc_audio_set_mute(mp, IsDlgButtonChecked(hWnd(), ID_FS_MUTE));
+                                SyncVolumeSliderWithVLCVolume();
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case WM_SIZE:{
+            const int new_client_width = LOWORD(lParam);
+            const int new_client_height = HIWORD(lParam);
+
+            HDWP hDwp = BeginDeferWindowPos(4);
+
+            int VideoScrollWidth = new_client_width;
+
+            POINT pt = {0, 0};
+            RECT rect;
+            GetWindowRect(hPlayPauseButton, &rect);
+            pt.x = rect.right;
+            ScreenToClient(hWnd(), &pt);
+            VideoScrollWidth -= pt.x;
+            VideoScrollWidth -= xControlsSpace;
+
+            RECT VideoSrcollRect;
+            GetWindowRect(hVideoPosScroll, &VideoSrcollRect);
+
+            RECT MuteRect;
+            GetWindowRect(hMuteButton, &MuteRect);
+            VideoScrollWidth -= xControlsSpace;
+            VideoScrollWidth -= (MuteRect.right - MuteRect.left);
+
+            RECT VolumeRect;
+            GetWindowRect(hVolumeSlider, &VolumeRect);
+            VideoScrollWidth -= xControlsSpace;
+            VideoScrollWidth -= (VolumeRect.right - VolumeRect.left);
+
+            RECT FSRect;
+            GetWindowRect(hFSButton, &FSRect);
+            VideoScrollWidth -= xControlsSpace;
+            VideoScrollWidth -= (FSRect.right - FSRect.left);
+            VideoScrollWidth -= xControlsSpace;
+
+            pt.x = VideoSrcollRect.left;
+            pt.y = VideoSrcollRect.top;
+            ScreenToClient(hWnd(), &pt);
+            hDwp = DeferWindowPos(hDwp, hVideoPosScroll, 0, pt.x, pt.y,
+                                  VideoScrollWidth,
+                                  VideoSrcollRect.bottom - VideoSrcollRect.top,
+                                  SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+
+            int HorizontalOffset =
+                pt.x + VideoScrollWidth + xControlsSpace;
+            pt.x = 0;
+            pt.y = MuteRect.top;
+            ScreenToClient(hWnd(), &pt);
+            hDwp = DeferWindowPos(hDwp, hMuteButton, 0,
+                                  HorizontalOffset, pt.y, 0, 0,
+                                  SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+            HorizontalOffset +=
+                MuteRect.right - MuteRect.left + xControlsSpace;
+
+            pt.x = 0;
+            pt.y = VolumeRect.top;
+            ScreenToClient(hWnd(), &pt);
+            hDwp = DeferWindowPos(hDwp, hVolumeSlider, 0,
+                                  HorizontalOffset, pt.y, 0, 0,
+                                  SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+            HorizontalOffset +=
+                VolumeRect.right - VolumeRect.left + xControlsSpace;
+
+            pt.x = 0;
+            pt.y = FSRect.top;
+            ScreenToClient(hWnd(), &pt);
+            hDwp = DeferWindowPos(hDwp, hFSButton, 0,
+                                  HorizontalOffset, pt.y, 0, 0,
+                                  SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+
+            EndDeferWindowPos(hDwp);
+            break;
+        }
+        case WM_HSCROLL:
+        case WM_VSCROLL: {
+            libvlc_media_player_t* mp = MP();
+            if( mp ){
+                if(hVolumeSlider==(HWND)lParam){
+                    LRESULT SliderPos = SendMessage(hVolumeSlider, (UINT) TBM_GETPOS, 0, 0);
+                    SetVLCVolumeBySliderPos(SliderPos);
+                }
+            }
+            break;
+        }
+        default:
+            return VLCWnd::WindowProc(uMsg, wParam, lParam);
+    }
+    return 0L;
+}
+
+void VLCControlsWnd::UpdateButtons()
+{
+    if(hVideoPosScroll){
+        SetVideoPosScrollRangeByVideoLen();
+        SyncVideoPosScrollPosWithVideoPos();
+    }
+
+    if(hVolumeSlider){
+        SyncVolumeSliderWithVLCVolume();
+    }
+
+    if(hFSButton) {
+        HANDLE hFSBitmap =
+            WM().IsFullScreen() ? RC().hDeFullscreenBitmap :
+                                  RC().hFullscreenBitmap;
+
+        HANDLE hBitmap =
+            (HANDLE)SendMessage(hFSButton, BM_GETIMAGE, (WPARAM)IMAGE_BITMAP, 0);
+
+        if( WM().getNewMessageFlag() &&
+           (hBitmap == RC().hDeFullscreenBitmap ||
+            hBitmap == RC().hFullscreenBitmap) )
+        {
+            SendMessage(hFSButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP,
+                        (LPARAM)RC().hNewMessageBitmap);
+            //do not allow control window to close while there are new messages
+            NeedShowControls();
+        }
+        else{
+            if(hBitmap != hFSBitmap)
+                SendMessage(hFSButton, BM_SETIMAGE,
+                            (WPARAM)IMAGE_BITMAP,
+                            (LPARAM)hFSBitmap);
+        }
+    }
+
+    if(hPlayPauseButton){
+        HANDLE hBmp = IsPlaying() ? RC().hPauseBitmap : RC().hPlayBitmap;
+        SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                    (WPARAM)IMAGE_BITMAP, (LPARAM)hBmp);
+    }
+
+}
+
+void VLCControlsWnd::NeedShowControls()
+{
+    if( !IsWindowVisible( hWnd() ) ){
+        ShowWindow( hWnd(), SW_SHOW );
+    }
+    //hide controls after 2 seconds
+    SetTimer(hWnd(), 1, 2*1000, NULL);
+}
+
+void VLCControlsWnd::NeedHideControls()
+{
+    KillTimer( hWnd(), 1 );
+    ShowWindow( hWnd(), SW_HIDE );
+}
+
+void VLCControlsWnd::SyncVideoPosScrollPosWithVideoPos()
+{
+    libvlc_media_player_t* mp = MP();
+    if( mp ){
+        libvlc_time_t pos = libvlc_media_player_get_time(mp);
+        SetVideoPosScrollPosByVideoPos(pos);
+    }
+}
+
+void VLCControlsWnd::SetVideoPosScrollRangeByVideoLen()
+{
+    libvlc_media_player_t* mp = MP();
+    if( mp ){
+        libvlc_time_t MaxLen = libvlc_media_player_get_length(mp);
+        VideoPosShiftBits = 0;
+        while(MaxLen>0xffff){
+            MaxLen >>= 1;
+            ++VideoPosShiftBits;
+        };
+        SendMessage(hVideoPosScroll, (UINT)PBM_SETRANGE, 0, MAKELPARAM(0, MaxLen));
+    }
+}
+
+void VLCControlsWnd::SetVideoPosScrollPosByVideoPos(libvlc_time_t CurScrollPos)
+{
+    SendMessage(hVideoPosScroll, (UINT)PBM_SETPOS, (WPARAM) (CurScrollPos >> VideoPosShiftBits), 0);
+}
+
+void VLCControlsWnd::SetVideoPos(float Pos) //0-start, 1-end
+{
+    libvlc_media_player_t* mp = MP();
+    if( mp ){
+        libvlc_media_player_set_time(mp, static_cast<libvlc_time_t>(libvlc_media_player_get_length(mp)*Pos));
+        SyncVideoPosScrollPosWithVideoPos();
+    }
+}
+
+void VLCControlsWnd::SyncVolumeSliderWithVLCVolume()
+{
+    libvlc_media_player_t* mp = MP();
+    if( mp ){
+        int vol = libvlc_audio_get_volume(mp);
+        const LRESULT SliderPos = SendMessage(hVolumeSlider, (UINT) TBM_GETPOS, 0, 0);
+        if(SliderPos!=vol)
+            SendMessage(hVolumeSlider, (UINT) TBM_SETPOS, (WPARAM) TRUE, (LPARAM) vol);
+
+        bool muted = libvlc_audio_get_mute(mp)!=0;
+        int MuteButtonState = SendMessage(hMuteButton, (UINT) BM_GETCHECK, 0, 0);
+        if((muted&&(BST_UNCHECKED==MuteButtonState))||(!muted&&(BST_CHECKED==MuteButtonState))){
+            SendMessage(hMuteButton, BM_SETCHECK, (WPARAM)(muted?BST_CHECKED:BST_UNCHECKED), 0);
+        }
+        LRESULT lResult = SendMessage(hMuteButton, BM_GETIMAGE, (WPARAM)IMAGE_BITMAP, 0);
+        if( (muted && ((HANDLE)lResult == RC().hVolumeBitmap)) ||
+            (!muted&&((HANDLE)lResult == RC().hVolumeMutedBitmap)) )
+        {
+            HANDLE hBmp = muted ? RC().hVolumeMutedBitmap : RC().hVolumeBitmap ;
+            SendMessage(hMuteButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)hBmp);
+        }
+    }
+}
+
+void VLCControlsWnd::SetVLCVolumeBySliderPos(int CurPos)
+{
+    libvlc_media_player_t* mp = MP();
+    if( mp ){
+        libvlc_audio_set_volume(mp, CurPos);
+        if(0==CurPos){
+            libvlc_audio_set_mute(mp, IsDlgButtonChecked( hWnd(), ID_FS_MUTE) );
+        }
+        SyncVolumeSliderWithVLCVolume();
+    }
+}
+
+
+/////////////////////////////////////
+//VLCControlsWnd event handlers
+
+void VLCControlsWnd::handle_position_changed_event(const libvlc_event_t* event)
+{
+    SyncVideoPosScrollPosWithVideoPos();
+}
+
+void VLCControlsWnd::handle_input_state_event(const libvlc_event_t* event)
+{
+    switch( event->type )
+    {
+        case libvlc_MediaPlayerPlaying:
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPauseBitmap);
+            break;
+        case libvlc_MediaPlayerPaused:
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPlayBitmap);
+            break;
+        case libvlc_MediaPlayerStopped:
+            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+                        (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPlayBitmap);
+            break;
+    }
+}
+
+//libvlc events arrives from separate thread
+void VLCControlsWnd::OnLibVlcEvent(const libvlc_event_t* event)
+{
+    switch(event->type){
+        case libvlc_MediaPlayerPlaying:
+        case libvlc_MediaPlayerPaused:
+        case libvlc_MediaPlayerStopped:
+            handle_input_state_event(event);
+            break;
+        case libvlc_MediaPlayerPositionChanged:
+            handle_position_changed_event(event);
+            break;
+    }
+}
+
 /////////////////////////////////
 //VLCHolderWnd static members
 HINSTANCE VLCHolderWnd::_hinstance = 0;
@@ -244,11 +786,11 @@ void VLCHolderWnd::LibVlcDetach()
     MouseHook(false);
 }
 
-/////////////////////////////////
-//VLCFullScreenWnd static members
+////////////////////////////////////////////////////////////////////////////////
+//VLCFullScreenWnd members
+////////////////////////////////////////////////////////////////////////////////
 HINSTANCE VLCFullScreenWnd::_hinstance = 0;
 ATOM VLCFullScreenWnd::_fullscreen_wndclass_atom = 0;
-ATOM VLCFullScreenWnd::_fullscreen_controls_wndclass_atom = 0;
 
 void VLCFullScreenWnd::RegisterWndClassName(HINSTANCE hInstance)
 {
@@ -278,37 +820,12 @@ void VLCFullScreenWnd::RegisterWndClassName(HINSTANCE hInstance)
         _fullscreen_wndclass_atom = 0;
     }
 
-    memset(&wClass, 0 , sizeof(wClass));
-    if( ! GetClassInfo(_hinstance,  getControlsClassName(), &wClass) )
-    {
-        wClass.style          = CS_NOCLOSE;
-        wClass.lpfnWndProc    = FSControlsWndWindowProc;
-        wClass.cbClsExtra     = 0;
-        wClass.cbWndExtra     = 0;
-        wClass.hInstance      = _hinstance;
-        wClass.hIcon          = NULL;
-        wClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
-        wClass.hbrBackground  = (HBRUSH)(COLOR_3DFACE+1);
-        wClass.lpszMenuName   = NULL;
-        wClass.lpszClassName  = getControlsClassName();
-
-        _fullscreen_controls_wndclass_atom = RegisterClass(&wClass);
-    }
-    else
-    {
-        _fullscreen_controls_wndclass_atom = 0;
-    }
 }
 void VLCFullScreenWnd::UnRegisterWndClassName()
 {
     if(0 != _fullscreen_wndclass_atom){
         UnregisterClass(MAKEINTATOM(_fullscreen_wndclass_atom), _hinstance);
         _fullscreen_wndclass_atom = 0;
-    }
-
-    if(0 != _fullscreen_controls_wndclass_atom){
-        UnregisterClass(MAKEINTATOM(_fullscreen_controls_wndclass_atom), _hinstance);
-        _fullscreen_controls_wndclass_atom = 0;
     }
 }
 
@@ -325,18 +842,6 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
             fs_data = new VLCFullScreenWnd(hWnd, WM);
             SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(fs_data));
 
-            fs_data->hControlsWnd =
-                CreateWindow(fs_data->getControlsClassName(),
-                        TEXT("VLC ActiveX Full Screen Controls Window"),
-                        WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS,
-                        0,
-                        0,
-                        0, 0,
-                        hWnd,
-                        0,
-                        VLCFullScreenWnd::_hinstance,
-                        (LPVOID) fs_data);
-
             break;
         }
         case WM_NCDESTROY:
@@ -347,8 +852,6 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
             if(FALSE==wParam){ //hiding
                 break;
             }
-
-            fs_data->NeedShowControls();
 
             //simulate lParam for WM_SIZE
             RECT ClientRect;
@@ -361,199 +864,6 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
                 int new_client_height = HIWORD(lParam);
                 VLCHolderWnd* HolderWnd =  fs_data->_WindowsManager->getHolderWnd();
                 SetWindowPos(HolderWnd->getHWND(), HWND_BOTTOM, 0, 0, new_client_width, new_client_height, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
-            }
-            break;
-        }
-        default:
-            return DefWindowProc(hWnd, uMsg, wParam, lParam);
-    }
-    return 0L;
-};
-
-#define ID_FS_SWITCH_FS 1
-#define ID_FS_PLAY_PAUSE 2
-#define ID_FS_VIDEO_POS_SCROLL 3
-#define ID_FS_MUTE 4
-#define ID_FS_VOLUME 5
-
-LRESULT CALLBACK VLCFullScreenWnd::FSControlsWndWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    VLCFullScreenWnd* fs_data = reinterpret_cast<VLCFullScreenWnd *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
-    switch( uMsg )
-    {
-        case WM_CREATE:{
-            CREATESTRUCT* CreateStruct = (CREATESTRUCT*)(lParam);
-            fs_data = (VLCFullScreenWnd*)CreateStruct->lpCreateParams;
-            const VLCViewResources& rc = fs_data->RC();
-
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(fs_data));
-
-            const int ControlsHeight = 21+2;
-            const int ButtonsWidth = ControlsHeight;
-            const int ControlsSpace = 5;
-            const int ScrollVOffset = (ControlsHeight-GetSystemMetrics(SM_CXHSCROLL))/2;
-
-            int HorizontalOffset = ControlsSpace;
-            int ControlWidth = ButtonsWidth;
-            fs_data->hFSButton =
-                CreateWindow(TEXT("BUTTON"), TEXT("End Full Screen"), WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
-                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_SWITCH_FS, 0, 0);
-            SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hDeFullscreenBitmap);
-            HorizontalOffset+=ControlWidth+ControlsSpace;
-
-            ControlWidth = ButtonsWidth;
-            fs_data->hPlayPauseButton =
-                CreateWindow(TEXT("BUTTON"), TEXT("Play/Pause"), WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
-                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_PLAY_PAUSE, 0, 0);
-            SendMessage(fs_data->hPlayPauseButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPauseBitmap);
-            HorizontalOffset+=ControlWidth+ControlsSpace;
-
-            ControlWidth = 200;
-            int VideoPosControlHeight = 12;
-            fs_data->hVideoPosScroll =
-                CreateWindow(PROGRESS_CLASS, TEXT("Video Position"), WS_CHILD|WS_DISABLED|WS_VISIBLE|SBS_HORZ|SBS_TOPALIGN|PBS_SMOOTH,
-                             HorizontalOffset, ControlsSpace+(ControlsHeight-VideoPosControlHeight)/2, ControlWidth, VideoPosControlHeight, hWnd, (HMENU)ID_FS_VIDEO_POS_SCROLL, 0, 0);
-            HMODULE hThModule = LoadLibrary(TEXT("UxTheme.dll"));
-            if(hThModule){
-                FARPROC proc = GetProcAddress(hThModule, "SetWindowTheme");
-                typedef HRESULT (WINAPI* SetWindowThemeProc)(HWND, LPCWSTR, LPCWSTR);
-                if(proc){
-                    //SetWindowTheme(fs_data->hVideoPosScroll, L"", L"");
-                    ((SetWindowThemeProc)proc)(fs_data->hVideoPosScroll, L"", L"");
-                }
-                FreeLibrary(hThModule);
-            }
-            HorizontalOffset+=ControlWidth+ControlsSpace;
-
-            ControlWidth = ButtonsWidth;
-            fs_data->hMuteButton =
-                CreateWindow(TEXT("BUTTON"), TEXT("Mute"), WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX|BS_PUSHLIKE|BS_BITMAP, //BS_FLAT
-                             HorizontalOffset, ControlsSpace, ControlWidth, ControlsHeight, hWnd, (HMENU)ID_FS_MUTE, 0, 0);
-            SendMessage(fs_data->hMuteButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hVolumeBitmap);
-            HorizontalOffset+=ControlWidth+ControlsSpace;
-
-            ControlWidth = 100;
-            fs_data->hVolumeSlider =
-                CreateWindow(TRACKBAR_CLASS, TEXT("Volume"), WS_CHILD|WS_VISIBLE|TBS_HORZ|TBS_BOTTOM|TBS_AUTOTICKS,
-                             HorizontalOffset, ControlsSpace, ControlWidth, 21, hWnd, (HMENU)ID_FS_VOLUME, 0, 0);
-            HorizontalOffset+=ControlWidth+ControlsSpace;
-            SendMessage(fs_data->hVolumeSlider, TBM_SETRANGE, FALSE, (LPARAM) MAKELONG (0, 100));
-            SendMessage(fs_data->hVolumeSlider, TBM_SETTICFREQ, (WPARAM) 10, 0);
-            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
-
-            int ControlWndWidth = HorizontalOffset;
-            int ControlWndHeight = ControlsSpace+ControlsHeight+ControlsSpace;
-            SetWindowPos(hWnd, HWND_TOPMOST, (GetSystemMetrics(SM_CXSCREEN)-ControlWndWidth)/2, 0,
-                         ControlWndWidth, ControlWndHeight, SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE);
-
-            //new message blinking timer
-            SetTimer(hWnd, 2, 500, NULL);
-
-            fs_data->CreateToolTip();
-
-            break;
-        }
-        case WM_LBUTTONUP:{
-            POINT BtnUpPoint = {LOWORD(lParam), HIWORD(lParam)};
-            RECT VideoPosRect;
-            GetWindowRect(fs_data->hVideoPosScroll, &VideoPosRect);
-            ClientToScreen(hWnd, &BtnUpPoint);
-            if(PtInRect(&VideoPosRect, BtnUpPoint)){
-                fs_data->SetVideoPos(float(BtnUpPoint.x-VideoPosRect.left)/(VideoPosRect.right-VideoPosRect.left));
-            }
-            break;
-        }
-        case WM_TIMER:{
-            switch(wParam){
-                case 1:{
-                    POINT MousePoint;
-                    GetCursorPos(&MousePoint);
-                    RECT ControlWndRect;
-                    GetWindowRect(fs_data->hControlsWnd, &ControlWndRect);
-                    if(PtInRect(&ControlWndRect, MousePoint)||GetCapture()==fs_data->hVolumeSlider){
-                        //do not allow control window to close while mouse is within
-                        fs_data->NeedShowControls();
-                    }
-                    else{
-                        fs_data->NeedHideControls();
-                    }
-                    break;
-                }
-                case 2:{
-                    const VLCViewResources& rc = fs_data->RC();
-                    LRESULT lResult = SendMessage(fs_data->hFSButton, BM_GETIMAGE, (WPARAM)IMAGE_BITMAP, 0);
-                    if((HANDLE)lResult == rc.hDeFullscreenBitmap){
-                        if(fs_data->_WindowsManager->getNewMessageFlag()){
-                            SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hNewMessageBitmap);
-                            //do not allow control window to close while there are new messages
-                            fs_data->NeedShowControls();
-                        }
-                    }
-                    else{
-                        SendMessage(fs_data->hFSButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hDeFullscreenBitmap);
-                    }
-
-                    break;
-                }
-            }
-            break;
-        }
-        case WM_SETCURSOR:{
-            RECT VideoPosRect;
-            GetWindowRect(fs_data->hVideoPosScroll, &VideoPosRect);
-            DWORD dwMsgPos = GetMessagePos();
-            POINT MsgPosPoint = {LOWORD(dwMsgPos), HIWORD(dwMsgPos)};
-            if(PtInRect(&VideoPosRect, MsgPosPoint)){
-                SetCursor(LoadCursor(NULL, IDC_HAND));
-                return TRUE;
-            }
-            else{
-                return DefWindowProc(hWnd, uMsg, wParam, lParam);
-            }
-            break;
-        }
-        case WM_NCDESTROY:
-            break;
-        case WM_COMMAND:{
-            WORD NCode = HIWORD(wParam);
-            WORD Control = LOWORD(wParam);
-            switch(NCode){
-                case BN_CLICKED:{
-                    switch(Control){
-                        case ID_FS_SWITCH_FS:
-                            fs_data->_WindowsManager->ToggleFullScreen();
-                            break;
-                        case ID_FS_PLAY_PAUSE:{
-                            libvlc_media_player_t* p_md = fs_data->getMD();
-                            if( p_md ){
-                                if(fs_data->IsPlaying()) libvlc_media_player_pause(p_md);
-                                else libvlc_media_player_play(p_md);
-                            }
-                            break;
-                        }
-                        case ID_FS_MUTE:{
-                            libvlc_media_player_t* p_md = fs_data->getMD();
-                            if( p_md ){
-                                libvlc_audio_set_mute(p_md, IsDlgButtonChecked(hWnd, ID_FS_MUTE));
-                                fs_data->SyncVolumeSliderWithVLCVolume();
-                            }
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-            break;
-        }
-        case WM_HSCROLL:
-        case WM_VSCROLL: {
-            libvlc_media_player_t* p_md = fs_data->getMD();
-            if( p_md ){
-                if(fs_data->hVolumeSlider==(HWND)lParam){
-                    LRESULT SliderPos = SendMessage(fs_data->hVolumeSlider, (UINT) TBM_GETPOS, 0, 0);
-                    fs_data->SetVLCVolumeBySliderPos(SliderPos);
-                }
             }
             break;
         }
@@ -578,220 +888,6 @@ VLCFullScreenWnd* VLCFullScreenWnd::CreateFSWindow(VLCWindowsManager* WM)
         return reinterpret_cast<VLCFullScreenWnd*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     return 0;
-}
-
-/////////////////////////////////////
-//VLCFullScreenWnd members
-VLCFullScreenWnd::~VLCFullScreenWnd()
-{
-    if(hToolTipWnd){
-        ::DestroyWindow(hToolTipWnd);
-        hToolTipWnd = 0;
-    }
-}
-
-void VLCFullScreenWnd::NeedShowControls()
-{
-    if(!IsWindowVisible(hControlsWnd)){
-        libvlc_media_player_t* p_md = getMD();
-        if( p_md ){
-            if(hVideoPosScroll){
-                SetVideoPosScrollRangeByVideoLen();
-                SyncVideoPosScrollPosWithVideoPos();
-            }
-            if(hVolumeSlider){
-                SyncVolumeSliderWithVLCVolume();
-            }
-            if(hPlayPauseButton){
-                HANDLE hBmp = IsPlaying() ? RC().hPauseBitmap : RC().hPlayBitmap;
-                SendMessage(hPlayPauseButton, BM_SETIMAGE,
-                            (WPARAM)IMAGE_BITMAP, (LPARAM)hBmp);
-            }
-        }
-        ShowWindow(hControlsWnd, SW_SHOW);
-    }
-    //hide controls after 2 seconds
-    SetTimer(hControlsWnd, 1, 2*1000, NULL);
-}
-
-void VLCFullScreenWnd::NeedHideControls()
-{
-    KillTimer(hControlsWnd, 1);
-    ShowWindow(hControlsWnd, SW_HIDE);
-}
-
-void VLCFullScreenWnd::SyncVideoPosScrollPosWithVideoPos()
-{
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        libvlc_time_t pos = libvlc_media_player_get_time(p_md);
-        SetVideoPosScrollPosByVideoPos(pos);
-    }
-}
-
-void VLCFullScreenWnd::SetVideoPosScrollRangeByVideoLen()
-{
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        libvlc_time_t MaxLen = libvlc_media_player_get_length(p_md);
-        VideoPosShiftBits = 0;
-        while(MaxLen>0xffff){
-            MaxLen >>= 1;
-            ++VideoPosShiftBits;
-        };
-        SendMessage(hVideoPosScroll, (UINT)PBM_SETRANGE, 0, MAKELPARAM(0, MaxLen));
-    }
-}
-
-void VLCFullScreenWnd::SetVideoPosScrollPosByVideoPos(libvlc_time_t CurScrollPos)
-{
-    SendMessage(hVideoPosScroll, (UINT)PBM_SETPOS, (WPARAM) (CurScrollPos >> VideoPosShiftBits), 0);
-}
-
-void VLCFullScreenWnd::SetVideoPos(float Pos) //0-start, 1-end
-{
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        libvlc_media_player_set_time(p_md, libvlc_media_player_get_length(p_md)*Pos);
-        SyncVideoPosScrollPosWithVideoPos();
-    }
-}
-
-void VLCFullScreenWnd::SyncVolumeSliderWithVLCVolume()
-{
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        int vol = libvlc_audio_get_volume(p_md);
-        const LRESULT SliderPos = SendMessage(hVolumeSlider, (UINT) TBM_GETPOS, 0, 0);
-        if(SliderPos!=vol)
-            SendMessage(hVolumeSlider, (UINT) TBM_SETPOS, (WPARAM) TRUE, (LPARAM) vol);
-
-        bool muted = libvlc_audio_get_mute(p_md);
-        int MuteButtonState = SendMessage(hMuteButton, (UINT) BM_GETCHECK, 0, 0);
-        if((muted&&(BST_UNCHECKED==MuteButtonState))||(!muted&&(BST_CHECKED==MuteButtonState))){
-            SendMessage(hMuteButton, BM_SETCHECK, (WPARAM)(muted?BST_CHECKED:BST_UNCHECKED), 0);
-        }
-        LRESULT lResult = SendMessage(hMuteButton, BM_GETIMAGE, (WPARAM)IMAGE_BITMAP, 0);
-        if( (muted && ((HANDLE)lResult == RC().hVolumeBitmap)) ||
-            (!muted&&((HANDLE)lResult == RC().hVolumeMutedBitmap)) )
-        {
-            HANDLE hBmp = muted ? RC().hVolumeMutedBitmap : RC().hVolumeBitmap ;
-            SendMessage(hMuteButton, BM_SETIMAGE,
-                        (WPARAM)IMAGE_BITMAP, (LPARAM)hBmp);
-        }
-    }
-}
-
-void VLCFullScreenWnd::SetVLCVolumeBySliderPos(int CurPos)
-{
-    libvlc_media_player_t* p_md = getMD();
-    if( p_md ){
-        libvlc_audio_set_volume(p_md, CurPos);
-        if(0==CurPos){
-            libvlc_audio_set_mute(p_md, IsDlgButtonChecked(getHWND(), ID_FS_MUTE));
-        }
-        SyncVolumeSliderWithVLCVolume();
-    }
-}
-
-void VLCFullScreenWnd::CreateToolTip()
-{
-    hToolTipWnd = CreateWindowEx(WS_EX_TOPMOST,
-            TOOLTIPS_CLASS,
-            NULL,
-            WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            this->getHWND(),
-            NULL,
-            _hinstance,
-            NULL);
-
-    SetWindowPos(hToolTipWnd,
-            HWND_TOPMOST,
-            0, 0, 0, 0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-
-
-    TOOLINFO ti;
-    ti.cbSize = sizeof(TOOLINFO);
-    ti.uFlags = TTF_SUBCLASS|TTF_IDISHWND;
-    ti.hwnd = this->getHWND();
-    ti.hinst = _hinstance;
-
-    TCHAR HintText[100];
-    RECT ActivateTTRect;
-
-    //end fullscreen button tooltip
-    GetWindowRect(this->hFSButton, &ActivateTTRect);
-    GetWindowText(this->hFSButton, HintText, sizeof(HintText));
-    ti.uId = (UINT_PTR)this->hFSButton;
-    ti.rect = ActivateTTRect;
-    ti.lpszText = HintText;
-    SendMessage(hToolTipWnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
-
-    //play/pause button tooltip
-    GetWindowRect(this->hPlayPauseButton, &ActivateTTRect);
-    GetWindowText(this->hPlayPauseButton, HintText, sizeof(HintText));
-    ti.uId = (UINT_PTR)this->hPlayPauseButton;
-    ti.rect = ActivateTTRect;
-    ti.lpszText = HintText;
-    SendMessage(hToolTipWnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
-
-    //mute button tooltip
-    GetWindowRect(this->hMuteButton, &ActivateTTRect);
-    GetWindowText(this->hMuteButton, HintText, sizeof(HintText));
-    ti.uId = (UINT_PTR)this->hMuteButton;
-    ti.rect = ActivateTTRect;
-    ti.lpszText = HintText;
-    SendMessage(hToolTipWnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);
-}
-
-/////////////////////////////////////
-//VLCFullScreenWnd event handlers
-void VLCFullScreenWnd::handle_position_changed_event(const libvlc_event_t* event)
-{
-    SyncVideoPosScrollPosWithVideoPos();
-}
-
-void VLCFullScreenWnd::handle_input_state_event(const libvlc_event_t* event)
-{
-    const VLCViewResources& rc = RC();
-    switch( event->type )
-    {
-        case libvlc_MediaPlayerPlaying:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE,
-                        (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPauseBitmap);
-            break;
-        case libvlc_MediaPlayerPaused:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE,
-                        (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPlayBitmap);
-            break;
-        case libvlc_MediaPlayerStopped:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE,
-                        (WPARAM)IMAGE_BITMAP, (LPARAM)rc.hPlayBitmap);
-            break;
-    }
-}
-
-//libvlc events arrives from separate thread
-void VLCFullScreenWnd::OnLibVlcEvent(const libvlc_event_t* event)
-{
-    if( !_WindowsManager->IsFullScreen() )
-        return;
-
-    switch(event->type){
-        case libvlc_MediaPlayerPlaying:
-        case libvlc_MediaPlayerPaused:
-        case libvlc_MediaPlayerStopped:
-            handle_input_state_event(event);
-            break;
-        case libvlc_MediaPlayerPositionChanged:
-            handle_position_changed_event(event);
-            break;
-    }
 }
 
 ///////////////////////
@@ -944,7 +1040,6 @@ void VLCWindowsManager::OnMouseEvent(UINT uMouseMsg)
             DWORD MsgPos = GetMessagePos();
             if(Last_WM_MOUSEMOVE_Pos != MsgPos){
                 Last_WM_MOUSEMOVE_Pos = MsgPos;
-                if(IsFullScreen()) _FSWnd->NeedShowControls();
             }
             break;
         }
