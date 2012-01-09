@@ -18,6 +18,7 @@ DIST_misc = \
     axvlc.tlb \
     inplace.bmp \
     vlc16x16.bmp \
+    ../share/pixmaps/win32/fullscreen.bmp \
     ../share/pixmaps/win32/defullscreen.bmp \
     ../share/pixmaps/win32/pixmaps/play.bmp \
     ../share/pixmaps/win32/pixmaps/pause.bmp \
