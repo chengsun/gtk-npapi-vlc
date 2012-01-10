@@ -29,6 +29,7 @@
 #include <vlc/vlc.h>
 
 #include "win32_vlcwnd.h"
+#include "vlc_player_options.h"
 
 struct VLCViewResources
 {
@@ -114,6 +115,7 @@ private:
     VLCWindowsManager& WM() {return *_wm;}
     inline const VLCViewResources& RC();
     inline libvlc_media_player_t* MP() const;
+    inline const vlc_player_options* PO() const;
 
     void CreateToolTip();
 
@@ -243,7 +245,8 @@ private:
 class VLCWindowsManager
 {
 public:
-    VLCWindowsManager(HMODULE hModule, const VLCViewResources& rc);
+    VLCWindowsManager(HMODULE hModule, const VLCViewResources& rc,
+                      const vlc_player_options* = 0);
     ~VLCWindowsManager();
 
     void CreateWindows(HWND hWindowedParentWnd);
@@ -262,6 +265,7 @@ public:
     VLCFullScreenWnd* getFullScreenWnd() const {return _FSWnd;}
     libvlc_media_player_t* getMD() const {return _p_md;}
     const VLCViewResources& RC() const {return _rc;}
+    const vlc_player_options* PO() const {return _po;}
 
 public:
     void setNewMessageFlag(bool Yes)
@@ -280,6 +284,8 @@ private:
 private:
     const VLCViewResources& _rc;
     HMODULE _hModule;
+    const vlc_player_options *const _po;
+
     HWND _hWindowedParentWnd;
 
     libvlc_media_player_t* _p_md;
@@ -304,6 +310,11 @@ inline libvlc_media_player_t* VLCControlsWnd::MP() const
 inline const VLCViewResources& VLCControlsWnd::RC()
 {
     return _wm->RC();
+}
+
+inline const vlc_player_options* VLCControlsWnd::PO() const
+{
+    return _wm->PO();
 }
 
 inline libvlc_media_player_t* VLCHolderWnd::getMD() const
