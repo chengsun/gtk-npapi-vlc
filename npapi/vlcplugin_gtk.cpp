@@ -365,6 +365,10 @@ bool VlcPluginGtk::create_windows()
 
     parent = gtk_plug_new(socket);
     gtk_widget_modify_bg(parent, GTK_STATE_NORMAL, &color_bg);
+    gtk_widget_add_events(parent,
+            GDK_BUTTON_PRESS_MASK
+          | GDK_BUTTON_RELEASE_MASK);
+    g_signal_connect(G_OBJECT(parent), "button-press-event", G_CALLBACK(video_button_handler), this);
 
     parent_vbox = gtk_vbox_new(false, 0);
     gtk_container_add(GTK_CONTAINER(parent), parent_vbox);
