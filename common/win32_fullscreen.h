@@ -143,6 +143,9 @@ public:
     void LibVlcAttach();
     void LibVlcDetach();
 
+    void NeedShowControls()
+        { if(_CtrlsWnd) _CtrlsWnd->NeedShowControls(); }
+
     //libvlc events arrives from separate thread
     void OnLibVlcEvent(const libvlc_event_t* event);
 
@@ -150,6 +153,8 @@ private:
     static LPCTSTR getClassName(void)  { return TEXT("VLC ActiveX Window Holder Class"); };
     static LRESULT CALLBACK VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
+
+    HWND FindMP_hWnd();
 
     HHOOK _hMouseHook;
     DWORD _MouseHookThreadId;
@@ -167,7 +172,7 @@ private:
 private:
     VLCHolderWnd(HWND hWnd, VLCWindowsManager* WM)
         : _hMouseHook(NULL), _MouseHookThreadId(0), _hWnd(hWnd),
-        _WindowsManager(WM){};
+        _WindowsManager(WM), _CtrlsWnd(0) {};
 
 public:
     HWND getHWND() const {return _hWnd;}
@@ -175,6 +180,7 @@ public:
 private:
     HWND _hWnd;
     VLCWindowsManager* _WindowsManager;
+    VLCControlsWnd*    _CtrlsWnd;
 };
 
 ///////////////////////

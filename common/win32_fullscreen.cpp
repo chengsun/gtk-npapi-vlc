@@ -655,6 +655,9 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             MoveWindow(hWnd, 0, 0,
                        (ParentClientRect.right-ParentClientRect.left),
                        (ParentClientRect.bottom-ParentClientRect.top), FALSE);
+            h_data->_CtrlsWnd =
+                VLCControlsWnd::CreateControlsWindow(h_data->_hinstance, WM,
+                                                     hWnd);
             break;
         }
         case WM_PAINT:{
@@ -668,6 +671,12 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             EndPaint(hWnd, &PaintStruct);
             break;
         }
+        case WM_SHOWWINDOW:{
+            if(FALSE!=wParam){ //showing
+                h_data->NeedShowControls();
+            }
+            break;
+        }
         case WM_NCDESTROY:
             delete h_data;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
@@ -676,6 +685,19 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
             h_data->MouseHook(true);
             break;
         }
+        case WM_SIZE:
+            if(h_data->_CtrlsWnd){
+                int new_client_width = LOWORD(lParam);
+                int new_client_height = HIWORD(lParam);
+
+                RECT rect;
+                GetWindowRect(h_data->_CtrlsWnd->hWnd(), &rect);
+
+                MoveWindow(h_data->_CtrlsWnd->hWnd(),
+                           0, new_client_height - (rect.bottom - rect.top),
+                           new_client_width, (rect.bottom-rect.top), TRUE);
+            }
+            break;
         case WM_MOUSEMOVE:
         case WM_LBUTTONDBLCLK:
             h_data->_WindowsManager->OnMouseEvent(uMsg);
@@ -693,6 +715,12 @@ LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARA
 void VLCHolderWnd::DestroyWindow()
 {
     LibVlcDetach();
+
+    if(_CtrlsWnd){
+        delete _CtrlsWnd;
+        _CtrlsWnd = 0;
+    }
+
     if(_hWnd)
         ::DestroyWindow(_hWnd);
 };
@@ -730,14 +758,14 @@ LRESULT CALLBACK VLCHolderWnd::MouseHookProc(int nCode, WPARAM wParam, LPARAM lP
 void VLCHolderWnd::MouseHook(bool SetHook)
 {
     if(SetHook){
-        const HWND hChildWnd = GetWindow(getHWND(), GW_CHILD);
-        const DWORD WndThreadID = (hChildWnd) ? GetWindowThreadProcessId(hChildWnd, NULL) : 0;
-        if( _hMouseHook &&( !hChildWnd || WndThreadID != _MouseHookThreadId) ){
+        HWND hMPWnd = FindMP_hWnd();
+        const DWORD WndThreadID = (hMPWnd) ? GetWindowThreadProcessId(hMPWnd, NULL) : 0;
+        if( _hMouseHook &&( !hMPWnd || WndThreadID != _MouseHookThreadId) ){
             //unhook if something changed
             MouseHook(false);
         }
 
-        if(!_hMouseHook && hChildWnd && WndThreadID){
+        if(!_hMouseHook && hMPWnd && WndThreadID){
             _MouseHookThreadId = WndThreadID;
             _hMouseHook =
                 SetWindowsHookEx(WH_MOUSE, VLCHolderWnd::MouseHookProc,
@@ -753,6 +781,14 @@ void VLCHolderWnd::MouseHook(bool SetHook)
     }
 }
 
+HWND VLCHolderWnd::FindMP_hWnd()
+{
+    if(_CtrlsWnd)
+        return GetWindow(_CtrlsWnd->hWnd(), GW_HWNDNEXT);
+    else
+        return GetWindow(getHWND(), GW_CHILD);
+}
+
 //libvlc events arrives from separate thread
 void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
 {
@@ -762,14 +798,21 @@ void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
     //So we try catch events,
     //(suppose wnd will be ever created),
     //and then try set mouse hook.
-    const HWND hChildWnd = GetWindow(getHWND(), GW_CHILD);
-    const DWORD WndThreadID = (hChildWnd) ? GetWindowThreadProcessId(hChildWnd, NULL) : 0;
+    HWND hMPWnd = FindMP_hWnd();
+    const DWORD WndThreadID = (hMPWnd) ? GetWindowThreadProcessId(hMPWnd, NULL) : 0;
     //if no hook, or window thread has changed
-    if(!_hMouseHook || (hChildWnd && WndThreadID != _MouseHookThreadId)){
+    if(!_hMouseHook || (hMPWnd && WndThreadID != _MouseHookThreadId)){
+        DWORD s = GetWindowLong(hMPWnd, GWL_STYLE);
+        s |= WS_CLIPSIBLINGS;
+        SetWindowLong(hMPWnd, GWL_STYLE, s);
+
         //libvlc events arrives from separate thread,
         //so we need post message to main thread, to notify it.
         PostMessage(getHWND(), WM_TRY_SET_MOUSE_HOOK, 0, 0);
     }
+
+    if( _CtrlsWnd )
+        _CtrlsWnd->OnLibVlcEvent(event);
 }
 
 void VLCHolderWnd::LibVlcAttach()
@@ -1040,6 +1083,7 @@ void VLCWindowsManager::OnMouseEvent(UINT uMouseMsg)
             DWORD MsgPos = GetMessagePos();
             if(Last_WM_MOUSEMOVE_Pos != MsgPos){
                 Last_WM_MOUSEMOVE_Pos = MsgPos;
+                _HolderWnd->NeedShowControls();
             }
             break;
         }
