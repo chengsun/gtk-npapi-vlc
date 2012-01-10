@@ -329,6 +329,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\common\vlc_player_options.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\activex\vlccontrol.h"
 				>
 			</File>

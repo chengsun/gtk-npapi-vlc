@@ -229,6 +229,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\common\vlc_player_options.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\npapi\vlcplugin_base.h"
 				>
 			</File>
