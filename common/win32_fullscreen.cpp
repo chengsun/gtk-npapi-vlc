@@ -442,8 +442,9 @@ void VLCControlsWnd::UpdateButtons()
 
 void VLCControlsWnd::NeedShowControls()
 {
-    if( !IsWindowVisible( hWnd() ) ){
-        ShowWindow( hWnd(), SW_SHOW );
+    if( !IsWindowVisible( hWnd() )) {
+        if(WM().IsFullScreen() || (PO() && PO()->get_show_toolbar() ) )
+            ShowWindow( hWnd(), SW_SHOW );
     }
     //hide controls after 2 seconds
     SetTimer(hWnd(), 1, 2*1000, NULL);
