@@ -188,7 +188,7 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
 
                 if( ! hasVout )
                 {
-                    /* draw the text from p_plugin->psz_text */
+                    /* draw the text from get_bg_text() */
                     ForeColor(blackColor);
                     PenMode( patCopy );
 
@@ -206,8 +206,8 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
 
                     ForeColor(whiteColor);
                     MoveTo( (npwindow.width-80)/ 2  , npwindow.height / 2 );
-                    if( p_plugin->psz_text )
-                        DrawText( p_plugin->psz_text, 0, strlen(p_plugin->psz_text) );
+                    if( !p_plugin->get_bg_text().empty() )
+                        DrawText( p_plugin->get_bg_text().c_str(), 0, p_plugin->get_bg_text().length() );
                 }
             }
             return true;
@@ -350,7 +350,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             p_plugin->resize_windows();
 
             /* now set plugin state to that requested in parameters */
-            p_plugin->set_toolbar_visible( p_plugin->b_toolbar );
+            p_plugin->set_toolbar_visible( p_plugin->get_show_toolbar() );
 
             /* handle streams properly */
             if( !p_plugin->b_stream )
@@ -359,7 +359,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
                 {
                     if( p_plugin->playlist_add( p_plugin->psz_target ) != -1 )
                     {
-                        if( p_plugin->b_autoplay )
+                        if( p_plugin->get_autoplay() )
                         {
                             p_plugin->playlist_play();
                         }
@@ -459,7 +459,7 @@ void NPP_StreamAsFile( NPP instance, NPStream *stream, const char* fname )
 
     if( p_plugin->playlist_add( stream->url ) != -1 )
     {
-        if( p_plugin->b_autoplay )
+        if( p_plugin->get_autoplay() )
         {
             p_plugin->playlist_play();
         }

@@ -87,7 +87,7 @@ LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 VlcPluginWin::VlcPluginWin(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode), _NPWndProc(0),
-    _WindowsManager(DllGetModule(), _ViewRC)
+    _WindowsManager(DllGetModule(), _ViewRC, this)
 {
     _ViewRC.hDeFullscreenBitmap =
         LoadImage(DllGetModule(), MAKEINTRESOURCE(3),
@@ -125,13 +125,11 @@ VlcPluginWin::~VlcPluginWin()
 
 void VlcPluginWin::toggle_fullscreen()
 {
-    if (!b_allowfullscreen) return;
     _WindowsManager.ToggleFullScreen();
 }
 
 void VlcPluginWin::set_fullscreen(int yes)
 {
-    if (!b_allowfullscreen) return;
     if(yes){
         _WindowsManager.StartFullScreen();
     }

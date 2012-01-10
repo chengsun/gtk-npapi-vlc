@@ -48,14 +48,14 @@ void VlcPluginXcb::set_player_window()
 
 void VlcPluginXcb::toggle_fullscreen()
 {
-    if (!b_allowfullscreen) return;
+    if (!get_enable_fs()) return;
     if (playlist_isplaying())
         libvlc_toggle_fullscreen(libvlc_media_player);
 }
 
 void VlcPluginXcb::set_fullscreen(int yes)
 {
-    if (!b_allowfullscreen) return;
+    if (!get_enable_fs()) return;
     if (playlist_isplaying())
         libvlc_set_fullscreen(libvlc_media_player,yes);
 }
@@ -83,7 +83,7 @@ bool VlcPluginXcb::create_windows()
     xcb_atom_t xembed_info_atom = xcb_intern_atom_reply(conn, cookie, NULL)->atom;
 
     /* create windows */
-    /* TODO: respect psz_bgcolor */
+    /* TODO: respect get_bg_color() */
     const uint32_t parent_values[] = {0x0FFFFF};
     parent = xcb_generate_id(conn);
     xcb_create_window(conn, XCB_COPY_FROM_PARENT, parent, socket,

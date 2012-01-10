@@ -350,12 +350,7 @@ void EventObj::unhook_manager( void *userdata )
 VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     i_npmode(mode),
     b_stream(0),
-    b_autoplay(1),
-    b_toolbar(1),
-    b_allowfullscreen(1),
-    psz_text(NULL),
     psz_target(NULL),
-    psz_bgcolor("#000000"),
     playlist_index(-1),
     libvlc_instance(NULL),
     libvlc_media_list(NULL),
@@ -457,18 +452,17 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         }
         else if( !strcmp( argn[i], "text" ) )
         {
-            free( psz_text );
-            psz_text = strdup( argv[i] );
+            set_bg_text( argv[i] );
         }
         else if( !strcmp( argn[i], "autoplay")
               || !strcmp( argn[i], "autostart") )
         {
-            b_autoplay = boolValue(argv[i]);
+            set_autoplay(boolValue(argv[i]));
         }
         else if( !strcmp( argn[i], "fullscreen" )
               || !strcmp( argn[i], "allowfullscreen" ) )
         {
-            b_allowfullscreen = boolValue(argv[i]);
+            set_enable_fs( boolValue(argv[i]) );
         }
         else if( !strcmp( argn[i], "mute" ) )
         {
@@ -491,11 +485,11 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         }
         else if( !strcmp( argn[i], "toolbar" ) )
         {
-            b_toolbar = boolValue(argv[i]);
+            set_show_toolbar( boolValue(argv[i]) );
         }
         else if( !strcmp( argn[i], "bgcolor" ) )
         {
-            psz_bgcolor = strdup( argv[i] );
+            set_bg_color( argv[i] );
         }
     }
 
@@ -562,7 +556,6 @@ VlcPluginBase::~VlcPluginBase()
 {
     free(psz_baseURL);
     free(psz_target);
-    free(psz_text);
 
     if( libvlc_media_player )
     {

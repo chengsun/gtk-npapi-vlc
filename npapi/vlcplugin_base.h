@@ -81,6 +81,7 @@
 #include <assert.h>
 
 #include "control/nporuntime.h"
+#include "../common/vlc_player_options.h"
 
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
     typedef uint16 NPuint16_t;
@@ -189,7 +190,7 @@ typedef enum vlc_toolbar_clicked_e {
     clicked_Unmute
 } vlc_toolbar_clicked_t;
 
-class VlcPluginBase
+class VlcPluginBase: public vlc_player_options
 {
 protected:
 
@@ -222,10 +223,6 @@ public:
 
     /* plugin properties */
     int      b_stream;
-    int      b_autoplay;
-    int      b_toolbar;
-    int      b_allowfullscreen;
-    char *   psz_text;
     char *   psz_target;
 
     void playlist_play()
@@ -321,7 +318,6 @@ protected:
 
     /* display settings */
     NPWindow  npwindow;
-    const char *psz_bgcolor;
 
     static void eventAsync(void *);
 
