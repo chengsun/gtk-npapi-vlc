@@ -190,9 +190,13 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             SendMessage(hVolumeSlider, TBM_SETTICFREQ, (WPARAM) 10, 0);
 
             ControlWidth = ButtonsWidth;
+            DWORD dwFSBtnStyle = WS_CHILD|BS_BITMAP|BS_FLAT;
+            if( !PO() || PO()->get_enable_fs() ){
+                dwFSBtnStyle |= WS_VISIBLE;
+            }
             hFSButton =
                 CreateWindow(TEXT("BUTTON"), TEXT("Toggle fullscreen"),
-                             WS_CHILD|WS_VISIBLE|BS_BITMAP|BS_FLAT,
+                             dwFSBtnStyle,
                              HorizontalOffset, xControlsSpace,
                              ControlWidth, ControlsHeight, hWnd(),
                              (HMENU)ID_FS_SWITCH_FS, 0, 0);
@@ -309,6 +313,9 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             const int new_client_width = LOWORD(lParam);
             const int new_client_height = HIWORD(lParam);
 
+            bool isFSBtnVisible =
+                (GetWindowLong(hFSButton, GWL_STYLE) & WS_VISIBLE) != 0;
+
             HDWP hDwp = BeginDeferWindowPos(4);
 
             int VideoScrollWidth = new_client_width;
@@ -334,11 +341,13 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             VideoScrollWidth -= xControlsSpace;
             VideoScrollWidth -= (VolumeRect.right - VolumeRect.left);
 
-            RECT FSRect;
-            GetWindowRect(hFSButton, &FSRect);
-            VideoScrollWidth -= xControlsSpace;
-            VideoScrollWidth -= (FSRect.right - FSRect.left);
-            VideoScrollWidth -= xControlsSpace;
+            RECT FSRect = {0, 0, 0, 0};
+            if( isFSBtnVisible ) {
+                GetWindowRect(hFSButton, &FSRect);
+                VideoScrollWidth -= xControlsSpace;
+                VideoScrollWidth -= (FSRect.right - FSRect.left);
+                VideoScrollWidth -= xControlsSpace;
+            }
 
             pt.x = VideoSrcollRect.left;
             pt.y = VideoSrcollRect.top;
@@ -368,12 +377,14 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             HorizontalOffset +=
                 VolumeRect.right - VolumeRect.left + xControlsSpace;
 
-            pt.x = 0;
-            pt.y = FSRect.top;
-            ScreenToClient(hWnd(), &pt);
-            hDwp = DeferWindowPos(hDwp, hFSButton, 0,
-                                  HorizontalOffset, pt.y, 0, 0,
-                                  SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+            if( isFSBtnVisible ) {
+                pt.x = 0;
+                pt.y = FSRect.top;
+                ScreenToClient(hWnd(), &pt);
+                hDwp = DeferWindowPos(hDwp, hFSButton, 0,
+                                      HorizontalOffset, pt.y, 0, 0,
+                                      SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+            }
 
             EndDeferWindowPos(hDwp);
             break;
@@ -1004,7 +1015,7 @@ void VLCWindowsManager::LibVlcDetach()
 
 void VLCWindowsManager::StartFullScreen()
 {
-    if(!_HolderWnd)
+    if( !_HolderWnd || ( PO() && !PO()->get_enable_fs() ) )
         return;//VLCWindowsManager::CreateWindows was not called
 
     if(getMD()&&!IsFullScreen()){
