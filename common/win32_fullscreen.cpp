@@ -584,145 +584,108 @@ void VLCControlsWnd::OnLibVlcEvent(const libvlc_event_t* event)
     }
 }
 
-/////////////////////////////////
-//VLCHolderWnd static members
-HINSTANCE VLCHolderWnd::_hinstance = 0;
-ATOM VLCHolderWnd::_holder_wndclass_atom = 0;
-
+////////////////////////////////////////////////////////////////////////////////
+//VLCHolderWnd members
+////////////////////////////////////////////////////////////////////////////////
 enum{
     WM_TRY_SET_MOUSE_HOOK = WM_USER+1,
     WM_MOUSE_EVENT_NOTIFY = WM_APP+1,
     WM_MOUSE_EVENT_NOTIFY_SUCCESS = 0xFF
 };
 
-void VLCHolderWnd::RegisterWndClassName(HINSTANCE hInstance)
+VLCHolderWnd*
+VLCHolderWnd::CreateHolderWindow(HINSTANCE hInstance,
+                                 HWND hParentWnd, VLCWindowsManager* WM)
 {
-    //save hInstance for future use
-    _hinstance = hInstance;
-
-    WNDCLASS wClass;
-
-    if( ! GetClassInfo(_hinstance, getClassName(), &wClass) )
-    {
-        wClass.style          = CS_DBLCLKS;
-        wClass.lpfnWndProc    = VLCHolderClassWndProc;
-        wClass.cbClsExtra     = 0;
-        wClass.cbWndExtra     = 0;
-        wClass.hInstance      = _hinstance;
-        wClass.hIcon          = NULL;
-        wClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
-        wClass.hbrBackground  = (HBRUSH)GetStockObject(BLACK_BRUSH);
-        wClass.lpszMenuName   = NULL;
-        wClass.lpszClassName  = getClassName();
-
-        _holder_wndclass_atom = RegisterClass(&wClass);
+    VLCHolderWnd* wnd = new VLCHolderWnd(hInstance, WM);
+    if( wnd && wnd->Create(hParentWnd) ) {
+        return wnd;
     }
-    else
-    {
-        _holder_wndclass_atom = 0;
-    }
-}
-
-void VLCHolderWnd::UnRegisterWndClassName()
-{
-    if(0 != _holder_wndclass_atom){
-        UnregisterClass(MAKEINTATOM(_holder_wndclass_atom), _hinstance);
-        _holder_wndclass_atom = 0;
-    }
-}
-
-VLCHolderWnd* VLCHolderWnd::CreateHolderWindow(HWND hParentWnd, VLCWindowsManager* WM)
-{
-    HWND hWnd = CreateWindow(getClassName(),
-                             TEXT("Holder Window"),
-                             WS_CHILD|WS_CLIPCHILDREN|WS_CLIPSIBLINGS|WS_VISIBLE,
-                             0, 0, 0, 0,
-                             hParentWnd,
-                             0,
-                             VLCHolderWnd::_hinstance,
-                             (LPVOID)WM
-                             );
-
-    if(hWnd)
-        return reinterpret_cast<VLCHolderWnd*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
+    delete wnd;
     return 0;
 }
 
-LRESULT CALLBACK VLCHolderWnd::VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+VLCHolderWnd::~VLCHolderWnd()
 {
-    VLCHolderWnd* h_data = reinterpret_cast<VLCHolderWnd*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+}
 
+bool VLCHolderWnd::Create(HWND hWndParent)
+{
+    return VLCWnd::Create(TEXT("Holder Window"),
+                            WS_CHILD|WS_CLIPCHILDREN|WS_CLIPSIBLINGS|WS_VISIBLE,
+                            0, 0, 0, 0, hWndParent, 0);
+}
+
+void VLCHolderWnd::PreRegisterWindowClass(WNDCLASS* wc)
+{
+    wc->hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wc->lpszClassName = TEXT("Web Plugin VLC Window Holder Class");
+}
+
+LRESULT VLCHolderWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
     switch( uMsg )
     {
         case WM_CREATE:{
             CREATESTRUCT* CreateStruct = (CREATESTRUCT*)(lParam);
-            VLCWindowsManager* WM = (VLCWindowsManager*)CreateStruct->lpCreateParams;
-
-            h_data = new VLCHolderWnd(hWnd, WM);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(h_data));
 
             RECT ParentClientRect;
             GetClientRect(CreateStruct->hwndParent, &ParentClientRect);
-            MoveWindow(hWnd, 0, 0,
+            MoveWindow(hWnd(), 0, 0,
                        (ParentClientRect.right-ParentClientRect.left),
                        (ParentClientRect.bottom-ParentClientRect.top), FALSE);
-            h_data->_CtrlsWnd =
-                VLCControlsWnd::CreateControlsWindow(h_data->_hinstance, WM,
-                                                     hWnd);
+            _CtrlsWnd =
+                VLCControlsWnd::CreateControlsWindow(hInstance(), _wm,
+                                                     hWnd());
             break;
         }
         case WM_PAINT:{
             PAINTSTRUCT PaintStruct;
-            HDC hDC = BeginPaint(hWnd, &PaintStruct);
+            HDC hDC = BeginPaint(hWnd(), &PaintStruct);
             RECT rect;
-            GetClientRect(hWnd, &rect);
+            GetClientRect(hWnd(), &rect);
             int IconX = ((rect.right - rect.left) - GetSystemMetrics(SM_CXICON))/2;
             int IconY = ((rect.bottom - rect.top) - GetSystemMetrics(SM_CYICON))/2;
-            DrawIcon(hDC, IconX, IconY, h_data->RC().hBackgroundIcon);
-            EndPaint(hWnd, &PaintStruct);
+            DrawIcon(hDC, IconX, IconY, RC().hBackgroundIcon);
+            EndPaint(hWnd(), &PaintStruct);
             break;
         }
         case WM_SHOWWINDOW:{
             if(FALSE!=wParam){ //showing
-                h_data->NeedShowControls();
+                NeedShowControls();
             }
             break;
         }
-        case WM_NCDESTROY:
-            delete h_data;
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
-            break;
         case WM_TRY_SET_MOUSE_HOOK:{
-            h_data->MouseHook(true);
+            MouseHook(true);
             break;
         }
         case WM_SIZE:
-            if(h_data->_CtrlsWnd){
+            if(_CtrlsWnd){
                 int new_client_width = LOWORD(lParam);
                 int new_client_height = HIWORD(lParam);
 
                 RECT rect;
-                GetWindowRect(h_data->_CtrlsWnd->hWnd(), &rect);
+                GetWindowRect(_CtrlsWnd->hWnd(), &rect);
 
-                MoveWindow(h_data->_CtrlsWnd->hWnd(),
+                MoveWindow(_CtrlsWnd->hWnd(),
                            0, new_client_height - (rect.bottom - rect.top),
                            new_client_width, (rect.bottom-rect.top), TRUE);
             }
             break;
         case WM_MOUSEMOVE:
         case WM_LBUTTONDBLCLK:
-            h_data->_WindowsManager->OnMouseEvent(uMsg);
+            WM().OnMouseEvent(uMsg);
             break;
         case WM_MOUSE_EVENT_NOTIFY:{
-            h_data->_WindowsManager->OnMouseEvent(wParam);
+            WM().OnMouseEvent(wParam);
             return WM_MOUSE_EVENT_NOTIFY_SUCCESS;
         }
         default:
-            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+            return VLCWnd::WindowProc(uMsg, wParam, lParam);
     }
     return 0;
-};
+}
 
 void VLCHolderWnd::DestroyWindow()
 {
@@ -733,8 +696,8 @@ void VLCHolderWnd::DestroyWindow()
         _CtrlsWnd = 0;
     }
 
-    if(_hWnd)
-        ::DestroyWindow(_hWnd);
+    if(hWnd())
+        ::DestroyWindow(hWnd());
 };
 
 LRESULT CALLBACK VLCHolderWnd::MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -798,7 +761,7 @@ HWND VLCHolderWnd::FindMP_hWnd()
     if(_CtrlsWnd)
         return GetWindow(_CtrlsWnd->hWnd(), GW_HWNDNEXT);
     else
-        return GetWindow(getHWND(), GW_CHILD);
+        return GetWindow(hWnd(), GW_CHILD);
 }
 
 //libvlc events arrives from separate thread
@@ -820,7 +783,7 @@ void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
 
         //libvlc events arrives from separate thread,
         //so we need post message to main thread, to notify it.
-        PostMessage(getHWND(), WM_TRY_SET_MOUSE_HOOK, 0, 0);
+        PostMessage(hWnd(), WM_TRY_SET_MOUSE_HOOK, 0, 0);
     }
 
     if( _CtrlsWnd )
@@ -829,12 +792,12 @@ void VLCHolderWnd::OnLibVlcEvent(const libvlc_event_t* event)
 
 void VLCHolderWnd::LibVlcAttach()
 {
-    libvlc_media_player_set_hwnd(getMD(), getHWND());
+    libvlc_media_player_set_hwnd(MP(), hWnd());
 }
 
 void VLCHolderWnd::LibVlcDetach()
 {
-    libvlc_media_player_t* p_md = getMD();
+    libvlc_media_player_t* p_md = MP();
     if(p_md)
         libvlc_media_player_set_hwnd(p_md, 0);
 
@@ -918,7 +881,9 @@ LRESULT CALLBACK VLCFullScreenWnd::FSWndWindowProc(HWND hWnd, UINT uMsg, WPARAM 
                 int new_client_width = LOWORD(lParam);
                 int new_client_height = HIWORD(lParam);
                 VLCHolderWnd* HolderWnd =  fs_data->_WindowsManager->getHolderWnd();
-                SetWindowPos(HolderWnd->getHWND(), HWND_BOTTOM, 0, 0, new_client_width, new_client_height, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
+                SetWindowPos(HolderWnd->hWnd(), HWND_BOTTOM, 0, 0,
+                             new_client_width, new_client_height,
+                             SWP_NOACTIVATE|SWP_NOOWNERZORDER);
             }
             break;
         }
@@ -953,13 +918,11 @@ VLCWindowsManager::VLCWindowsManager(HMODULE hModule, const VLCViewResources& rc
     :_hModule(hModule), _hWindowedParentWnd(0), _p_md(0), _HolderWnd(0), _FSWnd(0),
     _b_new_messages_flag(false), Last_WM_MOUSEMOVE_Pos(0), _rc(rc), _po(po)
 {
-    VLCHolderWnd::RegisterWndClassName(hModule);
     VLCFullScreenWnd::RegisterWndClassName(hModule);
 }
 
 VLCWindowsManager::~VLCWindowsManager()
 {
-    VLCHolderWnd::UnRegisterWndClassName();
     VLCFullScreenWnd::UnRegisterWndClassName();
 }
 
@@ -968,7 +931,9 @@ void VLCWindowsManager::CreateWindows(HWND hWindowedParentWnd)
     _hWindowedParentWnd = hWindowedParentWnd;
 
     if(!_HolderWnd){
-        _HolderWnd = VLCHolderWnd::CreateHolderWindow(hWindowedParentWnd, this);
+        _HolderWnd =
+            VLCHolderWnd::CreateHolderWindow(getHModule(),
+                                             hWindowedParentWnd, this);
     }
 }
 
@@ -976,8 +941,9 @@ void VLCWindowsManager::DestroyWindows()
 {
     if(_HolderWnd){
         _HolderWnd->DestroyWindow();
+        delete _HolderWnd;
+        _HolderWnd = 0;
     }
-    _HolderWnd = 0;
 
     if(_FSWnd){
         _FSWnd->DestroyWindow();
@@ -1040,7 +1006,7 @@ void VLCWindowsManager::StartFullScreen()
         UINT FSFlags = 0;
 #endif
 
-        SetParent(_HolderWnd->getHWND(), _FSWnd->getHWND());
+        SetParent(_HolderWnd->hWnd(), _FSWnd->getHWND());
         SetWindowPos(_FSWnd->getHWND(), HWND_TOPMOST,
                      FSRect.left, FSRect.top,
                      FSRect.right - FSRect.left, FSRect.bottom - FSRect.top,
@@ -1056,11 +1022,12 @@ void VLCWindowsManager::EndFullScreen()
         return;//VLCWindowsManager::CreateWindows was not called
 
     if(IsFullScreen()){
-        SetParent(_HolderWnd->getHWND(), _hWindowedParentWnd);
+        SetParent(_HolderWnd->hWnd(), _hWindowedParentWnd);
 
         RECT WindowedParentRect;
         GetClientRect(_hWindowedParentWnd, &WindowedParentRect);
-        MoveWindow(_HolderWnd->getHWND(), 0, 0, WindowedParentRect.right, WindowedParentRect.bottom, FALSE);
+        MoveWindow(_HolderWnd->hWnd(), 0, 0,
+                   WindowedParentRect.right, WindowedParentRect.bottom, FALSE);
 
         ShowWindow(_FSWnd->getHWND(), SW_HIDE);
 
@@ -1083,7 +1050,7 @@ void VLCWindowsManager::ToggleFullScreen()
 
 bool VLCWindowsManager::IsFullScreen()
 {
-    return 0!=_FSWnd && 0!=_HolderWnd && GetParent(_HolderWnd->getHWND())==_FSWnd->getHWND();
+    return 0!=_FSWnd && 0!=_HolderWnd && GetParent(_HolderWnd->hWnd())==_FSWnd->getHWND();
 }
 
 void VLCWindowsManager::OnMouseEvent(UINT uMouseMsg)

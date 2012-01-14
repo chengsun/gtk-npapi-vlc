@@ -130,16 +130,28 @@ private:
     int VideoPosShiftBits;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//class VLCHolderWnd
+////////////////////////////////////////////////////////////////////////////////
 class VLCWindowsManager;
-///////////////////////
-//VLCHolderWnd
-///////////////////////
-class VLCHolderWnd
+class VLCHolderWnd: public VLCWnd
 {
 public:
-    static void RegisterWndClassName(HINSTANCE hInstance);
-    static void UnRegisterWndClassName();
-    static VLCHolderWnd* CreateHolderWindow(HWND hParentWnd, VLCWindowsManager* WM);
+    static VLCHolderWnd*
+        CreateHolderWindow(HINSTANCE hInstance,
+                           HWND hParentWnd, VLCWindowsManager* WM);
+    ~VLCHolderWnd();
+
+protected:
+    VLCHolderWnd(HINSTANCE hInstance, VLCWindowsManager* WM)
+        : VLCWnd(hInstance), _hMouseHook(NULL), _MouseHookThreadId(0),
+         _wm(WM), _CtrlsWnd(0) {};
+    bool Create(HWND hWndParent);
+
+    virtual void PreRegisterWindowClass(WNDCLASS* wc);
+    virtual LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+public:
     void DestroyWindow();
 
     void LibVlcAttach();
@@ -152,8 +164,6 @@ public:
     void OnLibVlcEvent(const libvlc_event_t* event);
 
 private:
-    static LPCTSTR getClassName(void)  { return TEXT("VLC ActiveX Window Holder Class"); };
-    static LRESULT CALLBACK VLCHolderClassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
     HWND FindMP_hWnd();
@@ -162,26 +172,18 @@ private:
     DWORD _MouseHookThreadId;
     void MouseHook(bool SetHook);
 
-     VLCWindowsManager& WM()
-        {return *_WindowsManager;}
-    inline libvlc_media_player_t* getMD() const;
+    VLCWindowsManager& WM()
+        {return *_wm;}
+    inline libvlc_media_player_t* MP() const;
     inline const VLCViewResources& RC() const;
+    inline const vlc_player_options* PO() const;
 
 private:
     static HINSTANCE _hinstance;
     static ATOM _holder_wndclass_atom;
 
 private:
-    VLCHolderWnd(HWND hWnd, VLCWindowsManager* WM)
-        : _hMouseHook(NULL), _MouseHookThreadId(0), _hWnd(hWnd),
-        _WindowsManager(WM), _CtrlsWnd(0) {};
-
-public:
-    HWND getHWND() const {return _hWnd;}
-
-private:
-    HWND _hWnd;
-    VLCWindowsManager* _WindowsManager;
+    VLCWindowsManager* _wm;
     VLCControlsWnd*    _CtrlsWnd;
 };
 
@@ -317,14 +319,19 @@ inline const vlc_player_options* VLCControlsWnd::PO() const
     return _wm->PO();
 }
 
-inline libvlc_media_player_t* VLCHolderWnd::getMD() const
+inline libvlc_media_player_t* VLCHolderWnd::MP() const
 {
-    return _WindowsManager->getMD();
+    return _wm->getMD();
 }
 
 inline const VLCViewResources& VLCHolderWnd::RC() const
 {
-    return _WindowsManager->RC();
+    return _wm->RC();
+}
+
+inline const vlc_player_options* VLCHolderWnd::PO() const
+{
+    return _wm->PO();
 }
 
 inline libvlc_media_player_t* VLCFullScreenWnd::getMD() const

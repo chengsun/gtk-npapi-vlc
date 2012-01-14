@@ -192,7 +192,7 @@ bool VlcPluginWin::resize_windows()
     RECT rect;
     GetClientRect(drawable, &rect);
     if(!_WindowsManager.IsFullScreen() && _WindowsManager.getHolderWnd()){
-        HWND hHolderWnd = _WindowsManager.getHolderWnd()->getHWND();
+        HWND hHolderWnd = _WindowsManager.getHolderWnd()->hWnd();
         MoveWindow(hHolderWnd, 0, 0, rect.right - rect.left, rect.bottom - rect.top, TRUE);
     }
     return true;
