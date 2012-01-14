@@ -217,7 +217,7 @@ extern HMODULE DllGetModule();
 
 VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     _inplacewnd(NULL),
-    _WindowsManager(DllGetModule(), _ViewRC),
+    _WindowsManager(DllGetModule(), _ViewRC, this),
     _p_class(p_class),
     _i_ref(1UL),
     _p_libvlc(NULL),
@@ -402,9 +402,9 @@ HRESULT VLCPlugin::onInit(void)
     if( NULL == _p_libvlc )
     {
         // initialize persistable properties
-        _b_autoplay   = TRUE;
+        set_autoplay(true);
         _b_autoloop   = FALSE;
-        _b_toolbar    = FALSE;
+        set_show_toolbar(false);
         _bstr_baseurl = NULL;
         _bstr_mrl     = NULL;
         _b_visible    = TRUE;
@@ -750,7 +750,7 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
         if( FAILED(result) )
             return result;
 
-        if( _b_autoplay && playlist_select(0) )
+        if( get_autoplay() && playlist_select(0) )
         {
             libvlc_media_player_play(_p_mplayer);
             fireOnPlayEvent();

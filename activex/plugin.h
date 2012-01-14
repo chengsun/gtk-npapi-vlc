@@ -32,6 +32,8 @@
 #include <vlc/vlc.h>
 
 #include "../common/win32_fullscreen.h"
+#include "../common/vlc_player_options.h"
+
 extern "C" const GUID CLSID_VLCPlugin;
 extern "C" const GUID CLSID_VLCPlugin2;
 extern "C" const GUID LIBID_AXVLC;
@@ -73,11 +75,9 @@ private:
     LPPICTURE   _inplace_picture;
 };
 
-struct VLCPlugin : public IUnknown
+struct VLCPlugin : public IUnknown, public vlc_player_options
 {
-
 public:
-
     VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter);
 
     /* IUnknown methods */
@@ -103,10 +103,10 @@ public:
 
     inline void setAutoPlay(BOOL autoplay)
     {
-        _b_autoplay = autoplay;
+        set_autoplay(autoplay != FALSE);
         setDirty(TRUE);
     };
-    inline BOOL getAutoPlay(void) { return _b_autoplay; };
+    inline BOOL getAutoPlay(void) { return get_autoplay()? TRUE : FALSE; };
 
     inline void setAutoLoop(BOOL autoloop)
     {
@@ -117,10 +117,10 @@ public:
 
     inline void setShowToolbar(BOOL showtoolbar)
     {
-        _b_toolbar = showtoolbar;
+        set_show_toolbar(showtoolbar != FALSE);
         setDirty(TRUE);
     };
-    inline BOOL getShowToolbar(void) { return _b_toolbar;};
+    inline BOOL getShowToolbar(void) { return get_show_toolbar() ? TRUE : FALSE; };
 
     void setVolume(int volume);
     int getVolume(void) { return _i_volume; };
@@ -380,9 +380,7 @@ private:
     // persistable properties
     BSTR _bstr_baseurl;
     BSTR _bstr_mrl;
-    BOOL _b_autoplay;
     BOOL _b_autoloop;
-    BOOL _b_toolbar;
     BOOL _b_visible;
     BOOL _b_mute;
     int  _i_volume;
