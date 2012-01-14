@@ -1,0 +1,3 @@
+component {7c4020fc-40fa-43a4-9b13-d7ba62171ce1} vlcvideo.js
+contract @videolan.org/vlcvideo;1 {7c4020fc-40fa-43a4-9b13-d7ba62171ce1}
+category profile-after-change @videolan.org/vlcvideo;1 @videolan.org/vlcvideo;1
