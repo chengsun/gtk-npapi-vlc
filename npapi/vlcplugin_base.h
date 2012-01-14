@@ -225,6 +225,10 @@ public:
     int      b_stream;
     char *   psz_target;
 
+    libvlc_media_t *playlist_get_media()
+    {
+        return libvlc_media_list_item_at_index(libvlc_media_list, playlist_index);
+    }
     void playlist_play()
     {
         if( playlist_isplaying() )
@@ -272,6 +276,7 @@ public:
     int playlist_delete_item( int );
     void playlist_clear();
     int  playlist_count();
+    bool playlist_select(int);
 
     void control_handler(vlc_toolbar_clicked_t);
 
@@ -302,7 +307,6 @@ protected:
     // called before libvlc_media_player_release
     virtual void on_media_player_release() {};
 
-    bool playlist_select(int);
     virtual void set_player_window() = 0;
 
     /* VLC reference */
