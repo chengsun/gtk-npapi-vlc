@@ -439,6 +439,14 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
     ppsz_argv[ppsz_argc++] = "--no-video-title-show";
     ppsz_argv[ppsz_argc++] = "--no-xlib";
 
+    bool b_set_toolbar = false,
+         b_set_allowfullscreen = false,
+         b_set_autoplay = false,
+         b_mute = false,
+         b_set_mute = false,
+         b_loop = false,
+         b_set_loop = false;
+
     /* parse plugin arguments */
     for( int i = 0; (i < argc) && (ppsz_argc < 32); i++ )
     {
@@ -455,43 +463,65 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         {
             set_bg_text( argv[i] );
         }
+        else if( !strcmp( argn[i], "videocompat" ) )
+        {
+            /* use API compatibility wrapper with <video> */
+            b_videocompat = boolValue(argv[i]);
+        }
         else if( !strcmp( argn[i], "autoplay")
               || !strcmp( argn[i], "autostart") )
         {
             set_autoplay(boolValue(argv[i]));
+            b_set_autoplay = true;
         }
         else if( !strcmp( argn[i], "fullscreen" )
               || !strcmp( argn[i], "allowfullscreen" ) )
         {
             set_enable_fs( boolValue(argv[i]) );
+            b_set_allowfullscreen = true;
         }
         else if( !strcmp( argn[i], "mute" ) )
         {
-            if( boolValue(argv[i]) )
-            {
-                ppsz_argv[ppsz_argc++] = "--volume=0";
-            }
+            b_mute = boolValue(argv[i]);
+            b_set_mute = true;
         }
         else if( !strcmp( argn[i], "loop")
               || !strcmp( argn[i], "autoloop") )
         {
-            if( boolValue(argv[i]) )
-            {
-                ppsz_argv[ppsz_argc++] = "--loop";
-            }
-            else
-            {
-                ppsz_argv[ppsz_argc++] = "--no-loop";
-            }
+            b_loop = boolValue(argv[i]);
+            b_set_loop = true;
         }
         else if( !strcmp( argn[i], "toolbar" ) )
         {
             set_show_toolbar( boolValue(argv[i]) );
+            b_set_toolbar = true;
         }
         else if( !strcmp( argn[i], "bgcolor" ) )
         {
             set_bg_color( argv[i] );
         }
+    }
+
+    if( b_videocompat ) {
+        b_toolbar = b_set_toolbar;
+        b_allowfullscreen = b_set_allowfullscreen;
+        b_loop = b_set_loop;
+        b_autoplay = b_set_autoplay;
+        b_mute = b_set_mute;
+    }
+
+    if( b_mute )
+    {
+        ppsz_argv[ppsz_argc++] = "--volume=0";
+    }
+
+    if( b_loop )
+    {
+        ppsz_argv[ppsz_argc++] = "--loop";
+    }
+    else
+    {
+        ppsz_argv[ppsz_argc++] = "--no-loop";
     }
 
     libvlc_instance = libvlc_new(ppsz_argc, ppsz_argv);
