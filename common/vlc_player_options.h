@@ -23,6 +23,30 @@
 #define _VLC_PLAYER_OPTIONS_H_
 
 #include <string>
+#include <cstring>
+#include <cstdio>
+
+static bool HTMLColor2RGB(const char *htmlColor, uint8_t *r, uint8_t *g, uint8_t *b)
+{
+    if (!htmlColor)
+        return false;
+    switch (strlen(htmlColor)) {
+        case 4:
+            if (sscanf(htmlColor, "#%1x%1x%1x", r, g, b) != 3)
+                return false;
+            *r *= 0x11;
+            *g *= 0x11;
+            *b *= 0x11;
+            return true;
+        case 7:
+            if (sscanf(htmlColor, "#%2x%2x%2x", r, g, b) != 3)
+                return false;
+            return true;
+        default:
+            return false;
+    }
+}
+
 
 enum vlc_player_option_e
 {
