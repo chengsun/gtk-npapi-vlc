@@ -281,3 +281,24 @@ protected:
     InvokeResult invoke(int index, const NPVariant *args, uint32_t argCount, NPVariant &result);
 };
 
+class LibvlcCompatNPObject: public RuntimeNPObject
+{
+protected:
+    friend class RuntimeNPClass<LibvlcCompatNPObject>;
+
+    LibvlcCompatNPObject(NPP instance, const NPClass *aClass) :
+        RuntimeNPObject(instance, aClass)
+    { }
+    virtual ~LibvlcCompatNPObject() { };
+
+    static const int propertyCount;
+    static const NPUTF8 * const propertyNames[];
+
+    InvokeResult getProperty(int index, NPVariant &result);
+    InvokeResult setProperty(int index, const NPVariant &value);
+
+    static const int methodCount;
+    static const NPUTF8 * const methodNames[];
+
+    InvokeResult invoke(int index, const NPVariant *args, uint32_t argCount, NPVariant &result);
+};

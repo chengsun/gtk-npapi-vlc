@@ -2045,3 +2045,336 @@ LibvlcDeinterlaceNPObject::invoke(int index, const NPVariant *args,
     }
     return INVOKERESULT_NO_ERROR;
 }
+
+/*
+** implementation of libvlc <video> compatibility root object
+** see https://developer.mozilla.org/En/XPCOM_Interface_Reference/NsIDOMHTMLMediaElement
+*/
+
+const NPUTF8 * const LibvlcCompatNPObject::propertyNames[] =
+{
+    "autoplay",
+    "buffered",
+    "controls",
+    "currentSrc",
+    "currentTime",
+    "defaultPlaybackRate",
+    "duration",
+    "ended",
+    "error",
+    "muted",
+    "networkState",
+    "paused",
+    "playbackRate",
+    "preload",
+    "readyState",
+    "seeking",
+    "src",
+    "totalBytes",
+    "volume",
+};
+COUNTNAMES(LibvlcCompatNPObject,propertyCount,propertyNames);
+
+enum LibvlcCompatNPObjectPropertyIds
+{
+    ID_compat_autoplay = 0,
+    ID_compat_buffered,
+    ID_compat_controls,
+    ID_compat_currentSrc,
+    ID_compat_currentTime,
+    ID_compat_defaultPlaybackRate,
+    ID_compat_duration,
+    ID_compat_ended,
+    ID_compat_error,
+    ID_compat_muted,
+    ID_compat_networkState,
+    ID_compat_paused,
+    ID_compat_playbackRate,
+    ID_compat_preload,
+    ID_compat_readyState,
+    ID_compat_seeking,
+    ID_compat_src,
+    ID_compat_totalBytes,
+    ID_compat_volume,
+};
+
+RuntimeNPObject::InvokeResult
+LibvlcCompatNPObject::getProperty(int index, NPVariant &result)
+{
+    fprintf(stderr, "'get %s'\n", propertyNames[index]);
+    /* is plugin still running */
+    if( isPluginRunning() )
+    {
+        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        libvlc_media_player_t *p_md = p_plugin->getMD();
+
+        switch( index )
+        {
+            case ID_compat_autoplay:
+                BOOLEAN_TO_NPVARIANT(p_plugin->b_autoplay, result);
+                return INVOKERESULT_NO_ERROR;
+            case ID_compat_buffered:
+                /* TODO */
+                break;
+            case ID_compat_controls:
+                BOOLEAN_TO_NPVARIANT(p_plugin->get_toolbar_visible(), result);
+                return INVOKERESULT_NO_ERROR;
+            case ID_compat_currentSrc:
+            {
+                NPUTF8 *val = NULL;
+                if (p_md) val = libvlc_media_get_mrl(p_plugin->playlist_get_media());
+                if (!val) return INVOKERESULT_GENERIC_ERROR;
+                STRINGZ_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_currentTime:
+            {
+                double val = 0.0;
+                if (p_md) val = libvlc_media_player_get_time(p_md) / 1000.f;
+                DOUBLE_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_defaultPlaybackRate:
+                /* TODO */
+                break;
+            case ID_compat_duration:
+            {
+                double val = 0.0;
+                if (p_md) val = libvlc_media_player_get_length(p_md) / 1000.f;
+                DOUBLE_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_ended:
+            {
+                bool val = false;
+                if (p_md) val = (libvlc_media_player_get_state(p_md) == libvlc_Ended);
+                BOOLEAN_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_error:
+            {
+                bool val = false;
+                if (p_md) val = (libvlc_media_player_get_state(p_md) == libvlc_Error);
+                BOOLEAN_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_muted:
+            {
+                bool val = false;
+                if (p_md) val = libvlc_audio_get_mute(p_md);
+                BOOLEAN_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_networkState:
+                /* TODO */
+                break;
+            case ID_compat_paused:
+            {
+                libvlc_state_t state = libvlc_NothingSpecial;
+                if (p_md) state = libvlc_media_player_get_state(p_md);
+                BOOLEAN_TO_NPVARIANT(state == libvlc_NothingSpecial ||
+                                     state == libvlc_Stopped ||
+                                     state == libvlc_Paused, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_playbackRate:
+                /* TODO */
+                break;
+            case ID_compat_preload:
+                /* TODO */
+                break;
+            case ID_compat_readyState:
+                /* TODO */
+                INT32_TO_NPVARIANT(3, result);
+                return INVOKERESULT_NO_ERROR;
+            case ID_compat_seeking:
+            {
+                bool val = false;
+                if (p_md) (libvlc_media_player_get_state(p_md) == libvlc_Buffering);
+                BOOLEAN_TO_NPVARIANT(val, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_src:
+            {
+                NPUTF8 *val = p_plugin->psz_target;
+                if (!val) return INVOKERESULT_GENERIC_ERROR;
+                return invokeResultString(val, result);
+            }
+            case ID_compat_totalBytes:
+                /* TODO */
+                break;
+            case ID_compat_volume:
+            {
+                float vol = -1.f;
+                if (p_md) libvlc_audio_get_volume(p_md) / 100.f;
+                if (vol > 1.f) vol = 1.f;
+                DOUBLE_TO_NPVARIANT(vol, result);
+                return INVOKERESULT_NO_ERROR;
+            }
+            default:
+                ;
+        }
+    }
+    fprintf(stderr, "Not sure what 'get %s' is\n", propertyNames[index]);
+    return INVOKERESULT_GENERIC_ERROR;
+}
+
+RuntimeNPObject::InvokeResult
+LibvlcCompatNPObject::setProperty(int index, const NPVariant &value)
+{
+    fprintf(stderr, "'set %s'\n", propertyNames[index]);
+    /* is plugin still running */
+    if( isPluginRunning() )
+    {
+        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        libvlc_media_player_t *p_md = p_plugin->getMD();
+
+        switch( index )
+        {
+            case ID_compat_autoplay:
+            {
+                if( !NPVARIANT_IS_BOOLEAN(value) )
+                    return INVOKERESULT_INVALID_VALUE;
+                bool val = (bool)NPVARIANT_TO_BOOLEAN(value);
+                p_plugin->b_autoplay = val;
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_controls:
+            {
+                if( !NPVARIANT_IS_BOOLEAN(value) )
+                    return INVOKERESULT_INVALID_VALUE;
+                bool val = (bool)NPVARIANT_TO_BOOLEAN(value);
+                p_plugin->set_toolbar_visible(val);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_currentTime:
+            {
+                if( NPVARIANT_IS_DOUBLE(value) ) {
+                    float val = (float)NPVARIANT_TO_DOUBLE(value);
+                    if (p_md) libvlc_media_player_set_time(p_md, int(val * 1000.f));
+                } else if( NPVARIANT_IS_INT32(value) ) {
+                    int32_t val = (int32_t)NPVARIANT_TO_INT32(value);
+                    if (p_md) libvlc_media_player_set_time(p_md, val * 1000);
+                } else {
+                    return INVOKERESULT_INVALID_VALUE;
+                }
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_defaultPlaybackRate:
+                /* TODO */
+                break;
+            case ID_compat_muted:
+            {
+                if( !NPVARIANT_IS_BOOLEAN(value) )
+                    return INVOKERESULT_INVALID_VALUE;
+                bool val = (bool)NPVARIANT_TO_BOOLEAN(value);
+                libvlc_audio_set_mute(p_md, val);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_playbackRate:
+                /* TODO */
+                break;
+            case ID_compat_preload:
+                /* TODO */
+                break;
+            case ID_compat_src:
+            {
+                if( !NPVARIANT_IS_STRING(value) )
+                    return INVOKERESULT_INVALID_VALUE;
+                NPUTF8 *psz_target = stringValue(NPVARIANT_TO_STRING(value));
+                if (!psz_target)
+                    return INVOKERESULT_GENERIC_ERROR;
+                free(p_plugin->psz_target);
+                p_plugin->psz_target = psz_target;
+                fprintf(stderr, "SET SRC NEW VAL TO %s\n", p_plugin->psz_target);
+                return INVOKERESULT_NO_ERROR;
+            }
+            case ID_compat_volume:
+            {
+                if( !NPVARIANT_IS_DOUBLE(value) )
+                    return INVOKERESULT_INVALID_VALUE;
+                int vol = NPVARIANT_TO_DOUBLE(value) * 100;
+                libvlc_audio_set_volume(p_md, vol);
+                return INVOKERESULT_NO_ERROR;
+            }
+            default:
+                ;
+        }
+    }
+    fprintf(stderr, "Not sure what 'set %s' is\n", propertyNames[index]);
+    return INVOKERESULT_NO_ERROR;
+}
+
+const NPUTF8 * const LibvlcCompatNPObject::methodNames[] =
+{
+    "canPlayType",
+    "load",
+    "pause",
+    "play",
+};
+COUNTNAMES(LibvlcCompatNPObject,methodCount,methodNames);
+
+enum LibvlcCompatNPObjectMethodIds
+{
+    ID_compat_canPlayType,
+    ID_compat_load,
+    ID_compat_pause,
+    ID_compat_play,
+};
+
+RuntimeNPObject::InvokeResult LibvlcCompatNPObject::invoke(int index,
+                  const NPVariant *args, uint32_t argCount, NPVariant &result)
+{
+    fprintf(stderr, "'invoke %s'\n", methodNames[index]);
+    /* is plugin still running */
+    if( !isPluginRunning() )
+        return INVOKERESULT_GENERIC_ERROR;
+
+    VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+    libvlc_media_player_t *p_md = p_plugin->getMD();
+
+    switch( index )
+    {
+    case ID_compat_canPlayType:
+        if( 1 != argCount )
+            break;
+        return invokeResultString("maybe", result);
+
+    case ID_compat_load:
+    {
+        if (0 != argCount)
+            break;
+        const char *url = p_plugin->psz_target;
+        if (!url) {
+            fprintf(stderr, "no target\n");
+            return INVOKERESULT_NO_ERROR;
+        }
+        const char *absUrl = p_plugin->getAbsoluteURL(url);
+        p_plugin->playlist_clear();
+        p_plugin->playlist_add(absUrl ? absUrl : strdup(url));
+        p_plugin->playlist_select(0);
+        fprintf(stderr, "done for %s from %s\n", absUrl, url);
+        VOID_TO_NPVARIANT(result);
+        return INVOKERESULT_NO_ERROR;
+    }
+
+    case ID_compat_pause:
+        if (0 != argCount)
+            break;
+        if (!p_md)
+            RETURN_ON_ERROR;
+        libvlc_media_player_set_pause( p_md, 1 );
+        VOID_TO_NPVARIANT(result);
+        return INVOKERESULT_NO_ERROR;
+
+    case ID_compat_play:
+        if (0 != argCount)
+            break;
+        p_plugin->playlist_play();
+        VOID_TO_NPVARIANT(result);
+        return INVOKERESULT_NO_ERROR;
+    }
+
+    fprintf(stderr, "Not sure what 'invoke %s' is\n", methodNames[index]);
+    return INVOKERESULT_NO_SUCH_METHOD;
+}
