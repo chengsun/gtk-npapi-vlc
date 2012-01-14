@@ -355,7 +355,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             /* handle streams properly */
             if( !p_plugin->b_stream )
             {
-                if( p_plugin->psz_target )
+                if( p_plugin->psz_target && !p_plugin->b_videocompat )
                 {
                     if( p_plugin->playlist_add( p_plugin->psz_target ) != -1 )
                     {

@@ -349,6 +349,7 @@ void EventObj::unhook_manager( void *userdata )
  *****************************************************************************/
 VlcPluginBase::VlcPluginBase( NPP instance, NPuint16_t mode ) :
     i_npmode(mode),
+    b_videocompat(0),
     b_stream(0),
     psz_target(NULL),
     playlist_index(-1),
@@ -543,8 +544,12 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
     }
 
     /* assign plugin script root class */
-    /* new APIs */
-    p_scriptClass = RuntimeNPClass<LibvlcRootNPObject>::getClass();
+    if( !b_videocompat )
+        /* new APIs */
+        p_scriptClass = RuntimeNPClass<LibvlcRootNPObject>::getClass();
+    else
+        /* <video> compatibility wrapper */
+        p_scriptClass = RuntimeNPClass<LibvlcCompatNPObject>::getClass();
 
     if( !events.init() )
         return NPERR_GENERIC_ERROR;

@@ -222,6 +222,7 @@ public:
     NPuint16_t  i_npmode; /* either NP_EMBED or NP_FULL */
 
     /* plugin properties */
+    int      b_videocompat;
     int      b_stream;
     char *   psz_target;
 
