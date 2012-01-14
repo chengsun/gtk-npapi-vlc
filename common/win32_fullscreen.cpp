@@ -607,6 +607,10 @@ VLCHolderWnd::CreateHolderWindow(HINSTANCE hInstance,
 
 VLCHolderWnd::~VLCHolderWnd()
 {
+    if(_hBgBrush) {
+        DeleteObject(_hBgBrush);
+        _hBgBrush = 0;
+    }
 }
 
 bool VLCHolderWnd::Create(HWND hWndParent)
@@ -618,7 +622,13 @@ bool VLCHolderWnd::Create(HWND hWndParent)
 
 void VLCHolderWnd::PreRegisterWindowClass(WNDCLASS* wc)
 {
-    wc->hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    if( !_hBgBrush){
+        BYTE r = 0, g = 0, b = 0;
+        HtmlColor2RGB(PO()->get_bg_color(), &r, &g, &b);
+        _hBgBrush = CreateSolidBrush(RGB(r, g, b));
+    }
+
+    wc->hbrBackground = _hBgBrush;
     wc->lpszClassName = TEXT("Web Plugin VLC Window Holder Class");
 }
 

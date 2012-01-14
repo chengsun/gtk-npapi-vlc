@@ -145,7 +145,7 @@ public:
 protected:
     VLCHolderWnd(HINSTANCE hInstance, VLCWindowsManager* WM)
         : VLCWnd(hInstance), _hMouseHook(NULL), _MouseHookThreadId(0),
-         _wm(WM), _CtrlsWnd(0) {};
+         _wm(WM), _CtrlsWnd(0), _hBgBrush(0) {};
     bool Create(HWND hWndParent);
 
     virtual void PreRegisterWindowClass(WNDCLASS* wc);
@@ -184,6 +184,7 @@ private:
 
 private:
     VLCWindowsManager* _wm;
+    HBRUSH _hBgBrush;
     VLCControlsWnd*    _CtrlsWnd;
 };
 
