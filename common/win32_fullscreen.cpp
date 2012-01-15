@@ -461,7 +461,7 @@ void VLCControlsWnd::UpdateButtons()
 
 void VLCControlsWnd::NeedShowControls()
 {
-    if( !IsWindowVisible( hWnd() )) {
+    if( !(GetWindowLong(hWnd(), GWL_STYLE) & WS_VISIBLE) ) {
         if(WM().IsFullScreen() || (PO() && PO()->get_show_toolbar() ) )
             ShowWindow( hWnd(), SW_SHOW );
     }
