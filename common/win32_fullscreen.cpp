@@ -310,6 +310,14 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         }
         case WM_SIZE:{
+            if( GetWindowLong(hWnd(), GWL_STYLE) & WS_VISIBLE &&
+                !WM().IsFullScreen() &&
+                ( !PO() || !PO()->get_show_toolbar() ) )
+            {
+                //hide controls when they are not allowed
+                NeedHideControls();
+            }
+
             const int new_client_width = LOWORD(lParam);
             const int new_client_height = HIWORD(lParam);
 
