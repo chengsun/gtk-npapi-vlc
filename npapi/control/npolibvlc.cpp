@@ -88,6 +88,7 @@ LibvlcRootNPObject::~LibvlcRootNPObject()
         if( playlistObj ) NPN_ReleaseObject(playlistObj);
         if( subtitleObj ) NPN_ReleaseObject(subtitleObj);
         if( videoObj    ) NPN_ReleaseObject(videoObj);
+        if( mediaDescriptionObj ) NPN_ReleaseObject(mediaDescriptionObj);
     }
 }
 
@@ -99,6 +100,7 @@ const NPUTF8 * const LibvlcRootNPObject::propertyNames[] =
     "subtitle",
     "video",
     "VersionInfo",
+    "mediaDescription"
 };
 COUNTNAMES(LibvlcRootNPObject,propertyCount,propertyNames);
 
@@ -110,6 +112,7 @@ enum LibvlcRootNPObjectPropertyIds
     ID_root_subtitle,
     ID_root_video,
     ID_root_VersionInfo,
+    ID_root_MediaDescription,
 };
 
 RuntimeNPObject::InvokeResult
@@ -142,6 +145,12 @@ LibvlcRootNPObject::getProperty(int index, NPVariant &result)
                 return INVOKERESULT_NO_ERROR;
             case ID_root_VersionInfo:
                 return invokeResultString(libvlc_get_version(),result);
+            case ID_root_MediaDescription:
+            {
+                InstantObj<LibvlcMediaDescriptionNPObject>( mediaDescriptionObj );
+                OBJECT_TO_NPVARIANT(NPN_RetainObject(mediaDescriptionObj), result);
+                return INVOKERESULT_NO_ERROR;
+            }
             default:
                 ;
         }
@@ -614,6 +623,106 @@ LibvlcInputNPObject::invoke(int index, const NPVariant *,
     }
     return INVOKERESULT_GENERIC_ERROR;
 }
+
+/*
+** implementation of libvlc MediaDescription object
+*/
+
+const NPUTF8 * const LibvlcMediaDescriptionNPObject::propertyNames[] =
+{
+    "title",
+    "artist",
+    "genre",
+    "copyright",
+    "album",
+    "trackNumber",
+    "description",
+    "rating",
+    "date",
+    "setting",
+    "URL",
+    "language",
+    "nowPlaying",
+    "publisher",
+    "encodedBy",
+    "artworkURL",
+    "trackID",
+};
+COUNTNAMES(LibvlcMediaDescriptionNPObject,propertyCount,propertyNames);
+
+enum LibvlcMediaDescriptionNPObjectPropertyIds
+{
+    ID_meta_title,
+    ID_meta_artist,
+    ID_meta_genre,
+    ID_meta_copyright,
+    ID_meta_album,
+    ID_meta_trackNumber,
+    ID_meta_description,
+    ID_meta_rating,
+    ID_meta_date,
+    ID_meta_setting,
+    ID_meta_URL,
+    ID_meta_language,
+    ID_meta_nowPlaying,
+    ID_meta_publisher,
+    ID_meta_encodedBy,
+    ID_meta_artworkURL,
+    ID_meta_trackID,
+};
+RuntimeNPObject::InvokeResult
+LibvlcMediaDescriptionNPObject::getProperty(int index, NPVariant &result)
+{
+    /* is plugin still running */
+    if( isPluginRunning() )
+    {
+        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        libvlc_media_player_t *p_md = p_plugin->getMD();
+        if( !p_md )
+            RETURN_ON_ERROR;
+        libvlc_media_t * p_media = libvlc_media_player_get_media(p_md);
+        if( !p_media )
+            RETURN_ON_ERROR;
+        const char *info;
+        switch( index )
+        {
+            case ID_meta_title:
+            case ID_meta_artist:
+            case ID_meta_genre:
+            case ID_meta_copyright:
+            case ID_meta_album:
+            case ID_meta_trackNumber:
+            case ID_meta_description:
+            case ID_meta_rating:
+            case ID_meta_date:
+            case ID_meta_setting:
+            case ID_meta_URL:
+            case ID_meta_language:
+            case ID_meta_nowPlaying:
+            case ID_meta_publisher:
+            case ID_meta_encodedBy:
+            case ID_meta_artworkURL:
+            case ID_meta_trackID:
+                info = libvlc_media_get_meta(p_media,(libvlc_meta_t) index);
+                return invokeResultString(info, result);
+            default:
+            ;
+        }
+     }
+     return INVOKERESULT_GENERIC_ERROR;
+}
+
+const NPUTF8 * const LibvlcMediaDescriptionNPObject::methodNames[] =
+{
+    "None"
+};
+COUNTNAMES(LibvlcMediaDescriptionNPObject,methodCount,methodNames);
+
+enum LibvlcMediaDescriptionNPObjectMethodIds
+{
+    ID_mediadescription_method_none,
+};
+
 
 /*
 ** implementation of libvlc playlist items object
