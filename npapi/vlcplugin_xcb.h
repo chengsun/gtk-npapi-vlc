@@ -57,6 +57,8 @@ public:
     unsigned int     i_width, i_height;
     xcb_connection_t *conn;
     xcb_window_t parent, video;
+    xcb_colormap_t colormap;
+    uint32_t colorpixel;
 
     pthread_t thread;
 

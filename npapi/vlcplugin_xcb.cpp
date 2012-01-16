@@ -83,7 +83,6 @@ bool VlcPluginXcb::create_windows()
     xcb_atom_t xembed_info_atom = xcb_intern_atom_reply(conn, cookie, NULL)->atom;
 
     /* create windows */
-    /* TODO: respect get_bg_color() */
     const uint32_t parent_values[] = {0x0FFFFF};
     parent = xcb_generate_id(conn);
     xcb_create_window(conn, XCB_COPY_FROM_PARENT, parent, socket,
@@ -94,7 +93,19 @@ bool VlcPluginXcb::create_windows()
     xcb_change_property(conn, XCB_PROP_MODE_REPLACE, parent,
                         xembed_info_atom, xembed_info_atom,
                         32, 2, (void *) xembed_info_buf);
-    const uint32_t video_values[] = {screen->black_pixel, 0x0FFFFF};
+
+    colormap = screen->default_colormap;
+    uint8_t r = 0, g = 0, b = 0;
+    HTMLColor2RGB(get_bg_color().c_str(), &r, &g, &b);
+    xcb_alloc_color_reply_t *reply = xcb_alloc_color_reply(conn,
+            xcb_alloc_color(conn, colormap,
+                            (uint16_t) r << 8,
+                            (uint16_t) g << 8,
+                            (uint16_t) b << 8), NULL);
+    colorpixel = reply->pixel;
+    free(reply);
+
+    const uint32_t video_values[] = {colorpixel, 0x0FFFFF};
     video = xcb_generate_id(conn);
     xcb_create_window(conn, 0, video, parent,
                       0, 0, 1, 1, 0,
@@ -129,9 +140,7 @@ bool VlcPluginXcb::resize_windows()
 
 bool VlcPluginXcb::destroy_windows()
 {
-    /* destroy x window */
     xcb_destroy_window(conn, parent);
-
-    /* close connection */
+    xcb_free_colors(conn, colormap, 0, 1, &colorpixel);
     xcb_disconnect(conn);
 }
