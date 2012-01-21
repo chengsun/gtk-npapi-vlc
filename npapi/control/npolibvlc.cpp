@@ -186,13 +186,13 @@ RuntimeNPObject::InvokeResult LibvlcRootNPObject::invoke(int index,
             !NPVARIANT_IS_BOOLEAN(args[2]) )
             break;
 
-        if( !VlcPlugin::canUseEventListener() )
+        if( !VlcPluginBase::canUseEventListener() )
         {
             NPN_SetException(this, ERROR_API_VERSION);
             return INVOKERESULT_GENERIC_ERROR;
         }
 
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         bool b;
         if( ID_root_addeventlistener == index )
@@ -248,7 +248,7 @@ LibvlcAudioNPObject::getProperty(int index, NPVariant &result)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
@@ -301,7 +301,7 @@ LibvlcAudioNPObject::setProperty(int index, const NPVariant &value)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
@@ -365,7 +365,7 @@ LibvlcAudioNPObject::invoke(int index, const NPVariant *args,
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -459,7 +459,7 @@ LibvlcInputNPObject::getProperty(int index, NPVariant &result)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
         {
@@ -530,7 +530,7 @@ LibvlcInputNPObject::setProperty(int index, const NPVariant &value)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -636,7 +636,7 @@ LibvlcPlaylistItemsNPObject::getProperty(int index, NPVariant &result)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         switch( index )
         {
@@ -673,7 +673,7 @@ LibvlcPlaylistItemsNPObject::invoke(int index, const NPVariant *args,
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         switch( index )
         {
@@ -733,7 +733,7 @@ LibvlcPlaylistNPObject::getProperty(int index, NPVariant &result)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         switch( index )
         {
@@ -796,7 +796,7 @@ LibvlcPlaylistNPObject::invoke(int index, const NPVariant *args,
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
 
         switch( index )
         {
@@ -1121,7 +1121,7 @@ LibvlcSubtitleNPObject::getProperty(int index, NPVariant &result)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -1155,7 +1155,7 @@ LibvlcSubtitleNPObject::setProperty(int index, const NPVariant &value)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -1196,7 +1196,7 @@ LibvlcSubtitleNPObject::invoke(int index, const NPVariant *args,
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -1298,7 +1298,7 @@ LibvlcVideoNPObject::getProperty(int index, NPVariant &result)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -1384,7 +1384,7 @@ LibvlcVideoNPObject::setProperty(int index, const NPVariant &value)
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -1486,7 +1486,7 @@ LibvlcVideoNPObject::invoke(int index, const NPVariant *args,
     /* is plugin still running */
     if( isPluginRunning() )
     {
-        VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+        VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
         libvlc_media_player_t *p_md = p_plugin->getMD();
         if( !p_md )
             RETURN_ON_ERROR;
@@ -1572,7 +1572,7 @@ LibvlcMarqueeNPObject::getProperty(int index, NPVariant &result)
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+    VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
     libvlc_media_player_t *p_md = p_plugin->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
@@ -1618,7 +1618,7 @@ LibvlcMarqueeNPObject::setProperty(int index, const NPVariant &value)
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+    VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
     libvlc_media_player_t *p_md = p_plugin->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
@@ -1681,7 +1681,7 @@ LibvlcMarqueeNPObject::invoke(int index, const NPVariant *args,
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+    VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
     libvlc_media_player_t *p_md = p_plugin->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
@@ -1730,7 +1730,7 @@ LibvlcLogoNPObject::getProperty(int index, NPVariant &result)
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+    VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
     libvlc_media_player_t *p_md = p_plugin->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
@@ -1766,7 +1766,7 @@ LibvlcLogoNPObject::setProperty(int index, const NPVariant &value)
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    VlcPlugin* p_plugin = getPrivate<VlcPlugin>();
+    VlcPluginBase* p_plugin = getPrivate<VlcPluginBase>();
     libvlc_media_player_t *p_md = p_plugin->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
@@ -1821,7 +1821,7 @@ LibvlcLogoNPObject::invoke(int index, const NPVariant *args,
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    libvlc_media_player_t *p_md = getPrivate<VlcPlugin>()->getMD();
+    libvlc_media_player_t *p_md = getPrivate<VlcPluginBase>()->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
 
@@ -1911,7 +1911,7 @@ LibvlcDeinterlaceNPObject::invoke(int index, const NPVariant *args,
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
 
-    libvlc_media_player_t *p_md = getPrivate<VlcPlugin>()->getMD();
+    libvlc_media_player_t *p_md = getPrivate<VlcPluginBase>()->getMD();
     if( !p_md )
         RETURN_ON_ERROR;
 
