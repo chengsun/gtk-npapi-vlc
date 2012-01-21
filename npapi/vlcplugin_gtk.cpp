@@ -295,14 +295,18 @@ static bool video_expose_handler(GtkWidget *widget, GdkEvent *event, gpointer us
 static bool time_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
-    libvlc_media_player_set_position(plugin->getMD(), value/100.0);
+    libvlc_media_player_t *md = plugin->getMD();
+    if (md)
+        libvlc_media_player_set_position(md, value/100.0);
     return false;
 }
 
 static bool vol_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
-    libvlc_audio_set_volume(plugin->getMD(), value);
+    libvlc_media_player_t *md = plugin->getMD();
+    if (md)
+        libvlc_audio_set_volume(md, value);
     return false;
 }
 
