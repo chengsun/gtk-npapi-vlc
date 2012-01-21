@@ -345,6 +345,9 @@ void VlcPluginGtk::update_controls()
             g_object_unref(toolbutton);
         }
 
+        /* toolbar sensitivity */
+        gtk_widget_set_sensitive(toolbar, libvlc_media_player != NULL);
+
         /* time slider */
         if (!libvlc_media_player ||
                 !libvlc_media_player_is_seekable(libvlc_media_player)) {
