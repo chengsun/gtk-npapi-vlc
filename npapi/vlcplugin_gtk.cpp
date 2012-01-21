@@ -287,6 +287,7 @@ static bool video_expose_handler(GtkWidget *widget, GdkEvent *event, gpointer us
             (winwidth-iconwidth)/2.0, (winheight-iconheight)/2.0);
     gdk_cairo_region(cr, event_expose->region);
     cairo_fill(cr);
+    cairo_destroy(cr);
 
     return true;
 }
