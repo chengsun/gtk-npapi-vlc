@@ -480,6 +480,7 @@ bool VlcPluginGtk::create_windows()
     toolitem = gtk_tool_item_new();
     time_slider = gtk_hscale_new_with_range(0, 100, 10);
     gtk_scale_set_draw_value(GTK_SCALE(time_slider), false);
+    gtk_range_set_increments(GTK_RANGE(time_slider), 2, 10);
     g_signal_connect(G_OBJECT(time_slider), "change-value", G_CALLBACK(time_slider_handler), this);
     gtk_container_add(GTK_CONTAINER(toolitem), time_slider);
     gtk_tool_item_set_expand(toolitem, true);
@@ -488,6 +489,7 @@ bool VlcPluginGtk::create_windows()
     /* volume slider */
     toolitem = gtk_tool_item_new();
     vol_slider = gtk_hscale_new_with_range(0, 200, 10);
+    gtk_range_set_increments(GTK_RANGE(vol_slider), 5, 20);
     gtk_scale_set_draw_value(GTK_SCALE(vol_slider), false);
     g_signal_connect(G_OBJECT(vol_slider), "change-value", G_CALLBACK(vol_slider_handler), this);
     gtk_range_set_value(GTK_RANGE(vol_slider), 100);
