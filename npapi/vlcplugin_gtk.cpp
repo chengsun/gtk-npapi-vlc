@@ -37,9 +37,13 @@ VlcPluginGtk::VlcPluginGtk(NPP instance, NPuint16_t mode) :
     parent_vbox(NULL),
     video_container(NULL),
     toolbar(NULL),
+    time_slider(NULL),
+    vol_slider(NULL),
     fullscreen_win(NULL),
     is_fullscreen(false),
-    is_toolbar_visible(false)
+    is_toolbar_visible(false),
+    time_slider_timeout_id(0),
+    vol_slider_timeout_id(0)
 {
     memset(&video_xwindow, 0, sizeof(Window));
     GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
@@ -292,21 +296,53 @@ static bool video_expose_handler(GtkWidget *widget, GdkEvent *event, gpointer us
     return true;
 }
 
-static bool time_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
+static gboolean do_time_slider_handler(gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
     libvlc_media_player_t *md = plugin->getMD();
-    if (md)
+    if (md) {
+        gdouble value = gtk_range_get_value(GTK_RANGE(plugin->time_slider));
         libvlc_media_player_set_position(md, value/100.0);
+    }
+
+    plugin->time_slider_timeout_id = 0;
+    return FALSE;
+}
+
+static bool time_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
+{
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    if (plugin->time_slider_timeout_id != 0)
+        return false;
+
+    plugin->time_slider_timeout_id = g_timeout_add(500,
+                                                  do_time_slider_handler,
+                                                  user_data);
     return false;
+}
+
+static gboolean do_vol_slider_handler(gpointer user_data)
+{
+    VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
+    libvlc_media_player_t *md = plugin->getMD();
+    if (md) {
+        gdouble value = gtk_range_get_value(GTK_RANGE(plugin->vol_slider));
+        libvlc_audio_set_volume(md, value);
+    }
+
+    plugin->vol_slider_timeout_id = 0;
+    return FALSE;
 }
 
 static bool vol_slider_handler(GtkRange *range, GtkScrollType scroll, gdouble value, gpointer user_data)
 {
     VlcPluginGtk *plugin = (VlcPluginGtk *) user_data;
-    libvlc_media_player_t *md = plugin->getMD();
-    if (md)
-        libvlc_audio_set_volume(md, value);
+    if (plugin->vol_slider_timeout_id != 0)
+        return false;
+
+    plugin->vol_slider_timeout_id = g_timeout_add(100,
+                                                  do_vol_slider_handler,
+                                                  user_data);
     return false;
 }
 
@@ -356,7 +392,10 @@ void VlcPluginGtk::update_controls()
         } else {
             gtk_widget_set_sensitive(time_slider, true);
             gdouble timepos = 100*libvlc_media_player_get_position(libvlc_media_player);
-            gtk_range_set_value(GTK_RANGE(time_slider), timepos);
+            if (time_slider_timeout_id == 0) {
+                /* only set the time if the user is not dragging the slider */
+                gtk_range_set_value(GTK_RANGE(time_slider), timepos);
+            }
         }
 
         gtk_widget_show_all(toolbar);
@@ -448,7 +487,7 @@ bool VlcPluginGtk::create_windows()
     
     /* volume slider */
     toolitem = gtk_tool_item_new();
-    GtkWidget *vol_slider = gtk_hscale_new_with_range(0, 200, 10);
+    vol_slider = gtk_hscale_new_with_range(0, 200, 10);
     gtk_scale_set_draw_value(GTK_SCALE(vol_slider), false);
     g_signal_connect(G_OBJECT(vol_slider), "change-value", G_CALLBACK(vol_slider_handler), this);
     gtk_range_set_value(GTK_RANGE(vol_slider), 100);

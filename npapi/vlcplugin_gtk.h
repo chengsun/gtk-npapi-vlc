@@ -54,14 +54,16 @@ public:
     void resize_video_xwindow(GdkRectangle *rect);
 
     GdkPixbuf *cone_icon;
+    GtkWidget *time_slider, *vol_slider;
+    guint time_slider_timeout_id, vol_slider_timeout_id;
 private:
     void set_player_window();
     Display *get_display() { return display; }
 
     unsigned int     i_width, i_height;
     GtkWidget *parent, *parent_vbox, *video_container;
-    GtkWidget *toolbar, *time_slider;
     GtkWidget *fullscreen_win;
+    GtkWidget *toolbar;
     gulong video_container_size_handler_id;
 
     Display *display;
