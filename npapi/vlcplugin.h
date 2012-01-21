@@ -1,4 +1,5 @@
 #ifndef __VLCPLUGIN_H__
+#define __VLCPLUGIN_H__
 
 #include "vlcplugin_base.h"
 
