@@ -367,6 +367,8 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
                     p_plugin->b_stream = true;
                 }
             }
+
+            p_plugin->update_controls();
         } else {
             if (window->window == curr_window.window) {
                 /* resize / move notification */
