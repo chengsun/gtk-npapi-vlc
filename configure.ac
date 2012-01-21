@@ -254,8 +254,9 @@ AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
       ])
     ])
 ])
-AM_CONDITIONAL(USE_GTK, [ test "x$gtk_found" = "xyes" ])
-
+AS_IF([ test "x$gtk_found" = "xyes" ],
+    AC_DEFINE([USE_GTK], [1], [Define to 1 if using GTK+]))
+AM_CONDITIONAL(WITH_GTK, [ test "x$gtk_found" = "xyes" ])
 
 dnl
 dnl final flags for ActiveX

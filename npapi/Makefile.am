@@ -47,14 +47,14 @@ npvlc_LTLIBRARIES = libvlcplugin.la
 AM_CPPFLAGS += -DXP_UNIX -DDATA_PATH=\"$(pkgdatadir)\"
 libvlcplugin_la_LIBADD += $(MOZILLA_LIBS)
 
-if USE_GTK
-AM_CPPFLAGS += $(GTK_CFLAGS) -DUSE_GTK
+if WITH_GTK
+AM_CPPFLAGS += $(GTK_CFLAGS)
 libvlcplugin_la_LIBADD += $(GTK_LIBS) $(X_LIBS) $(X_PRE_LIBS) -lX11
 SOURCES_support = \
 	support/npunix.cpp \
 	vlcplugin_gtk.cpp \
 	vlcplugin_gtk.h
-else # !USE_GTK
+else # !WITH_GTK
 AM_CPPFLAGS += $(XCB_CFLAGS)
 libvlcplugin_la_LIBADD += $(XCB_LIBS)
 SOURCES_support = \

@@ -1,6 +1,7 @@
 #ifndef __VLCPLUGIN_H__
 #define __VLCPLUGIN_H__
 
+#include "config.h"
 #include "vlcplugin_base.h"
 
 #if defined(XP_UNIX)
