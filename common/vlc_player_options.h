@@ -26,7 +26,7 @@
 #include <cstring>
 #include <cstdio>
 
-static bool HTMLColor2RGB(const char *htmlColor, uint8_t *r, uint8_t *g, uint8_t *b)
+static inline bool HTMLColor2RGB(const char *htmlColor, unsigned *r, unsigned *g, unsigned *b)
 {
     if (!htmlColor)
         return false;

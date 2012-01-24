@@ -95,7 +95,7 @@ bool VlcPluginXcb::create_windows()
                         32, 2, (void *) xembed_info_buf);
 
     colormap = screen->default_colormap;
-    uint8_t r = 0, g = 0, b = 0;
+    unsigned r = 0, g = 0, b = 0;
     HTMLColor2RGB(get_bg_color().c_str(), &r, &g, &b);
     xcb_alloc_color_reply_t *reply = xcb_alloc_color_reply(conn,
             xcb_alloc_color(conn, colormap,
