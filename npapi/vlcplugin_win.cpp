@@ -38,6 +38,7 @@ HMODULE DllGetModule()
 extern "C"
 BOOL WINAPI DllMain(HANDLE hModule, DWORD fdwReason, LPVOID lpReserved )
 {
+    (void)lpReserved;
     switch( fdwReason )
     {
         case DLL_PROCESS_ATTACH:
