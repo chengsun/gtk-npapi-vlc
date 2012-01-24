@@ -1262,7 +1262,7 @@ STDMETHODIMP VLCControl2::GetTypeInfoCount(UINT* pctInfo)
     return NOERROR;
 };
 
-STDMETHODIMP VLCControl2::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInfo)
+STDMETHODIMP VLCControl2::GetTypeInfo(UINT, LCID, LPTYPEINFO* ppTInfo)
 {
     if( NULL == ppTInfo )
         return E_INVALIDARG;
@@ -1277,8 +1277,8 @@ STDMETHODIMP VLCControl2::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInf
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCControl2::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames,
-        UINT cNames, LCID lcid, DISPID* rgDispID)
+STDMETHODIMP VLCControl2::GetIDsOfNames(REFIID, LPOLESTR* rgszNames,
+        UINT cNames, LCID, DISPID* rgDispID)
 {
     if( SUCCEEDED(loadTypeInfo()) )
     {
@@ -1287,8 +1287,8 @@ STDMETHODIMP VLCControl2::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames,
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCControl2::Invoke(DISPID dispIdMember, REFIID riid,
-        LCID lcid, WORD wFlags, DISPPARAMS* pDispParams,
+STDMETHODIMP VLCControl2::Invoke(DISPID dispIdMember, REFIID,
+        LCID, WORD wFlags, DISPPARAMS* pDispParams,
         VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr)
 {
     if( SUCCEEDED(loadTypeInfo()) )

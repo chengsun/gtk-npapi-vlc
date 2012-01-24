@@ -677,7 +677,7 @@ HRESULT VLCPlugin::onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID)
     return S_OK;
 };
 
-HRESULT VLCPlugin::onClose(DWORD dwSaveOption)
+HRESULT VLCPlugin::onClose(DWORD)
 {
     if( isInPlaceActive() )
     {
@@ -701,7 +701,7 @@ BOOL VLCPlugin::isInPlaceActive(void)
     return (NULL != _inplacewnd);
 };
 
-HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprcPosRect, LPCRECT lprcClipRect)
+HRESULT VLCPlugin::onActivateInPlace(LPMSG, HWND hwndParent, LPCRECT lprcPosRect, LPCRECT lprcClipRect)
 {
     RECT clipRect = *lprcClipRect;
 
@@ -946,7 +946,7 @@ void VLCPlugin::onDraw(DVTARGETDEVICE * ptd, HDC hicTargetDev,
     }
 };
 
-void VLCPlugin::onPaint(HDC hdc, const RECT &bounds, const RECT &clipRect)
+void VLCPlugin::onPaint(HDC hdc, const RECT &bounds, const RECT &)
 {
     if( isVisible() )
     {

@@ -408,8 +408,8 @@ private:
     HRESULT ReadProperty(LPSTREAM pStm, AxVLCPropertyPair **prop)
     {
         HRESULT result;
-
         ULONG len;
+        *prop = NULL;
 
         result = pStm->Read(&len, sizeof(len), NULL);
         if( FAILED(result) )

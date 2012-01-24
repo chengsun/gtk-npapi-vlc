@@ -68,7 +68,7 @@ STDMETHODIMP VLCControl::GetTypeInfoCount(UINT* pctInfo)
     return NOERROR;
 };
 
-STDMETHODIMP VLCControl::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInfo)
+STDMETHODIMP VLCControl::GetTypeInfo(UINT, LCID, LPTYPEINFO* ppTInfo)
 {
     if( NULL == ppTInfo )
         return E_INVALIDARG;
@@ -83,8 +83,8 @@ STDMETHODIMP VLCControl::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInfo
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCControl::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames,
-        UINT cNames, LCID lcid, DISPID* rgDispID)
+STDMETHODIMP VLCControl::GetIDsOfNames(REFIID, LPOLESTR* rgszNames,
+        UINT cNames, LCID, DISPID* rgDispID)
 {
     if( SUCCEEDED(getTypeInfo()) )
     {
@@ -93,8 +93,8 @@ STDMETHODIMP VLCControl::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames,
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCControl::Invoke(DISPID dispIdMember, REFIID riid,
-        LCID lcid, WORD wFlags, DISPPARAMS* pDispParams,
+STDMETHODIMP VLCControl::Invoke(DISPID dispIdMember, REFIID,
+        LCID, WORD wFlags, DISPPARAMS* pDispParams,
         VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr)
 {
     if( SUCCEEDED(getTypeInfo()) )
@@ -307,7 +307,7 @@ STDMETHODIMP VLCControl::toggleMute(void)
     return result;
 };
 
-STDMETHODIMP VLCControl::setVariable(BSTR name, VARIANT value)
+STDMETHODIMP VLCControl::setVariable(BSTR, VARIANT)
 {
     libvlc_instance_t* p_libvlc;
     HRESULT result = _p_instance->getVLC(&p_libvlc);
@@ -320,7 +320,7 @@ STDMETHODIMP VLCControl::setVariable(BSTR name, VARIANT value)
     return E_FAIL;
 };
 
-STDMETHODIMP VLCControl::getVariable(BSTR name, VARIANT *value)
+STDMETHODIMP VLCControl::getVariable(BSTR, VARIANT *)
 {
     libvlc_instance_t* p_libvlc;
     HRESULT result = _p_instance->getVLC(&p_libvlc);
