@@ -126,7 +126,7 @@ private:
         ~Listener()
             {
             }
-        const libvlc_event_type_t event_type() const { return _event->libvlc_type; }
+        libvlc_event_type_t event_type() const { return _event->libvlc_type; }
         NPObject *listener() const { return _listener; }
         bool bubble() const { return _bubble; }
     private:
@@ -146,9 +146,9 @@ private:
         ~VLCEvent()
             {
             }
-        const libvlc_event_type_t event_type() { return _libvlc_event_type; }
+        libvlc_event_type_t event_type() const { return _libvlc_event_type; }
         NPVariant *params() const { return _npparams; }
-        const uint32_t count() { return _npcount; }
+        uint32_t count() const { return _npcount; }
     private:
         libvlc_event_type_t _libvlc_event_type;
         NPVariant *_npparams;
