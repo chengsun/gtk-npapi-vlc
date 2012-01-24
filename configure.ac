@@ -272,6 +272,7 @@ AC_CONFIG_FILES([
   Makefile
   share/Makefile
   npapi/Makefile
+  activex/Makefile
   npapi/install.js
   npapi/install.rdf
   npapi/manifest.json
@@ -280,7 +281,6 @@ AC_CONFIG_FILES([
 AM_COND_IF([HAVE_WIN32], [
   AC_CONFIG_FILES([
     npapi/npvlc_rc.rc
-    activex/Makefile
     activex/axvlc.inf
     activex/axvlc_rc.rc
   ])
