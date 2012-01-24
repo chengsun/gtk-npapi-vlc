@@ -115,7 +115,7 @@ NPError NPP_GetValue( NPP instance, NPPVariable variable, void *value )
  * NPPVariable is wrongly defined as NPNVariable, which sounds incorrect.
  */
 
-NPError NPP_SetValue( NPP instance, NPNVariable variable, void *value )
+NPError NPP_SetValue( NPP, NPNVariable, void * )
 {
     return NPERR_GENERIC_ERROR;
 }
@@ -266,9 +266,9 @@ void NPP_Shutdown( void )
     ;
 }
 
-NPError NPP_New( NPMIMEType pluginType, NPP instance,
+NPError NPP_New( NPMIMEType, NPP instance,
                  NPuint16_t mode, NPint16_t argc,
-                 char* argn[], char* argv[], NPSavedData* saved )
+                 char* argn[], char* argv[], NPSavedData* )
 {
     NPError status;
 
@@ -295,7 +295,7 @@ NPError NPP_New( NPMIMEType pluginType, NPP instance,
     return status;
 }
 
-NPError NPP_Destroy( NPP instance, NPSavedData** save )
+NPError NPP_Destroy( NPP instance, NPSavedData** )
 {
     if( NULL == instance )
         return NPERR_INVALID_INSTANCE_ERROR;
@@ -329,7 +329,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
         return NPERR_NO_ERROR;
     }
 
-    libvlc_instance_t *p_vlc = p_plugin->getVLC();
+    p_plugin->getVLC();
 
     /*
      * PLUGIN DEVELOPERS:
@@ -394,8 +394,8 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
     return NPERR_NO_ERROR;
 }
 
-NPError NPP_NewStream( NPP instance, NPMIMEType type, NPStream *stream,
-                       NPBool seekable, NPuint16_t *stype )
+NPError NPP_NewStream( NPP instance, NPMIMEType, NPStream *stream,
+                       NPBool, NPuint16_t *stype )
 {
     if( NULL == instance  )
     {
@@ -424,20 +424,20 @@ NPError NPP_NewStream( NPP instance, NPMIMEType type, NPStream *stream,
     return NPERR_GENERIC_ERROR;
 }
 
-NPint32_t NPP_WriteReady( NPP instance, NPStream *stream )
+NPint32_t NPP_WriteReady( NPP, NPStream *)
 {
     /* TODO */
     return 8*1024;
 }
 
-NPint32_t NPP_Write( NPP instance, NPStream *stream, NPint32_t offset,
-                 NPint32_t len, void *buffer )
+NPint32_t NPP_Write( NPP, NPStream *, NPint32_t,
+                 NPint32_t len, void * )
 {
     /* TODO */
     return len;
 }
 
-NPError NPP_DestroyStream( NPP instance, NPStream *stream, NPError reason )
+NPError NPP_DestroyStream( NPP instance, NPStream *, NPError )
 {
     if( instance == NULL )
     {
@@ -446,7 +446,7 @@ NPError NPP_DestroyStream( NPP instance, NPStream *stream, NPError reason )
     return NPERR_NO_ERROR;
 }
 
-void NPP_StreamAsFile( NPP instance, NPStream *stream, const char* fname )
+void NPP_StreamAsFile( NPP instance, NPStream *stream, const char* )
 {
     if( instance == NULL )
     {
@@ -468,8 +468,8 @@ void NPP_StreamAsFile( NPP instance, NPStream *stream, const char* fname )
     }
 }
 
-void NPP_URLNotify( NPP instance, const char* url,
-                    NPReason reason, void* notifyData )
+void NPP_URLNotify( NPP instance, const char* ,
+                    NPReason, void* )
 {
     /***** Insert NPP_URLNotify code here *****\
     PluginInstance* p_plugin;
