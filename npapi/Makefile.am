@@ -21,6 +21,7 @@ libvlcplugin_la_SOURCES = \
 	control/nporuntime.h \
 	control/position.h \
 	support/classinfo.h \
+	../common/vlc_player_options.h \
 	$(SOURCES_support)
 
 EXTRA_libvlcplugin_la_SOURCES = \

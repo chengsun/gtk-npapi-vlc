@@ -72,6 +72,7 @@ axvlc_la_SOURCES = \
     plugin.h \
     axvlc_idl.c \
     axvlc_idl.h \
+    ../common/vlc_player_options.h \
     ../common/win32_fullscreen.cpp \
     ../common/win32_fullscreen.h \
     ../common/win32_vlcwnd.cpp \
