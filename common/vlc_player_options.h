@@ -102,7 +102,7 @@ public:
         return _bg_color;
     }
 
-    virtual void on_option_change(vlc_player_option_e o_ch){};
+    virtual void on_option_change(vlc_player_option_e ){};
 
 private:
     bool         _autoplay;
