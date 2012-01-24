@@ -334,7 +334,7 @@ void EventObj::unhook_manager( void *userdata )
 {
     if( _em )
     {
-		/* detach all libvlc events we cared about */
+        /* detach all libvlc events we cared about */
         for( size_t i = 0; i < ARRAY_SIZE(vlcevents); i++ )
         {
             libvlc_event_detach( _em, vlcevents[i].libvlc_type,

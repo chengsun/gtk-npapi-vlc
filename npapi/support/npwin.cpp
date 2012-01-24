@@ -55,8 +55,8 @@ JRIGlobalRef Private_GetJavaClass(void);
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 // Private_GetJavaClass (global function)
 //
-//	Given a Java class reference (thru NPP_GetJavaClass) inform JRT
-//	of this class existence
+//  Given a Java class reference (thru NPP_GetJavaClass) inform JRT
+//  of this class existence
 //
 JRIGlobalRef
 Private_GetJavaClass(void)
@@ -72,7 +72,7 @@ Private_GetJavaClass(void)
 
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
-//						PLUGIN DLL entry points
+//                      PLUGIN DLL entry points
 //
 // These are the Windows specific DLL entry points. They must be exported
 //
@@ -87,7 +87,7 @@ static NPPluginFuncs* g_pluginFuncs;
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 // NP_GetEntryPoints
 //
-//	fills in the func table used by Navigator to call entry points in
+//  fills in the func table used by Navigator to call entry points in
 //  plugin DLL.  Note that these entry points ensure that DS is loaded
 //  by using the NP_LOADDS macro, when compiling for Win16
 //
@@ -128,7 +128,7 @@ NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 // NP_Initialize
 //
-//	called immediately after the plugin DLL is loaded
+//  called immediately after the plugin DLL is loaded
 //
 #ifdef __MINGW32__
 extern "C" __declspec(dllexport) NPError WINAPI
@@ -167,9 +167,9 @@ NP_Initialize(NPNetscapeFuncs* pFuncs)
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 // NP_Shutdown
 //
-//	called immediately before the plugin DLL is unloaded.
-//	This function should check for some ref count on the dll to see if it is
-//	unloadable or it needs to stay in memory.
+//  called immediately before the plugin DLL is unloaded.
+//  This function should check for some ref count on the dll to see if it is
+//  unloadable or it needs to stay in memory.
 //
 #ifdef __MINGW32__
 extern "C" __declspec(dllexport) NPError WINAPI
@@ -188,7 +188,7 @@ NPP_GET_MIME_CONST char * NP_GetMIMEDescription()
   return NPP_GetMIMEDescription();
 }
 
-//						END - PLUGIN DLL entry points
+//                      END - PLUGIN DLL entry points
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 
