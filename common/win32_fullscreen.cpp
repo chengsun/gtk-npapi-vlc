@@ -632,7 +632,7 @@ void VLCHolderWnd::PreRegisterWindowClass(WNDCLASS* wc)
 {
     if( !_hBgBrush){
         BYTE r = 0, g = 0, b = 0;
-        HtmlColor2RGB(PO()->get_bg_color(), &r, &g, &b);
+        HTMLColor2RGB(PO()->get_bg_color().c_str(), &r, &g, &b);
         _hBgBrush = CreateSolidBrush(RGB(r, g, b));
     }
 
