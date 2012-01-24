@@ -50,31 +50,31 @@ char* RuntimeNPObject::stringValue(const NPVariant &v)
     return s;
 }
 
-RuntimeNPObject::InvokeResult RuntimeNPObject::getProperty(int index, NPVariant &result)
+RuntimeNPObject::InvokeResult RuntimeNPObject::getProperty(int, NPVariant &)
 {
     /* default behaviour */
     return INVOKERESULT_GENERIC_ERROR;
 }
 
-RuntimeNPObject::InvokeResult RuntimeNPObject::setProperty(int index, const NPVariant &value)
+RuntimeNPObject::InvokeResult RuntimeNPObject::setProperty(int, const NPVariant &)
 {
     /* default behaviour */
     return INVOKERESULT_GENERIC_ERROR;
 }
 
-RuntimeNPObject::InvokeResult RuntimeNPObject::removeProperty(int index)
+RuntimeNPObject::InvokeResult RuntimeNPObject::removeProperty(int)
 {
     /* default behaviour */
     return INVOKERESULT_GENERIC_ERROR;
 }
 
-RuntimeNPObject::InvokeResult RuntimeNPObject::invoke(int index, const NPVariant *args, uint32_t argCount, NPVariant &result)
+RuntimeNPObject::InvokeResult RuntimeNPObject::invoke(int, const NPVariant *, uint32_t, NPVariant &)
 {
     /* default beahviour */
     return INVOKERESULT_GENERIC_ERROR;
 }
 
-RuntimeNPObject::InvokeResult RuntimeNPObject::invokeDefault(const NPVariant *args, uint32_t argCount, NPVariant &result)
+RuntimeNPObject::InvokeResult RuntimeNPObject::invokeDefault(const NPVariant *, uint32_t, NPVariant &result)
 {
     /* return void */
     VOID_TO_NPVARIANT(result);
