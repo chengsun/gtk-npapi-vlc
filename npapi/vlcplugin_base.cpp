@@ -256,7 +256,7 @@ void EventObj::callback(const libvlc_event_t* event,
 
 vlcplugin_event_t *EventObj::find_event(const char *s) const
 {
-    for( int i = 0; i < ARRAY_SIZE(vlcevents); i++ )
+    for( size_t i = 0; i < ARRAY_SIZE(vlcevents); i++ )
     {
         if( strncmp(vlcevents[i].name, s, strlen(vlcevents[i].name)) == 0 )
             return &vlcevents[i];
@@ -266,7 +266,7 @@ vlcplugin_event_t *EventObj::find_event(const char *s) const
 
 const char *EventObj::find_name(const libvlc_event_t *event)
 {
-    for( int i = 0; i < ARRAY_SIZE(vlcevents); i++ )
+    for( size_t i = 0; i < ARRAY_SIZE(vlcevents); i++ )
     {
         if( vlcevents[i].libvlc_type == event->type )
             return vlcevents[i].name;
@@ -321,7 +321,7 @@ void EventObj::hook_manager( libvlc_event_manager_t *em, void *userdata )
     if( _em )
     {
         /* attach all libvlc events we care about */
-        for( int i = 0; i < ARRAY_SIZE(vlcevents); i++ )
+        for( size_t i = 0; i < ARRAY_SIZE(vlcevents); i++ )
         {
             libvlc_event_attach( _em, vlcevents[i].libvlc_type,
                                       vlcevents[i].libvlc_callback,
@@ -335,7 +335,7 @@ void EventObj::unhook_manager( void *userdata )
     if( _em )
     {
 		/* detach all libvlc events we cared about */
-        for( int i = 0; i < ARRAY_SIZE(vlcevents); i++ )
+        for( size_t i = 0; i < ARRAY_SIZE(vlcevents); i++ )
         {
             libvlc_event_detach( _em, vlcevents[i].libvlc_type,
                                       vlcevents[i].libvlc_callback,
@@ -597,7 +597,7 @@ int VlcPluginBase::playlist_add( const char *mrl )
     return item;
 }
 
-int VlcPluginBase::playlist_add_extended_untrusted( const char *mrl, const char *name,
+int VlcPluginBase::playlist_add_extended_untrusted( const char *mrl, const char *,
                     int optc, const char **optv )
 {
     libvlc_media_t *p_m;
