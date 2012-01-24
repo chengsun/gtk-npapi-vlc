@@ -598,8 +598,8 @@ enum LibvlcInputNPObjectMethodIds
 };
 
 RuntimeNPObject::InvokeResult
-LibvlcInputNPObject::invoke(int index, const NPVariant *args,
-                                    uint32_t argCount, NPVariant &result)
+LibvlcInputNPObject::invoke(int index, const NPVariant *,
+                            uint32_t, NPVariant &)
 {
     /* is plugin still running */
     if( isPluginRunning() )
@@ -1480,7 +1480,7 @@ enum LibvlcVideoNPObjectMethodIds
 };
 
 RuntimeNPObject::InvokeResult
-LibvlcVideoNPObject::invoke(int index, const NPVariant *args,
+LibvlcVideoNPObject::invoke(int index, const NPVariant *,
                             uint32_t argCount, NPVariant &result)
 {
     /* is plugin still running */
@@ -1675,8 +1675,8 @@ enum LibvlcMarqueeNPObjectMethodIds
 };
 
 RuntimeNPObject::InvokeResult
-LibvlcMarqueeNPObject::invoke(int index, const NPVariant *args,
-                            uint32_t argCount, NPVariant &result)
+LibvlcMarqueeNPObject::invoke(int index, const NPVariant *,
+                              uint32_t, NPVariant &result)
 {
     if( !isPluginRunning() )
         return INVOKERESULT_GENERIC_ERROR;
@@ -1880,13 +1880,13 @@ enum LibvlcDeinterlaceNPObjectPropertyIds {
 const int LibvlcDeinterlaceNPObject::propertyCount=0;
 
 RuntimeNPObject::InvokeResult
-LibvlcDeinterlaceNPObject::getProperty(int index, NPVariant &result)
+LibvlcDeinterlaceNPObject::getProperty(int, NPVariant &)
 {
     return INVOKERESULT_GENERIC_ERROR;
 }
 
 RuntimeNPObject::InvokeResult
-LibvlcDeinterlaceNPObject::setProperty(int index, const NPVariant &value)
+LibvlcDeinterlaceNPObject::setProperty(int, const NPVariant &)
 {
     return INVOKERESULT_GENERIC_ERROR;
 }
@@ -1904,7 +1904,7 @@ COUNTNAMES(LibvlcDeinterlaceNPObject,methodCount,methodNames);
 
 RuntimeNPObject::InvokeResult
 LibvlcDeinterlaceNPObject::invoke(int index, const NPVariant *args,
-                           uint32_t argCount, NPVariant &result)
+                                  uint32_t argCount, NPVariant &)
 {
     char *psz;
 
