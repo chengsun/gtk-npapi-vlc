@@ -134,7 +134,6 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CREATE:{
             const int ControlsHeight = 21+3;
             const int ButtonsWidth = ControlsHeight;
-            const int ScrollVOffset = (ControlsHeight-GetSystemMetrics(SM_CXHSCROLL))/2;
 
             int HorizontalOffset = xControlsSpace;
             int ControlWidth = ButtonsWidth;
@@ -319,7 +318,6 @@ LRESULT VLCControlsWnd::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
 
             const int new_client_width = LOWORD(lParam);
-            const int new_client_height = HIWORD(lParam);
 
             bool isFSBtnVisible =
                 (GetWindowLong(hFSButton, GWL_STYLE) & WS_VISIBLE) != 0;
@@ -553,7 +551,7 @@ void VLCControlsWnd::SetVLCVolumeBySliderPos(int CurPos)
 /////////////////////////////////////
 //VLCControlsWnd event handlers
 
-void VLCControlsWnd::handle_position_changed_event(const libvlc_event_t* event)
+void VLCControlsWnd::handle_position_changed_event(const libvlc_event_t* )
 {
     SyncVideoPosScrollPosWithVideoPos();
 }
@@ -933,8 +931,8 @@ VLCFullScreenWnd* VLCFullScreenWnd::CreateFSWindow(VLCWindowsManager* WM)
 ///////////////////////
 VLCWindowsManager::VLCWindowsManager(HMODULE hModule, const VLCViewResources& rc,
                                      const vlc_player_options* po)
-    :_hModule(hModule), _hWindowedParentWnd(0), _p_md(0), _HolderWnd(0), _FSWnd(0),
-    _b_new_messages_flag(false), Last_WM_MOUSEMOVE_Pos(0), _rc(rc), _po(po)
+    :_rc(rc), _hModule(hModule), _po(po), _hWindowedParentWnd(0), _p_md(0),
+    _HolderWnd(0), _FSWnd(0), _b_new_messages_flag(false), Last_WM_MOUSEMOVE_Pos(0)
 {
     VLCFullScreenWnd::RegisterWndClassName(hModule);
 }

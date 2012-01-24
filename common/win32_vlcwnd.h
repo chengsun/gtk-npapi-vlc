@@ -38,7 +38,7 @@ protected:
                   int x, int y, int nWidth, int nHeight,
                   HWND hWndParent, HMENU hMenu);
 
-    virtual void PreRegisterWindowClass(WNDCLASS* wc) {};
+    virtual void PreRegisterWindowClass(WNDCLASS* ) {};
     virtual LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
         { return DefWindowProc(_hWnd, uMsg, wParam, lParam); };
 

@@ -145,7 +145,7 @@ public:
 protected:
     VLCHolderWnd(HINSTANCE hInstance, VLCWindowsManager* WM)
         : VLCWnd(hInstance), _hMouseHook(NULL), _MouseHookThreadId(0),
-         _wm(WM), _CtrlsWnd(0), _hBgBrush(0) {};
+         _wm(WM), _hBgBrush(0), _CtrlsWnd(0) {};
     bool Create(HWND hWndParent);
 
     virtual void PreRegisterWindowClass(WNDCLASS* wc);
@@ -222,7 +222,7 @@ private:
 
 public:
     //libvlc events arrives from separate thread
-    void OnLibVlcEvent(const libvlc_event_t* event) {};
+    void OnLibVlcEvent(const libvlc_event_t* ) {};
 
 private:
     void NeedHideControls();
