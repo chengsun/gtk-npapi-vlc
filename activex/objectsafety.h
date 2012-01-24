@@ -23,7 +23,7 @@
 #ifndef __OBJECTSAFETY_H__
 #define __OBJECTSAFETY_H__
 
-#if HAVE_OBJSAFE_HEADER
+#ifdef HAVE_OBJSAFE_HEADER
 /*
 ** at last, a version of mingw that supports this header
 */

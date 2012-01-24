@@ -38,7 +38,7 @@ STDMETHODIMP VLCPersistStorage::IsDirty(void)
     return _p_instance->isDirty() ? S_OK : S_FALSE;
 };
 
-STDMETHODIMP VLCPersistStorage::InitNew(LPSTORAGE pStg)
+STDMETHODIMP VLCPersistStorage::InitNew(LPSTORAGE)
 {
     return _p_instance->onInit();
 };
@@ -94,7 +94,7 @@ STDMETHODIMP VLCPersistStorage::Save(LPSTORAGE pStg, BOOL fSameAsLoad)
     return result;
 };
 
-STDMETHODIMP VLCPersistStorage::SaveCompleted(IStorage *pStg)
+STDMETHODIMP VLCPersistStorage::SaveCompleted(IStorage *)
 {
     return S_OK;
 };

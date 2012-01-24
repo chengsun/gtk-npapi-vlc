@@ -439,6 +439,7 @@ STDAPI_(int) WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
 
 STDAPI_(BOOL) DllMain(HANDLE hModule, DWORD fdwReason, LPVOID lpReserved )
 {
+    (void)lpReserved;
     switch( fdwReason )
     {
         case DLL_PROCESS_ATTACH:

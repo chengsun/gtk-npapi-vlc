@@ -93,7 +93,7 @@ STDMETHODIMP VLCDataObject::EnumDAdvise(IEnumSTATDATA **ppenumAdvise)
     return _p_adviseHolder->EnumAdvise(ppenumAdvise);
 };
 
-STDMETHODIMP VLCDataObject::EnumFormatEtc(DWORD dwDirection,
+STDMETHODIMP VLCDataObject::EnumFormatEtc(DWORD,
                                           IEnumFORMATETC **ppEnum)
 {
     if( NULL == ppEnum )
@@ -149,7 +149,7 @@ STDMETHODIMP VLCDataObject::GetData(LPFORMATETC pFormatEtc, LPSTGMEDIUM pMedium)
     return result;
 };
 
-STDMETHODIMP VLCDataObject::GetDataHere(LPFORMATETC pFormatEtc,
+STDMETHODIMP VLCDataObject::GetDataHere(LPFORMATETC,
                                         LPSTGMEDIUM pMedium)
 {
     if( NULL == pMedium )
@@ -259,8 +259,8 @@ STDMETHODIMP VLCDataObject::QueryGetData(LPFORMATETC pFormatEtc)
     return S_OK;
 };
 
-STDMETHODIMP VLCDataObject::SetData(LPFORMATETC pFormatEtc,
-                                    LPSTGMEDIUM pMedium, BOOL fRelease)
+STDMETHODIMP VLCDataObject::SetData(LPFORMATETC,
+                                    LPSTGMEDIUM, BOOL)
 {
     return E_NOTIMPL;
 };

@@ -239,7 +239,7 @@ public:
 
     // IPropertyBag methods
 
-    STDMETHODIMP Read(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog *pErrorLog)
+    STDMETHODIMP Read(LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog *)
     {
         if( (NULL == pszPropName) || (NULL == pVar) )
             return E_POINTER;

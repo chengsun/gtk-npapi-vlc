@@ -37,12 +37,12 @@ STDMETHODIMP VLCOleInPlaceActiveObject::GetWindow(HWND *pHwnd)
     return E_FAIL;
 };
 
-STDMETHODIMP VLCOleInPlaceActiveObject::EnableModeless(BOOL fEnable)
+STDMETHODIMP VLCOleInPlaceActiveObject::EnableModeless(BOOL)
 {
     return S_OK;
 };
 
-STDMETHODIMP VLCOleInPlaceActiveObject::ContextSensitiveHelp(BOOL fEnterMode)
+STDMETHODIMP VLCOleInPlaceActiveObject::ContextSensitiveHelp(BOOL)
 {
     return E_NOTIMPL;
 };
@@ -72,17 +72,17 @@ STDMETHODIMP VLCOleInPlaceActiveObject::TranslateAccelerator(LPMSG lpmsg)
     return hr;
 };
 
-STDMETHODIMP VLCOleInPlaceActiveObject::OnFrameWindowActivate(BOOL fActivate)
+STDMETHODIMP VLCOleInPlaceActiveObject::OnFrameWindowActivate(BOOL)
 {
     return S_OK;
 };
 
-STDMETHODIMP VLCOleInPlaceActiveObject::OnDocWindowActivate(BOOL fActivate)
+STDMETHODIMP VLCOleInPlaceActiveObject::OnDocWindowActivate(BOOL)
 {
     return S_OK;
 };
 
-STDMETHODIMP VLCOleInPlaceActiveObject::ResizeBorder(LPCRECT prcBorder, LPOLEINPLACEUIWINDOW pUIWindow, BOOL fFrameWindow)
+STDMETHODIMP VLCOleInPlaceActiveObject::ResizeBorder(LPCRECT, LPOLEINPLACEUIWINDOW, BOOL)
 {
     return S_OK;
 };

@@ -58,7 +58,7 @@ STDMETHODIMP VLCOleObject::Close(DWORD dwSaveOption)
 };
 
 STDMETHODIMP VLCOleObject::DoVerb(LONG iVerb, LPMSG lpMsg, LPOLECLIENTSITE pActiveSite,
-                                    LONG lIndex, HWND hwndParent, LPCRECT lprcPosRect)
+                                    LONG, HWND hwndParent, LPCRECT lprcPosRect)
 {
     switch( iVerb )
     {
@@ -250,7 +250,7 @@ STDMETHODIMP VLCOleObject::GetClientSite(LPOLECLIENTSITE *ppClientSite)
     return S_OK;
 };
 
-STDMETHODIMP VLCOleObject::GetClipboardData(DWORD dwReserved, LPDATAOBJECT *ppDataObject)
+STDMETHODIMP VLCOleObject::GetClipboardData(DWORD, LPDATAOBJECT *ppDataObject)
 {
     return _p_instance->pUnkOuter->QueryInterface(IID_IDataObject, (void **)ppDataObject);
 };
@@ -314,7 +314,7 @@ STDMETHODIMP VLCOleObject::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserType
         dwFormOfType, pszUserType);
 };
 
-STDMETHODIMP VLCOleObject::InitFromData(LPDATAOBJECT pDataObject, BOOL fCreation, DWORD dwReserved)
+STDMETHODIMP VLCOleObject::InitFromData(LPDATAOBJECT, BOOL, DWORD)
 {
     return E_NOTIMPL;
 };
@@ -339,7 +339,7 @@ STDMETHODIMP VLCOleObject::SetClientSite(LPOLECLIENTSITE pClientSite)
     return S_OK;
 };
 
-STDMETHODIMP VLCOleObject::SetColorScheme(LOGPALETTE *pLogpal)
+STDMETHODIMP VLCOleObject::SetColorScheme(LOGPALETTE *)
 {
     return E_NOTIMPL;
 };
@@ -379,12 +379,12 @@ STDMETHODIMP VLCOleObject::SetExtent(DWORD dwDrawAspect, SIZEL *pSizel)
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCOleObject::SetHostNames(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj)
+STDMETHODIMP VLCOleObject::SetHostNames(LPCOLESTR, LPCOLESTR)
 {
     return S_OK;
 };
 
-STDMETHODIMP VLCOleObject::SetMoniker(DWORD dwWhichMoniker, LPMONIKER pMoniker)
+STDMETHODIMP VLCOleObject::SetMoniker(DWORD, LPMONIKER pMoniker)
 {
     return _p_advise_holder->SendOnRename(pMoniker);
 };

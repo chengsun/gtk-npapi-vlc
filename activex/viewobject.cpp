@@ -27,9 +27,9 @@
 
 using namespace std;
 
-STDMETHODIMP VLCViewObject::Draw(DWORD dwAspect, LONG lindex, PVOID pvAspect,
-        DVTARGETDEVICE *ptd, HDC hicTargetDev, HDC hdcDraw, LPCRECTL lprcBounds,
-        LPCRECTL lprcWBounds, BOOL(CALLBACK *pfnContinue)(ULONG_PTR), ULONG_PTR dwContinue)
+STDMETHODIMP VLCViewObject::Draw(DWORD dwAspect, LONG, PVOID,
+            DVTARGETDEVICE *ptd, HDC hicTargetDev, HDC hdcDraw, LPCRECTL lprcBounds,
+        LPCRECTL lprcWBounds, BOOL(CALLBACK *)(ULONG_PTR), ULONG_PTR )
 {
     if( dwAspect & DVASPECT_CONTENT )
     {
@@ -67,8 +67,8 @@ STDMETHODIMP VLCViewObject::Draw(DWORD dwAspect, LONG lindex, PVOID pvAspect,
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCViewObject::Freeze(DWORD dwAspect, LONG lindex,
-        PVOID pvAspect, LPDWORD pdwFreeze)
+STDMETHODIMP VLCViewObject::Freeze(DWORD, LONG,
+        PVOID, LPDWORD)
 {
     return E_NOTIMPL;
 };
@@ -92,8 +92,8 @@ STDMETHODIMP VLCViewObject::GetAdvise(LPDWORD pdwAspect, LPDWORD padvf,
     return S_OK;
 };
 
-STDMETHODIMP VLCViewObject::GetColorSet(DWORD dwAspect, LONG lindex,
-        PVOID pvAspect, DVTARGETDEVICE *ptd, HDC hicTargetDev, LPLOGPALETTE *ppColorSet)
+STDMETHODIMP VLCViewObject::GetColorSet(DWORD, LONG,
+        PVOID, DVTARGETDEVICE *, HDC, LPLOGPALETTE *)
 {
     return S_FALSE;
 };
@@ -119,13 +119,13 @@ STDMETHODIMP VLCViewObject::SetAdvise(DWORD dwAspect, DWORD advf,
     return S_OK;
 };
 
-STDMETHODIMP VLCViewObject::Unfreeze(DWORD dwFreeze)
+STDMETHODIMP VLCViewObject::Unfreeze(DWORD)
 {
     return E_NOTIMPL;
 };
 
-STDMETHODIMP VLCViewObject::GetExtent(DWORD dwAspect, LONG lindex,
-        DVTARGETDEVICE *ptd, LPSIZEL lpSizel)
+STDMETHODIMP VLCViewObject::GetExtent(DWORD dwAspect, LONG,
+        DVTARGETDEVICE *, LPSIZEL lpSizel)
 {
     if( dwAspect & DVASPECT_CONTENT )
     {

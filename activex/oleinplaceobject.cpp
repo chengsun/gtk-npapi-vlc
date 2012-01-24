@@ -39,7 +39,7 @@ STDMETHODIMP VLCOleInPlaceObject::GetWindow(HWND *pHwnd)
     return E_FAIL;
 };
 
-STDMETHODIMP VLCOleInPlaceObject::ContextSensitiveHelp(BOOL fEnterMode)
+STDMETHODIMP VLCOleInPlaceObject::ContextSensitiveHelp(BOOL)
 {
     return E_NOTIMPL;
 };

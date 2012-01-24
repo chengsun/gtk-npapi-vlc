@@ -36,7 +36,7 @@ STDMETHODIMP VLCOleControl::GetControlInfo(CONTROLINFO *pCI)
     return S_OK;
 };
 
-STDMETHODIMP VLCOleControl::OnMnemonic(LPMSG pMsg)
+STDMETHODIMP VLCOleControl::OnMnemonic(LPMSG)
 {
     return S_OK;
 };
