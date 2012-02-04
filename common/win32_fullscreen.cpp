@@ -498,7 +498,7 @@ void VLCControlsWnd::SetVideoPosScrollRangeByVideoLen()
 
 void VLCControlsWnd::SetVideoPosScrollPosByVideoPos(libvlc_time_t CurScrollPos)
 {
-    SendMessage(hVideoPosScroll, (UINT)PBM_SETPOS, (WPARAM) (CurScrollPos >> VideoPosShiftBits), 0);
+    PostMessage(hVideoPosScroll, (UINT)PBM_SETPOS, (WPARAM) (CurScrollPos >> VideoPosShiftBits), 0);
 }
 
 void VLCControlsWnd::SetVideoPos(float Pos) //0-start, 1-end
@@ -561,15 +561,15 @@ void VLCControlsWnd::handle_input_state_event(const libvlc_event_t* event)
     switch( event->type )
     {
         case libvlc_MediaPlayerPlaying:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+            PostMessage(hPlayPauseButton, BM_SETIMAGE,
                         (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPauseBitmap);
             break;
         case libvlc_MediaPlayerPaused:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+            PostMessage(hPlayPauseButton, BM_SETIMAGE,
                         (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPlayBitmap);
             break;
         case libvlc_MediaPlayerStopped:
-            SendMessage(hPlayPauseButton, BM_SETIMAGE,
+            PostMessage(hPlayPauseButton, BM_SETIMAGE,
                         (WPARAM)IMAGE_BITMAP, (LPARAM)RC().hPlayBitmap);
             break;
     }
