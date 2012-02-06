@@ -272,9 +272,15 @@ static bool video_expose_handler(GtkWidget *widget, GdkEvent *event, gpointer us
     GdkPixbuf *cone_icon = plugin->cone_icon;
     if (!cone_icon) return false;
 
-    int winwidth   = gdk_window_get_width(window),
-        winheight  = gdk_window_get_height(window),
-        iconwidth  = gdk_pixbuf_get_width(cone_icon),
+    int winwidth, winheight;
+#   if GTK_CHECK_VERSION(2, 24, 0)
+        winwidth  = gdk_window_get_width(window);
+        winheight = gdk_window_get_height(window);
+#   else
+        gdk_drawable_get_size(GDK_DRAWABLE(window), &winwidth, &winheight);
+#   endif
+
+    int iconwidth  = gdk_pixbuf_get_width(cone_icon),
         iconheight = gdk_pixbuf_get_height(cone_icon);
     double widthratio  = (double) winwidth / iconwidth,
            heightratio = (double) winheight / iconheight;
