@@ -1369,21 +1369,7 @@ STDMETHODIMP VLCControl2::get_Toolbar(VARIANT_BOOL *visible)
     if( NULL == visible )
         return E_POINTER;
 
-    /*
-     * Note to developers
-     *
-     * Returning the _b_toolbar is closer to the method specification.
-     * But returning True when toolbar is not implemented so not displayed
-     * could be bad for ActiveX users which rely on this value to show their
-     * own toolbar if not provided by the ActiveX.
-     *
-     * This is the reason why FALSE is returned, until toolbar get implemented.
-     */
-
-    /* DISABLED for now */
-    //  *visible = varbool( _p_instance->getShowToolbar() );
-
-    *visible = VARIANT_FALSE;
+    *visible = varbool( _p_instance->getShowToolbar() != FALSE );
 
     return S_OK;
 };
