@@ -37,6 +37,10 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TypeLibraryName="$(ProjectName).tlb"
+				OutputDirectory="$(InputDir)"
+				HeaderFileName="$(InputName)_idl.h"
+				InterfaceIdentifierFileName="$(InputName)_idl.c"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -113,6 +117,10 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TypeLibraryName="$(ProjectName).tlb"
+				OutputDirectory="$(InputDir)"
+				HeaderFileName="$(InputName)_idl.h"
+				InterfaceIdentifierFileName="$(InputName)_idl.c"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
