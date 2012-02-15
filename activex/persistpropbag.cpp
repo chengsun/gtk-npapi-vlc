@@ -212,6 +212,13 @@ STDMETHODIMP VLCPersistPropertyBag::Load(LPPROPERTYBAG pPropBag, LPERRORLOG pErr
         }
     }
 
+    V_VT(&value) = VT_BOOL;
+    if( S_OK == pPropBag->Read(OLESTR("FullscreenEnabled"), &value, pErrorLog) )
+    {
+        _p_instance->set_enable_fs(V_BOOL(&value) != VARIANT_FALSE);
+        VariantClear(&value);
+    }
+
     return _p_instance->onLoad();
 };
 
@@ -276,6 +283,11 @@ STDMETHODIMP VLCPersistPropertyBag::Save(LPPROPERTYBAG pPropBag, BOOL fClearDirt
     V_VT(&value) = VT_I4;
     V_I4(&value) = _p_instance->getBackColor();
     pPropBag->Write(OLESTR("BackColor"), &value);
+    VariantClear(&value);
+
+    V_VT(&value) = VT_BOOL;
+    V_BOOL(&value) = _p_instance->get_enable_fs()? VARIANT_TRUE : VARIANT_FALSE;
+    pPropBag->Write(OLESTR("FullscreenEnabled"), &value);
     VariantClear(&value);
 
     if( fClearDirty )

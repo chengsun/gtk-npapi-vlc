@@ -1380,6 +1380,21 @@ STDMETHODIMP VLCControl2::put_Toolbar(VARIANT_BOOL visible)
     return S_OK;
 };
 
+STDMETHODIMP VLCControl2::get_FullscreenEnabled(VARIANT_BOOL* enabled)
+{
+    if( NULL == enabled )
+        return E_POINTER;
+
+    *enabled = varbool( _p_instance->get_enable_fs() );
+
+    return S_OK;
+}
+
+STDMETHODIMP VLCControl2::put_FullscreenEnabled(VARIANT_BOOL enabled)
+{
+    _p_instance->set_enable_fs( VARIANT_FALSE != enabled );
+    return S_OK;
+}
 
 STDMETHODIMP VLCControl2::get_StartTime(long *seconds)
 {

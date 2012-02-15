@@ -381,6 +381,8 @@ public:
     STDMETHODIMP put_Volume(long volume);
     STDMETHODIMP get_BackColor(OLE_COLOR *backcolor);
     STDMETHODIMP put_BackColor(OLE_COLOR backcolor);
+    STDMETHODIMP get_FullscreenEnabled(VARIANT_BOOL* enabled);
+    STDMETHODIMP put_FullscreenEnabled(VARIANT_BOOL enabled);
 
     STDMETHODIMP get_audio(IVLCAudio**);
     STDMETHODIMP get_input(IVLCInput**);
