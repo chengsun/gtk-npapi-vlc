@@ -634,16 +634,16 @@ library AXVLC
         [propget, helpstring("Returns the audio object.")]
         HRESULT audio([out, retval] IVLCAudio** obj);
 
-        [propget, helpstring("Returns the audio object.")]
+        [propget, helpstring("Returns the input object.")]
         HRESULT input([out, retval] IVLCInput** obj);
 
         [propget, helpstring("Returns the playlist object.")]
         HRESULT playlist([out, retval] IVLCPlaylist** obj);
 
-        [propget, helpstring("Returns the audio object.")]
+        [propget, helpstring("Returns the subtitle object.")]
         HRESULT subtitle([out, retval] IVLCSubtitle** obj);
 
-        [propget, helpstring("Returns the audio object.")]
+        [propget, helpstring("Returns the video object.")]
         HRESULT video([out, retval] IVLCVideo** obj);
 
         [id(DISPID_FSEnabled), propget, helpstring("Returns/sets availability of fullscreen mode.")]
