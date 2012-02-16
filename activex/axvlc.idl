@@ -643,13 +643,13 @@ library AXVLC
         [propget, helpstring("Returns the audio object.")]
         HRESULT subtitle([out, retval] IVLCSubtitle** obj);
 
+        [propget, helpstring("Returns the audio object.")]
+        HRESULT video([out, retval] IVLCVideo** obj);
+
         [id(DISPID_FSEnabled), propget, helpstring("Returns/sets availability of fullscreen mode.")]
         HRESULT FullscreenEnabled([out, retval] VARIANT_BOOL* enabled);
         [id(DISPID_FSEnabled), propput, helpstring("Returns/sets availability of fullscreen mode.")]
         HRESULT FullscreenEnabled([in] VARIANT_BOOL enabled);
-
-        [propget, helpstring("Returns the audio object.")]
-        HRESULT video([out, retval] IVLCVideo** obj);
     };
 
     [
