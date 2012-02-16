@@ -740,7 +740,9 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG, HWND hwndParent, LPCRECT lprcPosRect
     HRGN clipRgn = CreateRectRgnIndirect(&clipRect);
     SetWindowRgn(_inplacewnd, clipRgn, TRUE);
 
-    _WindowsManager.CreateWindows(this->getInPlaceWindow());
+    if( isUserMode() ) {
+        _WindowsManager.CreateWindows(this->getInPlaceWindow());
+    }
 
     if( _b_usermode )
     {
