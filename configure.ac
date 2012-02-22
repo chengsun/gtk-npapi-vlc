@@ -2,14 +2,14 @@ dnl Autoconf settings for npapi-vlc
 
 AC_COPYRIGHT([Copyright 2002-2011 VLC authors and VideoLAN])
 
-AC_INIT(npapi-vlc, 2.0.0-rc)
+AC_INIT(npapi-vlc, 2.0.0)
 VERSION_MAJOR="2"
 AC_SUBST(VERSION_MAJOR)
 VERSION_MINOR="0"
 AC_SUBST(VERSION_MINOR)
 VERSION_REVISION="0"
 AC_SUBST(VERSION_REVISION)
-VERSION_EXTRA="-rc"
+VERSION_EXTRA=""
 AC_SUBST(VERSION_EXTRA)
 dnl Win32 need s a numerical version_extra.
 case $( echo ${VERSION_EXTRA}|wc -m ) in
