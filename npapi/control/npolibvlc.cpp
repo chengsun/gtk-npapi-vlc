@@ -1738,6 +1738,7 @@ LibvlcMarqueeNPObject::setProperty(int index, const NPVariant &value)
     case ID_marquee_opacity:
     case ID_marquee_refresh:
     case ID_marquee_timeout:
+    case ID_marquee_size:
     case ID_marquee_x:
     case ID_marquee_y:
         if( NPVARIANT_IS_INT32( value ) )
