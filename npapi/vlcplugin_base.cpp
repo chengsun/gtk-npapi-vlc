@@ -503,10 +503,10 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
     }
 
     if( b_videocompat ) {
-        b_toolbar = b_set_toolbar;
-        b_allowfullscreen = b_set_allowfullscreen;
+        set_show_toolbar(b_set_toolbar);
+        set_enable_fs(b_set_allowfullscreen);
         b_loop = b_set_loop;
-        b_autoplay = b_set_autoplay;
+        set_autoplay(b_set_autoplay);
         b_mute = b_set_mute;
     }
 

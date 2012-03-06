@@ -2111,7 +2111,7 @@ LibvlcCompatNPObject::getProperty(int index, NPVariant &result)
         switch( index )
         {
             case ID_compat_autoplay:
-                BOOLEAN_TO_NPVARIANT(p_plugin->b_autoplay, result);
+                BOOLEAN_TO_NPVARIANT(p_plugin->get_autoplay(), result);
                 return INVOKERESULT_NO_ERROR;
             case ID_compat_buffered:
                 /* TODO */
@@ -2236,7 +2236,7 @@ LibvlcCompatNPObject::setProperty(int index, const NPVariant &value)
                 if( !NPVARIANT_IS_BOOLEAN(value) )
                     return INVOKERESULT_INVALID_VALUE;
                 bool val = (bool)NPVARIANT_TO_BOOLEAN(value);
-                p_plugin->b_autoplay = val;
+                p_plugin->set_autoplay(val);
                 return INVOKERESULT_NO_ERROR;
             }
             case ID_compat_controls:
