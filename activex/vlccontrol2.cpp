@@ -1219,11 +1219,11 @@ VLCControl2::VLCControl2(VLCPlugin *p_instance) :
 
 VLCControl2::~VLCControl2()
 {
-    delete _p_vlcvideo;
-    delete _p_vlcsubtitle;
-    delete _p_vlcplaylist;
-    delete _p_vlcinput;
-    delete _p_vlcaudio;
+    delete static_cast<VLCVideo*>(_p_vlcvideo);
+    delete static_cast<VLCSubtitle*>(_p_vlcsubtitle);
+    delete static_cast<VLCPlaylist*>(_p_vlcplaylist);
+    delete static_cast<VLCInput*>(_p_vlcinput);
+    delete static_cast<VLCAudio*>(_p_vlcaudio);
     if( _p_typeinfo )
         _p_typeinfo->Release();
 };
