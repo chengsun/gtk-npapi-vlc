@@ -33,6 +33,7 @@
 
 #include "../common/win32_fullscreen.h"
 #include "../common/vlc_player_options.h"
+#include "../common/vlc_player.h"
 
 extern "C" const GUID CLSID_VLCPlugin;
 extern "C" const GUID CLSID_VLCPlugin2;
@@ -75,7 +76,8 @@ private:
     LPPICTURE   _inplace_picture;
 };
 
-struct VLCPlugin : public IUnknown, private vlc_player_options
+struct VLCPlugin
+    : public IUnknown, private vlc_player_options, private vlc_player
 {
 public:
     VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter);
@@ -89,6 +91,12 @@ public:
     HRESULT getTypeLib(LCID lcid, ITypeLib **pTL) { return LoadRegTypeLib(LIBID_AXVLC, 1, 0, lcid, pTL); };
     REFCLSID getClassID(void) { return _p_class->getClassID(); };
     REFIID getDispEventID(void) { return (REFIID)DIID_DVLCEvents; };
+
+    vlc_player& get_player()
+    {
+        if( !vlc_player::is_open() ) initVLC();
+        return *static_cast<vlc_player*>(this);
+    }
 
     vlc_player_options& get_options()
         { return *static_cast<vlc_player_options*>(this); }
@@ -212,17 +220,15 @@ public:
     }
     HRESULT getMD(libvlc_media_player_t **pp_md)
     {
-        *pp_md = _p_mplayer;
-        return _p_mplayer ? S_OK : E_FAIL;
+        *pp_md = get_player().get_mp();
+        return *pp_md ? S_OK : E_FAIL;
     }
-
     void setErrorInfo(REFIID riid, const char *description);
 
     // control geometry within container
     RECT getPosRect(void) { return _posRect; };
     inline HWND getInPlaceWindow(void) const { return _inplacewnd; };
     void toggleFullscreen();
-
 
     BOOL isInPlaceActive(void);
 
@@ -274,66 +280,51 @@ public:
     */
     bool isPlaying()
     {
-        return _p_mplayer && libvlc_media_player_is_playing(_p_mplayer);
+        return get_player().is_playing();
     }
-    int  playlist_get_current_index() { return _i_midx; }
-    int  playlist_add_extended_untrusted(const char *, int, const char **);
+    int playlist_get_current_index()
+    {
+        return get_player().current_item();
+    }
+    int playlist_add_extended_untrusted(const char *mrl, int optc, const char **optv)
+    {
+        return get_player().add_item(mrl, optc, optv);
+    }
     void playlist_delete_item(int idx)
     {
-        if( _p_mlist )
-        {
-            libvlc_media_list_lock(_p_mlist);
-            libvlc_media_list_remove_index(_p_mlist,idx);
-            libvlc_media_list_unlock(_p_mlist);
-        }
+        get_player().delete_item(idx);
     }
     void playlist_clear()
     {
-        if( !_p_libvlc )
-            return;
-        if( _p_mlist )
-            libvlc_media_list_release(_p_mlist);
-        _p_mlist = libvlc_media_list_new(_p_libvlc);
+        get_player().clear_items();
     }
     int  playlist_count()
     {
-         int r = 0;
-         if( !_p_mlist )
-             return 0;
-         libvlc_media_list_lock(_p_mlist);
-         r = libvlc_media_list_count(_p_mlist);
-         libvlc_media_list_unlock(_p_mlist);
-         return r;
+         return get_player().items_count();
     }
     void playlist_pause()
     {
-        if( isPlaying() )
-            libvlc_media_player_pause(_p_mplayer);
+        get_player().pause();
     }
     void playlist_play()
     {
-        if( _p_mplayer || playlist_select(0) )
-            libvlc_media_player_play(_p_mplayer);
+        get_player().play();
     }
     void playlist_play_item(int idx)
     {
-        if( playlist_select(idx) )
-            libvlc_media_player_play(_p_mplayer);
+        get_player().play(idx);
     }
     void playlist_stop()
     {
-        if( _p_mplayer )
-            libvlc_media_player_stop(_p_mplayer);
+        get_player().stop();
     }
     void playlist_next()
     {
-        if( playlist_select( _i_midx+1 ) )
-            libvlc_media_player_play(_p_mplayer);
+        get_player().next();
     }
     void playlist_prev()
     {
-        if( playlist_select( _i_midx-1 ) )
-            libvlc_media_player_play(_p_mplayer);
+        get_player().prev();
     }
 
 protected:
@@ -342,7 +333,6 @@ protected:
 
 private:
     void initVLC();
-    bool playlist_select(int i);
     void set_player_window();
     void player_register_events();
     void player_unregister_events();
@@ -373,9 +363,6 @@ private:
     ULONG _i_ref;
 
     libvlc_instance_t     *_p_libvlc;
-    libvlc_media_list_t   *_p_mlist;
-    libvlc_media_player_t *_p_mplayer;
-    int  _i_midx;
 
     UINT _i_codepage;
     BOOL _b_usermode;

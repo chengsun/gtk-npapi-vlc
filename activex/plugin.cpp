@@ -221,9 +221,6 @@ VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     _p_class(p_class),
     _i_ref(1UL),
     _p_libvlc(NULL),
-    _p_mlist(NULL),
-    _p_mplayer(NULL),
-    _i_midx(-1),
     _i_codepage(CP_ACP),
     _b_usermode(TRUE)
 {
@@ -307,16 +304,14 @@ VLCPlugin::~VLCPlugin()
     SysFreeString(_bstr_mrl);
     SysFreeString(_bstr_baseurl);
 
-    if( _p_mplayer )
+    if( vlc_player::is_open() )
     {
         if( isPlaying() )
             playlist_stop();
 
         player_unregister_events();
-        libvlc_media_player_release(_p_mplayer);
-        _p_mplayer=NULL;
     }
-    if( _p_mlist )   { libvlc_media_list_release(_p_mlist); _p_mlist=NULL; }
+
     if( _p_libvlc )  { libvlc_release(_p_libvlc); _p_libvlc=NULL; }
 
     _p_class->Release();
@@ -536,7 +531,10 @@ void VLCPlugin::initVLC()
     if( !_p_libvlc )
         return;
 
-    _p_mlist = libvlc_media_list_new(_p_libvlc);
+    if( !vlc_player::open(_p_libvlc) )
+        return;
+
+    set_player_window();
 
     // initial playlist item
     if( SysStringLen(_bstr_mrl) > 0 )
@@ -752,9 +750,9 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG, HWND hwndParent, LPCRECT lprcPosRect
         if( FAILED(result) )
             return result;
 
-        if( get_autoplay() && playlist_select(0) )
+        if( get_autoplay() )
         {
-            libvlc_media_player_play(_p_mplayer);
+            vlc_player::play(0);
             fireOnPlayEvent();
         }
     }
@@ -844,9 +842,9 @@ void VLCPlugin::setTime(int seconds)
     if( seconds != _i_time )
     {
         setStartTime(_i_time);
-        if( NULL != _p_mplayer )
+        if( vlc_player::is_open() )
         {
-            libvlc_media_player_set_time(_p_mplayer, _i_time);
+            vlc_player::set_time(_i_time);
         }
     }
 };
@@ -1240,76 +1238,17 @@ static void handle_pausable_changed_event(const libvlc_event_t* event, void *par
 
 /* */
 
-bool VLCPlugin::playlist_select( int idx )
-{
-    //In some cases, libvlc may not have been initialized yet.
-    //So check it and initialize if needed (in getVLC())
-    libvlc_instance_t* p_libvlc;
-    HRESULT hr = getVLC(&p_libvlc);
-    if( FAILED(hr) || !p_libvlc)
-        return false;
-
-    if(!_p_mlist)
-        return false;//playlist does not exist, nothing to play...
-
-    libvlc_media_t *p_m = NULL;
-
-    assert(_p_mlist);
-
-    libvlc_media_list_lock(_p_mlist);
-
-    int count = libvlc_media_list_count(_p_mlist);
-
-    if( (idx < 0) || (idx >= count) )
-        goto bad_unlock;
-
-    _i_midx = idx;
-
-    p_m = libvlc_media_list_item_at_index(_p_mlist,_i_midx);
-    libvlc_media_list_unlock(_p_mlist);
-    if( !p_m )
-        return false;
-
-    if( _p_mplayer )
-    {
-        if( isPlaying() )
-            playlist_stop();
-        player_unregister_events();
-        _WindowsManager.LibVlcDetach();
-        libvlc_media_player_release( _p_mplayer );
-        _p_mplayer = NULL;
-    }
-
-    _p_mplayer = libvlc_media_player_new_from_media(p_m);
-    if( _p_mplayer )
-    {
-        // initial volume setting
-        libvlc_audio_set_volume(_p_mplayer, _i_volume);
-        if( _b_mute )
-            libvlc_audio_set_mute(_p_mplayer, TRUE);
-        set_player_window();
-        player_register_events();
-    }
-
-    libvlc_media_release(p_m);
-    return _p_mplayer ? true : false;
-
-bad_unlock:
-    libvlc_media_list_unlock(_p_mlist);
-    return false;
-}
-
 void VLCPlugin::set_player_window()
 {
-    _WindowsManager.LibVlcAttach(_p_mplayer);
+    _WindowsManager.LibVlcAttach(vlc_player::get_mp());
 }
 
 void VLCPlugin::player_register_events()
 {
     libvlc_event_manager_t *eventManager = NULL;
-    assert(_p_mplayer);
+    assert(vlc_player::is_open());
 
-    eventManager = libvlc_media_player_event_manager(_p_mplayer);
+    eventManager = libvlc_media_player_event_manager(vlc_player::get_mp());
     if(eventManager) {
         libvlc_event_attach(eventManager, libvlc_MediaPlayerNothingSpecial,
                             handle_input_state_event, this);
@@ -1346,9 +1285,9 @@ void VLCPlugin::player_register_events()
 void VLCPlugin::player_unregister_events()
 {
     libvlc_event_manager_t *eventManager = NULL;
-    assert(_p_mplayer);
+    assert(vlc_player::is_open());
 
-    eventManager = libvlc_media_player_event_manager(_p_mplayer);
+    eventManager = libvlc_media_player_event_manager(vlc_player::get_mp());
     if(eventManager) {
         libvlc_event_detach(eventManager, libvlc_MediaPlayerNothingSpecial,
                             handle_input_state_event, this);
@@ -1380,23 +1319,4 @@ void VLCPlugin::player_unregister_events()
         libvlc_event_detach(eventManager, libvlc_MediaPlayerPausableChanged,
                             handle_pausable_changed_event, this);
     }
-}
-
-int  VLCPlugin::playlist_add_extended_untrusted(const char *mrl, int optc, const char **optv)
-{
-    int item = -1;
-    libvlc_media_t *p_m = libvlc_media_new_location(_p_libvlc,mrl);
-    if( !p_m )
-        return -1;
-
-    for( int i = 0; i < optc; ++i )
-        libvlc_media_add_option_flag(p_m, optv[i], libvlc_media_option_unique);
-
-    libvlc_media_list_lock(_p_mlist);
-    if( libvlc_media_list_add_media(_p_mlist,p_m) == 0 )
-        item = libvlc_media_list_count(_p_mlist)-1;
-    libvlc_media_list_unlock(_p_mlist);
-    libvlc_media_release(p_m);
-
-    return item;
 }
