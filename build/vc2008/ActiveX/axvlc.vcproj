@@ -251,6 +251,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\common\vlc_player.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\activex\vlccontrol.cpp"
 				>
 			</File>
@@ -334,6 +338,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\activex\viewobject.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\common\vlc_player.h"
 				>
 			</File>
 			<File
