@@ -538,8 +538,8 @@ STDMETHODIMP VLCPlaylist::get_itemCount(long* count)
     if( NULL == count )
         return E_POINTER;
 
-    *count = 0;
-    *count = Instance()->playlist_count();
+    *count = Instance()->get_player().items_count();
+
     return S_OK;
 };
 
@@ -548,13 +548,9 @@ STDMETHODIMP VLCPlaylist::get_isPlaying(VARIANT_BOOL* isPlaying)
     if( NULL == isPlaying )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *isPlaying = varbool( libvlc_media_player_is_playing(p_md) );
-    }
-    return hr;
+    *isPlaying = varbool( Instance()->get_player().is_playing()!=0 );
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::add(BSTR uri, VARIANT name, VARIANT options, long* item)
@@ -633,65 +629,50 @@ STDMETHODIMP VLCPlaylist::add(BSTR uri, VARIANT name, VARIANT options, long* ite
 
 STDMETHODIMP VLCPlaylist::play()
 {
-    Instance()->playlist_play();
+    Instance()->get_player().play();
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::playItem(long item)
 {
-    Instance()->playlist_play_item(item);
+    Instance()->get_player().play(item);
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::togglePause()
 {
-    libvlc_media_player_t* p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_media_player_pause(p_md);
-    }
-    return hr;
+    Instance()->get_player().pause();
+    return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::stop()
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_media_player_stop(p_md);
-    }
-    return hr;
+    Instance()->get_player().stop();
+    return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::next()
 {
-    Instance()->playlist_next();
+    Instance()->get_player().next();
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::prev()
 {
-    Instance()->playlist_prev();
+    Instance()->get_player().prev();
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::clear()
 {
-    Instance()->playlist_clear();
+    Instance()->get_player().clear_items();
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::removeItem(long item)
 {
-    libvlc_instance_t* p_libvlc;
-    HRESULT hr = getVLC(&p_libvlc);
-    if( SUCCEEDED(hr) )
-    {
-        Instance()->playlist_delete_item(item);
-    }
-    return hr;
+    Instance()->get_player().delete_item(item);
+    return S_OK;
 };
 
 STDMETHODIMP VLCPlaylist::get_items(IVLCPlaylistItems** obj)
