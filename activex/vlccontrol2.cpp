@@ -510,25 +510,20 @@ STDMETHODIMP VLCPlaylistItems::get_count(long* count)
     if( NULL == count )
         return E_POINTER;
 
-    *count = Instance()->playlist_count();
+    *count = Instance()->get_player().items_count();
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylistItems::clear()
 {
-    Instance()->playlist_clear();
+    Instance()->get_player().clear_items();
     return S_OK;
 };
 
 STDMETHODIMP VLCPlaylistItems::remove(long item)
 {
-    libvlc_instance_t* p_libvlc;
-    HRESULT hr = getVLC(&p_libvlc);
-    if( SUCCEEDED(hr) )
-    {
-        Instance()->playlist_delete_item(item);
-    }
-    return hr;
+    Instance()->get_player().delete_item(item);
+    return S_OK;
 };
 
 /****************************************************************************/
