@@ -753,7 +753,6 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG, HWND hwndParent, LPCRECT lprcPosRect
         if( get_autoplay() )
         {
             vlc_player::play(0);
-            fireOnPlayEvent();
         }
     }
 
@@ -1241,6 +1240,24 @@ static void handle_pausable_changed_event(const libvlc_event_t* event, void *par
 void VLCPlugin::set_player_window()
 {
     _WindowsManager.LibVlcAttach(vlc_player::get_mp());
+}
+
+void VLCPlugin::on_player_action(vlc_player_action_e pa)
+{
+    switch(pa){
+    case pa_play:
+        fireOnPlayEvent();
+        break;
+    case pa_pause:
+        fireOnPauseEvent();
+        break;
+    case pa_stop:
+        fireOnStopEvent();
+        break;
+    case pa_next:
+    case pa_prev:
+        break;
+    }
 }
 
 void VLCPlugin::player_register_events()

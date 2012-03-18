@@ -328,6 +328,7 @@ public:
     }
 
 protected:
+    void on_player_action(vlc_player_action_e);
 
     virtual ~VLCPlugin();
 

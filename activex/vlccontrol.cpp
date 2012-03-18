@@ -125,7 +125,6 @@ STDMETHODIMP VLCControl::put_Visible(VARIANT_BOOL isVisible)
 STDMETHODIMP VLCControl::play(void)
 {
     _p_instance->playlist_play();
-    _p_instance->fireOnPlayEvent();
     return S_OK;
 };
 
@@ -135,8 +134,7 @@ STDMETHODIMP VLCControl::pause(void)
     HRESULT result = _p_instance->getMD(&p_md);
     if( SUCCEEDED(result) )
     {
-        libvlc_media_player_pause(p_md);
-        _p_instance->fireOnPauseEvent();
+        _p_instance->playlist_pause();
     }
     return result;
 };
@@ -147,8 +145,7 @@ STDMETHODIMP VLCControl::stop(void)
     HRESULT result = _p_instance->getMD(&p_md);
     if( SUCCEEDED(result) )
     {
-        libvlc_media_player_stop(p_md);
-        _p_instance->fireOnStopEvent();
+        _p_instance->playlist_stop();
     }
     return result;
 };
