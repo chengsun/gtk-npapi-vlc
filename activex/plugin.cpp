@@ -521,17 +521,15 @@ void VLCPlugin::initVLC()
     ppsz_argv[ppsz_argc++] = "--intf=dummy";
     ppsz_argv[ppsz_argc++] = "--no-video-title-show";
 
-
-    // loop mode is a configuration option only
-    if( _b_autoloop )
-        ppsz_argv[ppsz_argc++] = "--loop";
-
     _p_libvlc = libvlc_new(ppsz_argc, ppsz_argv);
     if( !_p_libvlc )
         return;
 
     if( !vlc_player::open(_p_libvlc) )
         return;
+
+    vlc_player::set_mode(_b_autoloop ? libvlc_playback_mode_loop :
+                                       libvlc_playback_mode_default);
 
     // initial playlist item
     if( SysStringLen(_bstr_mrl) > 0 )

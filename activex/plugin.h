@@ -124,6 +124,10 @@ public:
     inline void setAutoLoop(BOOL autoloop)
     {
         _b_autoloop = autoloop;
+        if( vlc_player::is_open() ){
+            vlc_player::set_mode(autoloop ? libvlc_playback_mode_loop :
+                                            libvlc_playback_mode_default);
+        }
         setDirty(TRUE);
     };
     inline BOOL getAutoLoop(void) { return _b_autoloop;};
