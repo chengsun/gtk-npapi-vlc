@@ -253,15 +253,10 @@ STDMETHODIMP VLCInput::get_length(double* length)
 {
     if( NULL == length )
         return E_POINTER;
-    *length = 0;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *length = (double)libvlc_media_player_get_length(p_md);
-    }
-    return hr;
+    *length = static_cast<double>(Instance()->get_player().get_length());
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::get_position(double* position)
@@ -269,25 +264,16 @@ STDMETHODIMP VLCInput::get_position(double* position)
     if( NULL == position )
         return E_POINTER;
 
-    *position = 0.0f;
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *position = libvlc_media_player_get_position(p_md);
-    }
-    return hr;
+    *position = Instance()->get_player().get_position();
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::put_position(double position)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_media_player_set_position(p_md, position);
-    }
-    return hr;
+    Instance()->get_player().set_position( static_cast<float>(position) );
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::get_time(double* time)
@@ -295,24 +281,16 @@ STDMETHODIMP VLCInput::get_time(double* time)
     if( NULL == time )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *time = (double)libvlc_media_player_get_time(p_md);
-    }
-    return hr;
+    *time = static_cast<double>(Instance()->get_player().get_time());
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::put_time(double time)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_media_player_set_time(p_md, (int64_t)time);
-    }
-    return hr;
+    Instance()->get_player().set_time(static_cast<libvlc_time_t>(time));
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::get_state(long* state)
@@ -320,13 +298,9 @@ STDMETHODIMP VLCInput::get_state(long* state)
     if( NULL == state )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *state = libvlc_media_player_get_state(p_md);
-    }
-    return hr;
+    *state = Instance()->get_player().get_state();
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::get_rate(double* rate)
@@ -334,24 +308,16 @@ STDMETHODIMP VLCInput::get_rate(double* rate)
     if( NULL == rate )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *rate = libvlc_media_player_get_rate(p_md);
-    }
-    return hr;
+    *rate = Instance()->get_player().get_rate();
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::put_rate(double rate)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_media_player_set_rate(p_md, rate);
-    }
-    return hr;
+    Instance()->get_player().set_rate(static_cast<float>(rate));
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::get_fps(double* fps)
@@ -359,14 +325,9 @@ STDMETHODIMP VLCInput::get_fps(double* fps)
     if( NULL == fps )
         return E_POINTER;
 
-    *fps = 0.0;
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *fps = libvlc_media_player_get_fps(p_md);
-    }
-    return hr;
+    *fps = static_cast<double>(Instance()->get_player().get_fps());
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCInput::get_hasVout(VARIANT_BOOL* hasVout)
@@ -374,13 +335,9 @@ STDMETHODIMP VLCInput::get_hasVout(VARIANT_BOOL* hasVout)
     if( NULL == hasVout )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *hasVout = varbool( libvlc_media_player_has_vout(p_md) );
-    }
-    return hr;
+    *hasVout = varbool( Instance()->get_player().has_vout() );
+
+    return S_OK;
 };
 
 /****************************************************************************/
