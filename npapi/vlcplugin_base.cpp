@@ -435,6 +435,8 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
     ppsz_argv[ppsz_argc++] = "--no-video-title-show";
     ppsz_argv[ppsz_argc++] = "--no-xlib";
 
+    bool b_autoloop = false;
+
     /* parse plugin arguments */
     for( int i = 0; (i < argc) && (ppsz_argc < 32); i++ )
     {
@@ -471,14 +473,7 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         else if( !strcmp( argn[i], "loop")
               || !strcmp( argn[i], "autoloop") )
         {
-            if( boolValue(argv[i]) )
-            {
-                ppsz_argv[ppsz_argc++] = "--loop";
-            }
-            else
-            {
-                ppsz_argv[ppsz_argc++] = "--no-loop";
-            }
+            b_autoloop = boolValue(argv[i]);
         }
         else if( !strcmp( argn[i], "toolbar" ) )
         {
@@ -495,6 +490,9 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
         return NPERR_GENERIC_ERROR;
 
     vlc_player::open(libvlc_instance);
+
+    vlc_player::set_mode(b_autoloop ? libvlc_playback_mode_loop :
+                                      libvlc_playback_mode_default);
 
     /*
     ** fetch plugin base URL, which is the URL of the page containing the plugin
