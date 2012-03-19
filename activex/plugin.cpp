@@ -1239,7 +1239,7 @@ static void handle_pausable_changed_event(const libvlc_event_t* event, void *par
 
 void VLCPlugin::set_player_window()
 {
-    _WindowsManager.LibVlcAttach(vlc_player::get_mp());
+    _WindowsManager.LibVlcAttach( &get_player() );
 }
 
 void VLCPlugin::on_player_action(vlc_player_action_e pa)
