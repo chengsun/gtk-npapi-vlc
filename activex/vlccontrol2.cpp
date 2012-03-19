@@ -93,20 +93,16 @@ STDMETHODIMP VLCAudio::get_mute(VARIANT_BOOL* mute)
     if( NULL == mute )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-        *mute = varbool( libvlc_audio_get_mute(p_md) );
-    return hr;
+    *mute = varbool( Instance()->get_player().is_muted() );
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::put_mute(VARIANT_BOOL mute)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-        libvlc_audio_set_mute(p_md, VARIANT_FALSE != mute);
-    return hr;
+    Instance()->get_player().set_mute( VARIANT_FALSE != mute );
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::get_volume(long* volume)
@@ -114,22 +110,16 @@ STDMETHODIMP VLCAudio::get_volume(long* volume)
     if( NULL == volume )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-        *volume = libvlc_audio_get_volume(p_md);
-    return hr;
+    *volume = Instance()->get_player().get_volume();
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::put_volume(long volume)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_audio_set_volume(p_md, volume);
-    }
-    return hr;
+    Instance()->get_player().set_volume( volume );
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::get_track(long* track)
@@ -137,24 +127,16 @@ STDMETHODIMP VLCAudio::get_track(long* track)
     if( NULL == track )
         return E_POINTER;
 
-    libvlc_media_player_t* p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *track = libvlc_audio_get_track(p_md);
-    }
-    return hr;
+    *track = Instance()->get_player().get_track();
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::put_track(long track)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_audio_set_track(p_md, track);
-    }
-    return hr;
+    Instance()->get_player().set_track(track);
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::get_count(long* trackNumber)
@@ -162,16 +144,10 @@ STDMETHODIMP VLCAudio::get_count(long* trackNumber)
     if( NULL == trackNumber )
         return E_POINTER;
 
-    libvlc_media_player_t* p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        // get the number of audio track available and return it
-        *trackNumber = libvlc_audio_get_track_count(p_md);
-    }
-    return hr;
-};
+    *trackNumber = Instance()->get_player().track_count();
 
+    return S_OK;
+};
 
 STDMETHODIMP VLCAudio::description(long trackID, BSTR* name)
 {
@@ -226,33 +202,23 @@ STDMETHODIMP VLCAudio::get_channel(long *channel)
     if( NULL == channel )
         return E_POINTER;
 
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        *channel = libvlc_audio_get_channel(p_md);
-    }
-    return hr;
+    *channel = Instance()->get_player().get_channel();
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::put_channel(long channel)
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-    {
-        libvlc_audio_set_channel(p_md, channel);
-    }
-    return hr;
+    Instance()->get_player().set_channel(channel);
+
+    return S_OK;
 };
 
 STDMETHODIMP VLCAudio::toggleMute()
 {
-    libvlc_media_player_t *p_md;
-    HRESULT hr = getMD(&p_md);
-    if( SUCCEEDED(hr) )
-        libvlc_audio_toggle_mute(p_md);
-    return hr;
+    Instance()->get_player().toggle_mute();
+
+    return S_OK;
 };
 
 /****************************************************************************/
