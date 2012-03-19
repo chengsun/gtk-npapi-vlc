@@ -82,6 +82,7 @@
 
 #include "control/nporuntime.h"
 #include "../common/vlc_player_options.h"
+#include "../common/vlc_player.h"
 
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
     typedef uint16 NPuint16_t;
@@ -190,13 +191,18 @@ typedef enum vlc_toolbar_clicked_e {
     clicked_Unmute
 } vlc_toolbar_clicked_t;
 
-class VlcPluginBase: private vlc_player_options
+class VlcPluginBase: private vlc_player_options, private vlc_player
 {
 protected:
 
 public:
     VlcPluginBase( NPP, NPuint16_t );
     virtual ~VlcPluginBase();
+
+    vlc_player& get_player()
+    {
+        return *static_cast<vlc_player*>(this);
+    }
 
     vlc_player_options& get_options()
         { return *static_cast<vlc_player_options*>(this); }
@@ -208,11 +214,11 @@ public:
                             { return libvlc_instance; };
     libvlc_media_player_t* getMD()
     {
-        if( !libvlc_media_player )
+        if( !get_player().is_open() )
         {
              libvlc_printerr("no mediaplayer");
         }
-        return libvlc_media_player;
+        return get_player().get_mp();
     }
     NPP                 getBrowser()
                             { return p_browser; };
@@ -232,51 +238,53 @@ public:
 
     void playlist_play()
     {
-        if( playlist_isplaying() )
-            playlist_stop();
-        if( libvlc_media_player||playlist_select(0) )
-            libvlc_media_player_play(libvlc_media_player);
+        get_player().play();
     }
     void playlist_play_item(int idx)
     {
-        if( playlist_select(idx) )
-            libvlc_media_player_play(libvlc_media_player);
+        get_player().play(idx);
     }
     void playlist_stop()
     {
-        if( libvlc_media_player )
-            libvlc_media_player_stop(libvlc_media_player);
+        get_player().stop();
     }
     void playlist_next()
     {
-        if( playlist_select(playlist_index+1) )
-            libvlc_media_player_play(libvlc_media_player);
+        get_player().next();
     }
     void playlist_prev()
     {
-        if( playlist_select(playlist_index-1) )
-            libvlc_media_player_play(libvlc_media_player);
+        get_player().prev();
     }
     void playlist_pause()
     {
-        if( libvlc_media_player )
-            libvlc_media_player_pause(libvlc_media_player);
+        get_player().pause();
     }
     int playlist_isplaying()
     {
-        int is_playing = 0;
-        if( libvlc_media_player )
-            is_playing = libvlc_media_player_is_playing(
-                                libvlc_media_player );
-        return is_playing;
+        return get_player().is_playing();
     }
-
-    int playlist_add( const char * );
-    int playlist_add_extended_untrusted( const char *, const char *, int,
-                                const char ** );
-    int playlist_delete_item( int );
-    void playlist_clear();
-    int  playlist_count();
+    int playlist_add( const char * mrl)
+    {
+        return get_player().add_item(mrl);
+    }
+    int playlist_add_extended_untrusted( const char *mrl, const char *,
+                    int optc, const char **optv )
+    {
+        return get_player().add_item(mrl, optc, optv);
+    }
+    int playlist_delete_item( int idx)
+    {
+        return get_player().delete_item(idx);
+    }
+    void playlist_clear()
+    {
+        get_player().clear_items() ;
+    }
+    int  playlist_count()
+    {
+        return get_player().items_count();
+    }
 
     void control_handler(vlc_toolbar_clicked_t);
 
@@ -311,10 +319,7 @@ protected:
     virtual void set_player_window() = 0;
 
     /* VLC reference */
-    int                 playlist_index;
     libvlc_instance_t   *libvlc_instance;
-    libvlc_media_list_t *libvlc_media_list;
-    libvlc_media_player_t *libvlc_media_player;
     NPClass             *p_scriptClass;
 
     /* browser reference */
