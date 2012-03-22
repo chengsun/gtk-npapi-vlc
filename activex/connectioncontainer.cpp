@@ -256,11 +256,6 @@ void EventSystemProxyWnd::ProcessNotify()
 VLCConnectionPoint::VLCConnectionPoint(IConnectionPointContainer *p_cpc, REFIID iid) :
         _iid(iid), _p_cpc(p_cpc)
 {
-    // Get the Global Interface Table per-process singleton:
-    CoCreateInstance(CLSID_StdGlobalInterfaceTable, 0,
-                          CLSCTX_INPROC_SERVER,
-                          IID_IGlobalInterfaceTable,
-                          reinterpret_cast<void**>(&m_pGIT));
 };
 
 VLCConnectionPoint::~VLCConnectionPoint()
@@ -271,10 +266,10 @@ VLCConnectionPoint::~VLCConnectionPoint()
 
     while( iter != end )
     {
-        m_pGIT->RevokeInterfaceFromGlobal((DWORD)iter->second);
+        iter->second->Release();
         ++iter;
     }
-    m_pGIT->Release();
+    _connections.clear();
 };
 
 STDMETHODIMP VLCConnectionPoint::GetConnectionInterface(IID *iid)
@@ -307,14 +302,8 @@ STDMETHODIMP VLCConnectionPoint::Advise(IUnknown *pUnk, DWORD *pdwCookie)
     hr = pUnk->QueryInterface(_iid, (LPVOID *)&pUnk);
     if( SUCCEEDED(hr) )
     {
-        DWORD dwGITCookie;
-        hr = m_pGIT->RegisterInterfaceInGlobal( pUnk, _iid, &dwGITCookie );
-        if( SUCCEEDED(hr) )
-        {
-            *pdwCookie = ++dwCookieCounter;
-            _connections[*pdwCookie] = (LPUNKNOWN) dwGITCookie;
-        }
-        pUnk->Release();
+        *pdwCookie = ++dwCookieCounter;
+        _connections[*pdwCookie] = pUnk;
     }
     return hr;
 };
@@ -324,8 +313,8 @@ STDMETHODIMP VLCConnectionPoint::Unadvise(DWORD pdwCookie)
     map<DWORD,LPUNKNOWN>::iterator pcd = _connections.find((DWORD)pdwCookie);
     if( pcd != _connections.end() )
     {
-        m_pGIT->RevokeInterfaceFromGlobal((DWORD)pcd->second);
-        _connections.erase(pdwCookie);
+        pcd->second->Release();
+        _connections.erase(pcd);
         return S_OK;
     }
     return CONNECT_E_NOCONNECTION;
@@ -350,22 +339,15 @@ void VLCConnectionPoint::fireEvent(DISPID dispId, DISPPARAMS *pDispParams)
 
     while( iter != end )
     {
-        DWORD dwCookie = (DWORD)iter->second;
-        LPUNKNOWN pUnk;
+        LPUNKNOWN pUnk = iter->second;
 
-        hr = m_pGIT->GetInterfaceFromGlobal( dwCookie, _iid,
-                                             reinterpret_cast<void **>(&pUnk) );
+        IDispatch *pDisp;
+        hr = pUnk->QueryInterface(_iid, (LPVOID *)&pDisp);
         if( SUCCEEDED(hr) )
         {
-            IDispatch *pDisp;
-            hr = pUnk->QueryInterface(_iid, (LPVOID *)&pDisp);
-            if( SUCCEEDED(hr) )
-            {
-                pDisp->Invoke(dispId, IID_NULL, LOCALE_USER_DEFAULT,
-                              DISPATCH_METHOD, pDispParams, NULL, NULL, NULL);
-                pDisp->Release();
-            }
-            pUnk->Release();
+            pDisp->Invoke(dispId, IID_NULL, LOCALE_USER_DEFAULT,
+                          DISPATCH_METHOD, pDispParams, NULL, NULL, NULL);
+            pDisp->Release();
         }
         ++iter;
     }
@@ -378,21 +360,15 @@ void VLCConnectionPoint::firePropChangedEvent(DISPID dispId)
 
     while( iter != end )
     {
-        LPUNKNOWN pUnk;
+        LPUNKNOWN pUnk = iter->second;
         HRESULT hr;
 
-        hr = m_pGIT->GetInterfaceFromGlobal( (DWORD)iter->second, IID_IUnknown,
-                                              reinterpret_cast<void **>(&pUnk) );
+        IPropertyNotifySink *pPropSink;
+        hr = pUnk->QueryInterface( IID_IPropertyNotifySink, (LPVOID *)&pPropSink );
         if( SUCCEEDED(hr) )
         {
-            IPropertyNotifySink *pPropSink;
-            hr = pUnk->QueryInterface( IID_IPropertyNotifySink, (LPVOID *)&pPropSink );
-            if( SUCCEEDED(hr) )
-            {
-                pPropSink->OnChanged(dispId);
-                pPropSink->Release();
-            }
-            pUnk->Release();
+            pPropSink->OnChanged(dispId);
+            pPropSink->Release();
         }
         ++iter;
     }

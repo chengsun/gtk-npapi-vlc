@@ -71,7 +71,6 @@ public:
 private:
 
     REFIID _iid;
-    IGlobalInterfaceTable *m_pGIT;
     IConnectionPointContainer *_p_cpc;
     std::map<DWORD, LPUNKNOWN> _connections;
 };
