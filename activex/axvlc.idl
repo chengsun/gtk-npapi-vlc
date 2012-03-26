@@ -571,6 +571,51 @@ library AXVLC
 
     [
       odl,
+      uuid(796A2C2D-5B11-4fb5-9077-56D5E674972B),
+      helpstring("VLC Media Description"),
+      dual,
+      oleautomation
+    ]
+    interface IVLCMediaDescription : IDispatch
+    {
+        [propget]
+        HRESULT title([out, retval] BSTR* val);
+        [propget]
+        HRESULT artist([out, retval] BSTR* val);
+        [propget]
+        HRESULT genre([out, retval] BSTR* val);
+        [propget]
+        HRESULT copyright([out, retval] BSTR* val);
+        [propget]
+        HRESULT album([out, retval] BSTR* val);
+        [propget]
+        HRESULT trackNumber([out, retval] BSTR* val);
+        [propget]
+        HRESULT description([out, retval] BSTR* val);
+        [propget]
+        HRESULT rating([out, retval] BSTR* val);
+        [propget]
+        HRESULT date([out, retval] BSTR* val);
+        [propget]
+        HRESULT setting([out, retval] BSTR* val);
+        [propget]
+        HRESULT URL([out, retval] BSTR* val);
+        [propget]
+        HRESULT language([out, retval] BSTR* val);
+        [propget]
+        HRESULT nowPlaying([out, retval] BSTR* val);
+        [propget]
+        HRESULT publisher([out, retval] BSTR* val);
+        [propget]
+        HRESULT encodedBy([out, retval] BSTR* val);
+        [propget]
+        HRESULT artworkURL([out, retval] BSTR* val);
+        [propget]
+        HRESULT trackID([out, retval] BSTR* val);
+    }
+
+    [
+      odl,
       uuid(2D719729-5333-406C-BF12-8DE787FD65E3),
       helpstring("VLC Control"),
       dual,
@@ -650,6 +695,9 @@ library AXVLC
         HRESULT FullscreenEnabled([out, retval] VARIANT_BOOL* enabled);
         [id(DISPID_FSEnabled), propput, helpstring("Returns/sets availability of fullscreen mode.")]
         HRESULT FullscreenEnabled([in] VARIANT_BOOL enabled);
+
+        [propget, helpstring("Returns the media description object.")]
+        HRESULT mediaDescription([out, retval] IVLCMediaDescription** obj);
     };
 
     [

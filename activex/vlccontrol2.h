@@ -329,6 +329,36 @@ private:
     IVLCDeinterlace *_p_vlcdeint;
 };
 
+class VLCMediaDescription:
+    public VLCInterface<VLCMediaDescription, IVLCMediaDescription>
+{
+public:
+    VLCMediaDescription(VLCPlugin *p)
+        : VLCInterface<VLCMediaDescription, IVLCMediaDescription>(p) { }
+
+    // IVLCMediaDescription methods
+    STDMETHODIMP get_title(BSTR*);
+    STDMETHODIMP get_artist(BSTR*);
+    STDMETHODIMP get_genre(BSTR*);
+    STDMETHODIMP get_copyright(BSTR*);
+    STDMETHODIMP get_album(BSTR*);
+    STDMETHODIMP get_trackNumber(BSTR*);
+    STDMETHODIMP get_description(BSTR*);
+    STDMETHODIMP get_rating(BSTR*);
+    STDMETHODIMP get_date(BSTR*);
+    STDMETHODIMP get_setting(BSTR*);
+    STDMETHODIMP get_URL(BSTR*);
+    STDMETHODIMP get_language(BSTR*);
+    STDMETHODIMP get_nowPlaying(BSTR*);
+    STDMETHODIMP get_publisher(BSTR*);
+    STDMETHODIMP get_encodedBy(BSTR*);
+    STDMETHODIMP get_artworkURL(BSTR*);
+    STDMETHODIMP get_trackID(BSTR*);
+
+private:
+    STDMETHODIMP get_meta(BSTR*, libvlc_meta_t);
+};
+
 class VLCControl2 : public IVLCControl2
 {
 public:
@@ -389,6 +419,7 @@ public:
     STDMETHODIMP get_playlist(IVLCPlaylist**);
     STDMETHODIMP get_subtitle(IVLCSubtitle**);
     STDMETHODIMP get_video(IVLCVideo**);
+    STDMETHODIMP get_mediaDescription(IVLCMediaDescription**);
 
 protected:
     HRESULT loadTypeInfo();
@@ -402,6 +433,8 @@ private:
     IVLCPlaylist *_p_vlcplaylist;
     IVLCSubtitle *_p_vlcsubtitle;
     IVLCVideo    *_p_vlcvideo;
+
+    VLCMediaDescription    _p_vlcmedia_desc;
 };
 
 #endif

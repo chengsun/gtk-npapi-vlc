@@ -64,6 +64,7 @@ BIND_INTERFACE( VLCPlaylistItems )
 BIND_INTERFACE( VLCPlaylist )
 BIND_INTERFACE( VLCVideo )
 BIND_INTERFACE( VLCSubtitle )
+BIND_INTERFACE( VLCMediaDescription )
 
 #undef  BIND_INTERFACE
 
@@ -1203,7 +1204,96 @@ STDMETHODIMP VLCLogo::put_position(BSTR val)
     CoTaskMemFree(n);
     return hr;
 }
+/****************************************************************************/
 
+STDMETHODIMP VLCMediaDescription::get_meta(BSTR* val, libvlc_meta_t e_meta)
+{
+    if( NULL == val )
+        return E_POINTER;
+
+    *val = 0;
+
+    libvlc_media_player_t *p_md;
+    HRESULT hr = getMD(&p_md);
+    if( SUCCEEDED(hr) )
+    {
+        libvlc_media_t * p_media = libvlc_media_player_get_media(p_md);
+        const char* info = p_media ? libvlc_media_get_meta(p_media, e_meta) : 0;
+        *val = info ? BSTRFromCStr(CP_UTF8, info) : 0;
+        hr = *val ? S_OK : E_FAIL;
+    }
+    return hr;
+}
+
+STDMETHODIMP VLCMediaDescription::get_title(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Title);
+}
+
+STDMETHODIMP VLCMediaDescription::get_artist(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Artist);
+}
+STDMETHODIMP VLCMediaDescription::get_genre(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Genre);
+}
+STDMETHODIMP VLCMediaDescription::get_copyright(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Copyright);
+}
+STDMETHODIMP VLCMediaDescription::get_album(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Album);
+}
+STDMETHODIMP VLCMediaDescription::get_trackNumber(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_TrackNumber);
+}
+STDMETHODIMP VLCMediaDescription::get_description(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Description);
+}
+STDMETHODIMP VLCMediaDescription::get_rating(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Rating);
+}
+STDMETHODIMP VLCMediaDescription::get_date(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Date);
+}
+STDMETHODIMP VLCMediaDescription::get_setting(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Setting);
+}
+STDMETHODIMP VLCMediaDescription::get_URL(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_URL);
+}
+STDMETHODIMP VLCMediaDescription::get_language(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Language);
+}
+STDMETHODIMP VLCMediaDescription::get_nowPlaying(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_NowPlaying);
+}
+STDMETHODIMP VLCMediaDescription::get_publisher(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_Publisher);
+}
+STDMETHODIMP VLCMediaDescription::get_encodedBy(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_EncodedBy);
+}
+STDMETHODIMP VLCMediaDescription::get_artworkURL(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_ArtworkURL);
+}
+STDMETHODIMP VLCMediaDescription::get_trackID(BSTR *val)
+{
+    return get_meta(val, libvlc_meta_TrackID);
+}
 /****************************************************************************/
 
 VLCControl2::VLCControl2(VLCPlugin *p_instance) :
@@ -1213,7 +1303,8 @@ VLCControl2::VLCControl2(VLCPlugin *p_instance) :
     _p_vlcinput(new VLCInput(p_instance)),
     _p_vlcplaylist(new VLCPlaylist(p_instance)),
     _p_vlcsubtitle(new VLCSubtitle(p_instance)),
-    _p_vlcvideo(new VLCVideo(p_instance))
+    _p_vlcvideo(new VLCVideo(p_instance)),
+    _p_vlcmedia_desc(p_instance)
 {
 }
 
@@ -1496,4 +1587,9 @@ STDMETHODIMP VLCControl2::get_subtitle(IVLCSubtitle** obj)
 STDMETHODIMP VLCControl2::get_video(IVLCVideo** obj)
 {
     return object_get(obj,_p_vlcvideo);
+}
+
+STDMETHODIMP VLCControl2::get_mediaDescription(IVLCMediaDescription** obj)
+{
+    return object_get<IVLCMediaDescription>(obj, &_p_vlcmedia_desc);
 }
