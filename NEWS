@@ -1,3 +1,8 @@
+Changes between VLC 2.0.0 and 2.0.2:
+-----------------------------------
+ * introduce MediaDescription object for exposing media meta information
+
+
 Changes between VLC 1.1.4 and 2.0.0:
 -----------------------------------
 
