@@ -48,14 +48,14 @@ void VlcPluginXcb::set_player_window()
 
 void VlcPluginXcb::toggle_fullscreen()
 {
-    if (!get_enable_fs()) return;
+    if (!get_options().get_enable_fs()) return;
     if (playlist_isplaying())
         libvlc_toggle_fullscreen(libvlc_media_player);
 }
 
 void VlcPluginXcb::set_fullscreen(int yes)
 {
-    if (!get_enable_fs()) return;
+    if (!get_options().get_enable_fs()) return;
     if (playlist_isplaying())
         libvlc_set_fullscreen(libvlc_media_player,yes);
 }
@@ -96,7 +96,7 @@ bool VlcPluginXcb::create_windows()
 
     colormap = screen->default_colormap;
     unsigned r = 0, g = 0, b = 0;
-    HTMLColor2RGB(get_bg_color().c_str(), &r, &g, &b);
+    HTMLColor2RGB(get_options().get_bg_color().c_str(), &r, &g, &b);
     xcb_alloc_color_reply_t *reply = xcb_alloc_color_reply(conn,
             xcb_alloc_color(conn, colormap,
                             (uint16_t) r << 8,

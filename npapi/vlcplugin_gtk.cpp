@@ -108,7 +108,7 @@ void VlcPluginGtk::do_set_fullscreen(bool yes)
 
 void VlcPluginGtk::set_fullscreen(int yes)
 {
-    if (!get_enable_fs()) return;
+    if (!get_options().get_enable_fs()) return;
     if (yes == is_fullscreen) return;
     if (yes) {
         gtk_widget_show(fullscreen_win);
@@ -217,7 +217,7 @@ void VlcPluginGtk::popup_menu()
     g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
     gtk_menu_shell_append(GTK_MENU_SHELL(popupmenu), menuitem);
     /* set fullscreen */
-    if (get_enable_fs()) {
+    if (get_options().get_enable_fs()) {
         menuitem = gtk_image_menu_item_new_from_stock(
                                     GTK_STOCK_FULLSCREEN, NULL);
         g_signal_connect(G_OBJECT(menuitem), "activate", G_CALLBACK(menu_handler), this);
@@ -414,7 +414,7 @@ bool VlcPluginGtk::create_windows()
 
     Window socket = (Window) npwindow.window;
     GdkColor color_bg;
-    gdk_color_parse(get_bg_color().c_str(), &color_bg);
+    gdk_color_parse(get_options().get_bg_color().c_str(), &color_bg);
 
     parent = gtk_plug_new(socket);
     gtk_widget_modify_bg(parent, GTK_STATE_NORMAL, &color_bg);

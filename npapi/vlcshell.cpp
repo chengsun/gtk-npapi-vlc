@@ -350,7 +350,8 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             p_plugin->resize_windows();
 
             /* now set plugin state to that requested in parameters */
-            p_plugin->set_toolbar_visible( p_plugin->get_show_toolbar() );
+            bool show_toolbar = p_plugin->get_options().get_show_toolbar();
+            p_plugin->set_toolbar_visible( show_toolbar );
 
             /* handle streams properly */
             if( !p_plugin->b_stream )
@@ -359,7 +360,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
                 {
                     if( p_plugin->playlist_add( p_plugin->psz_target ) != -1 )
                     {
-                        if( p_plugin->get_autoplay() )
+                        if( p_plugin->get_options().get_autoplay() )
                         {
                             p_plugin->playlist_play();
                         }
@@ -461,7 +462,7 @@ void NPP_StreamAsFile( NPP instance, NPStream *stream, const char* )
 
     if( p_plugin->playlist_add( stream->url ) != -1 )
     {
-        if( p_plugin->get_autoplay() )
+        if( p_plugin->get_options().get_autoplay() )
         {
             p_plugin->playlist_play();
         }

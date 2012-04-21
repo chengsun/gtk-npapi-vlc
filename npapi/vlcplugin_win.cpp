@@ -88,7 +88,7 @@ LRESULT CALLBACK VlcPluginWin::NPWndProcR(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 VlcPluginWin::VlcPluginWin(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode), _NPWndProc(0),
-    _WindowsManager(DllGetModule(), _ViewRC, this)
+    _WindowsManager(DllGetModule(), _ViewRC, &get_options())
 {
     _ViewRC.hDeFullscreenBitmap =
         LoadImage(DllGetModule(), MAKEINTRESOURCE(3),

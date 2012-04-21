@@ -1476,14 +1476,14 @@ STDMETHODIMP VLCControl2::get_FullscreenEnabled(VARIANT_BOOL* enabled)
     if( NULL == enabled )
         return E_POINTER;
 
-    *enabled = varbool( _p_instance->get_enable_fs() );
+    *enabled = varbool( _p_instance->get_options().get_enable_fs() );
 
     return S_OK;
 }
 
 STDMETHODIMP VLCControl2::put_FullscreenEnabled(VARIANT_BOOL enabled)
 {
-    _p_instance->set_enable_fs( VARIANT_FALSE != enabled );
+    _p_instance->get_options().set_enable_fs( VARIANT_FALSE != enabled );
     return S_OK;
 }
 

@@ -75,7 +75,7 @@ private:
     LPPICTURE   _inplace_picture;
 };
 
-struct VLCPlugin : public IUnknown, public vlc_player_options
+struct VLCPlugin : public IUnknown, private vlc_player_options
 {
 public:
     VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter);
@@ -89,6 +89,11 @@ public:
     HRESULT getTypeLib(LCID lcid, ITypeLib **pTL) { return LoadRegTypeLib(LIBID_AXVLC, 1, 0, lcid, pTL); };
     REFCLSID getClassID(void) { return _p_class->getClassID(); };
     REFIID getDispEventID(void) { return (REFIID)DIID_DVLCEvents; };
+
+    vlc_player_options& get_options()
+        { return *static_cast<vlc_player_options*>(this); }
+    const vlc_player_options& get_options() const
+        { return *static_cast<const vlc_player_options*>(this); }
 
     /*
     ** persistant properties

@@ -190,13 +190,18 @@ typedef enum vlc_toolbar_clicked_e {
     clicked_Unmute
 } vlc_toolbar_clicked_t;
 
-class VlcPluginBase: public vlc_player_options
+class VlcPluginBase: private vlc_player_options
 {
 protected:
 
 public:
     VlcPluginBase( NPP, NPuint16_t );
     virtual ~VlcPluginBase();
+
+    vlc_player_options& get_options()
+        { return *static_cast<vlc_player_options*>(this); }
+    const vlc_player_options& get_options() const
+        { return *static_cast<const vlc_player_options*>(this); }
 
     NPError             init(int argc, char* const argn[], char* const argv[]);
     libvlc_instance_t*  getVLC()
