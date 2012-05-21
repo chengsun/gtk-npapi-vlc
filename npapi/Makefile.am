@@ -60,6 +60,7 @@ AM_CPPFLAGS += $(XCB_CFLAGS)
 libvlcplugin_la_LIBADD += $(XCB_LIBS)
 SOURCES_support = \
 	support/npunix.cpp \
+	xembed.h \
 	vlcplugin_xcb.cpp \
 	vlcplugin_xcb.h
 endif # !USE_GTK
