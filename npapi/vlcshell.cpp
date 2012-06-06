@@ -348,6 +348,7 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             p_plugin->setWindow(*window);
             p_plugin->create_windows();
             p_plugin->resize_windows();
+            p_plugin->set_player_window();
 
             /* now set plugin state to that requested in parameters */
             bool show_toolbar = p_plugin->get_options().get_show_toolbar();

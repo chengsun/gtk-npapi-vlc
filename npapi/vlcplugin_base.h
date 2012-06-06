@@ -304,6 +304,8 @@ public:
     virtual void update_controls() = 0;
     virtual void popup_menu() = 0;
 
+    virtual void set_player_window() = 0;
+
     static bool canUseEventListener();
 
     EventObj events;
@@ -316,7 +318,6 @@ protected:
     virtual void on_media_player_release() {};
 
     bool playlist_select(int);
-    virtual void set_player_window() = 0;
 
     /* VLC reference */
     libvlc_instance_t   *libvlc_instance;
