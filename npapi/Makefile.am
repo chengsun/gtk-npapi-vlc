@@ -22,6 +22,8 @@ libvlcplugin_la_SOURCES = \
 	control/position.h \
 	support/classinfo.h \
 	../common/vlc_player_options.h \
+	../common/vlc_player.cpp \
+	../common/vlc_player.h \
 	$(SOURCES_support)
 
 EXTRA_libvlcplugin_la_SOURCES = \
@@ -81,9 +83,7 @@ SOURCES_support = \
 	../common/win32_fullscreen.cpp \
 	../common/win32_fullscreen.h \
 	../common/win32_vlcwnd.cpp \
-	../common/win32_vlcwnd.h \
-	../common/vlc_player.cpp \
-	../common/vlc_player.h
+	../common/win32_vlcwnd.h
 
 npvlc_la_DEPENDENCIES += $(DATA_npvlc_rc)
 npvlc_la_LDFLAGS += -Wl,--kill-at -Wl,$(DATA_npvlc_rc)
