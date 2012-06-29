@@ -399,7 +399,6 @@ HRESULT VLCPlugin::onInit(void)
         // initialize persistable properties
         set_autoplay(true);
         _b_autoloop   = FALSE;
-        set_show_toolbar(false);
         _bstr_baseurl = NULL;
         _bstr_mrl     = NULL;
         _b_visible    = TRUE;
@@ -534,8 +533,6 @@ void VLCPlugin::initVLC()
     if( !vlc_player::open(_p_libvlc) )
         return;
 
-    set_player_window();
-
     // initial playlist item
     if( SysStringLen(_bstr_mrl) > 0 )
     {
@@ -580,6 +577,18 @@ void VLCPlugin::initVLC()
             CoTaskMemFree(psz_mrl);
         }
     }
+
+    if( !isInPlaceActive()  )
+    {
+        LPOLECLIENTSITE pClientSite;
+        if( SUCCEEDED(vlcOleObject->GetClientSite(&pClientSite)) && (NULL != pClientSite) )
+        {
+            vlcOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, pClientSite, 0, NULL, NULL);
+            pClientSite->Release();
+        }
+    }
+
+    set_player_window();
 };
 
 void VLCPlugin::setErrorInfo(REFIID riid, const char *description)
