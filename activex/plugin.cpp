@@ -282,6 +282,14 @@ VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
 
 VLCPlugin::~VLCPlugin()
 {
+    if( vlc_player::is_open() )
+    {
+        if( isPlaying() )
+            playlist_stop();
+
+        player_unregister_events();
+    }
+
     delete vlcSupportErrorInfo;
     delete vlcOleObject;
     delete vlcDataObject;
@@ -303,14 +311,6 @@ VLCPlugin::~VLCPlugin()
 
     SysFreeString(_bstr_mrl);
     SysFreeString(_bstr_baseurl);
-
-    if( vlc_player::is_open() )
-    {
-        if( isPlaying() )
-            playlist_stop();
-
-        player_unregister_events();
-    }
 
     if( _p_libvlc )  { libvlc_release(_p_libvlc); _p_libvlc=NULL; }
 
