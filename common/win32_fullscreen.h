@@ -39,6 +39,17 @@ struct VLCViewResources
          hPlayBitmap(0), hVolumeBitmap(0), hVolumeMutedBitmap(0),
          hBackgroundIcon(0)
     {};
+    ~VLCViewResources()
+    {
+        if( hNewMessageBitmap )   DeleteObject( hNewMessageBitmap );
+        if( hFullscreenBitmap )   DeleteObject( hFullscreenBitmap );
+        if( hDeFullscreenBitmap ) DeleteObject( hDeFullscreenBitmap );
+        if( hPauseBitmap )        DeleteObject( hPauseBitmap );
+        if( hPlayBitmap )         DeleteObject( hPlayBitmap );
+        if( hVolumeBitmap )       DeleteObject( hVolumeBitmap );
+        if( hVolumeMutedBitmap )  DeleteObject( hVolumeMutedBitmap );
+        if( hBackgroundIcon )     DestroyIcon ( hBackgroundIcon );
+    }
 
     HANDLE hNewMessageBitmap;
     HANDLE hFullscreenBitmap;
