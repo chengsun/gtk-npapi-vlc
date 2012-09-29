@@ -70,6 +70,7 @@ protected:
 private:
 
     LPLONG      _p_class_ref;
+    ULONG       _class_ref;
     HINSTANCE   _hinstance;
     CLSID       _classid;
     ATOM        _inplace_wndclass_atom;

@@ -94,6 +94,7 @@ static LRESULT CALLBACK VLCInPlaceClassWndProc(HWND hWnd, UINT uMsg, WPARAM wPar
 
 VLCPluginClass::VLCPluginClass(LONG *p_class_ref, HINSTANCE hInstance, REFCLSID rclsid) :
     _p_class_ref(p_class_ref),
+    _class_ref(0),
     _hinstance(hInstance),
     _classid(rclsid),
     _inplace_picture(NULL)
@@ -166,18 +167,19 @@ STDMETHODIMP VLCPluginClass::QueryInterface(REFIID riid, void **ppv)
 
 STDMETHODIMP_(ULONG) VLCPluginClass::AddRef(void)
 {
-    return InterlockedIncrement(_p_class_ref);
+    InterlockedIncrement(_p_class_ref);
+    return ++_class_ref;
 };
 
 STDMETHODIMP_(ULONG) VLCPluginClass::Release(void)
 {
-    ULONG refcount = InterlockedDecrement(_p_class_ref);
-    if( 0 == refcount )
+    InterlockedDecrement(_p_class_ref);
+    if( 0 == (--_class_ref) )
     {
         delete this;
         return 0;
     }
-    return refcount;
+    return _class_ref;
 };
 
 STDMETHODIMP VLCPluginClass::CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
