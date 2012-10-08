@@ -138,7 +138,8 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
         return false;
     }
 
-#ifndef __x86_64__
+// FIXME: implement Cocoa event model, by porting this legacy code:
+/*
     EventRecord *myEvent = (EventRecord*)event;
 
     switch( myEvent->what )
@@ -149,7 +150,7 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
         {
             if( (myEvent->when - lastMouseUp) < GetDblTime() )
             {
-                /* double click */
+                // double click
                 p_plugin->toggle_fullscreen();
             }
             return true;
@@ -188,12 +189,12 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
 
                 if( ! hasVout )
                 {
-                    /* draw the text from get_bg_text() */
+                    // draw the text from get_bg_text()
                     ForeColor(blackColor);
                     PenMode( patCopy );
 
-                    /* seems that firefox forgets to set the following
-                     * on occasion (reload) */
+                    // seems that firefox forgets to set the following
+                    // on occasion (reload)
                     SetOrigin(((NP_Port *)npwindow.window)->portx,
                               ((NP_Port *)npwindow.window)->porty);
 
@@ -230,7 +231,7 @@ int16_t NPP_HandleEvent( NPP instance, void * event )
         default:
             ;
     }
-#endif // __x86_64__
+*/
     return false;
 }
 #endif /* XP_MACOSX */
@@ -342,8 +343,10 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
     /* retrieve current window */
     NPWindow& curr_window = p_plugin->getWindow();
 
-    if (window && window->window) {
+    if (window/* && window->window */) {
+    	::DebugStr((const unsigned char*)"vlcshell: received window object from browser");
         if (!curr_window.window) {
+        	::DebugStr((const unsigned char*)"vlcshell: no current window");
             /* we've just been created */
             p_plugin->setWindow(*window);
             p_plugin->create_windows();
@@ -373,11 +376,13 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
             p_plugin->update_controls();
         } else {
             if (window->window == curr_window.window) {
+                ::DebugStr((const unsigned char*)"Already have current window, and new window is the same");
                 /* resize / move notification */
                 p_plugin->setWindow(*window);
                 p_plugin->resize_windows();
             } else {
                 /* plugin parent window was changed, notify plugin about it */
+            	::DebugStr((const unsigned char*)"Already have current window, but new window is different");
                 p_plugin->destroy_windows();
                 p_plugin->setWindow(*window);
                 p_plugin->create_windows();
@@ -387,12 +392,12 @@ NPError NPP_SetWindow( NPP instance, NPWindow* window )
     } else {
         /* NOTE: on Windows, Opera does not call NPP_SetWindow
          * on window destruction. */
+    	::DebugStr((const unsigned char*)"vlcshell: received no window object from browser");
         if (curr_window.window) {
             /* we've been destroyed */
             p_plugin->destroy_windows();
         }
     }
-
     return NPERR_NO_ERROR;
 }
 

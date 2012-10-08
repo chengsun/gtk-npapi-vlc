@@ -104,25 +104,21 @@ else
 lib_LTLIBRARIES = npvlc.la
 
 AM_CPPFLAGS += -I. -I$(top_builddir) -c \
-	-F/System/Library/Frameworks/CoreFoundation.framework \
-	-I/Developer/Headers/FlatCarbon -fno-common -fpascal-strings \
 	-Wmost -Wno-four-char-constants -Wno-unknown-pragmas \
 	-DXP_UNIX -DXP_MACOSX=1 \
 	-DNO_X11=1 -DUSE_SYSTEM_CONSOLE=1 -pipe -fmessage-length=0
 
-SOURCES_support = support/npmac.cpp
+SOURCES_support = support/npmac.cpp \
+                  vlcplugin_mac.cpp \
+                  vlcplugin_mac.h
 libvlcplugin_la_LDFLAGS += \
 	-bundle -Wl,-read_only_relocs -Wl,suppress \
 	-Wl,-headerpad_max_install_names \
 	-Wl,-framework,Carbon -Wl,-framework,System \
-	-shrext $(LIBEXT)
+	-shrext .dylib
 
-noinst_DATA = npvlc.rsrc VLC\ Plugin.plugin
-MOSTLYCLEANFILES += npvlc.rsrc
+noinst_DATA = VLC\ Plugin.plugin
 CLEANFILES += VLC\ Plugin.plugin
-
-npvlc.rsrc: vlc.r
-	/Developer/Tools/Rez -useDF /Developer/Headers/FlatCarbon/Types.r $< -o $@
 
 #
 # Plugin uses shared libraries that are located relatively through @executable_path,
@@ -140,13 +136,12 @@ define FIXEXECPATH
 	}' | sh -x
 endef
 
-VLC\ Plugin.plugin: npvlc.rsrc $(lib_LTLIBRARIES)
+VLC\ Plugin.plugin: $(lib_LTLIBRARIES)
 	rm -Rf "$@"
 	$(INSTALL) -d "VLC-Plugin.plugin/Contents/MacOS/lib"
 	$(INSTALL) -d "VLC-Plugin.plugin/Contents/Resources"
-	ACTION="release-makefile" PRODUCT="VLC-Plugin.plugin" src_dir=$(srcdir) build_dir=$(top_builddir) sh "$(top_srcdir)/project/macosx/framework/Pre-Compile.sh"
-	$(INSTALL) npvlc.rsrc "VLC-Plugin.plugin/Contents/Resources/VLC Plugin.rsrc"
-	$(INSTALL) "$(top_builddir)/extras/package/macosx/plugin/Info.plist" "VLC-Plugin.plugin/Contents/Info.plist"
+	ACTION="release-makefile" PRODUCT="VLC-Plugin.plugin" libvlc_dir=$(LIBVLC_PREFIX) src_dir=$(srcdir) build_dir=$(top_builddir) sh "$(top_srcdir)/extras/macosx/build-package.sh"
+	$(INSTALL) "$(top_builddir)/extras/macosx/Info.plist" "VLC-Plugin.plugin/Contents/Info.plist"
 	mv "VLC-Plugin.plugin" "VLC Plugin.plugin"
 	find "VLC Plugin.plugin" -type d -exec chmod ugo+rx '{}' \;
 	find "VLC Plugin.plugin" -type f -exec chmod ugo+r '{}' \;

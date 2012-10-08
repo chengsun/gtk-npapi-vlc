@@ -27,14 +27,7 @@
 #include "config.h"
 
 #include <string.h>
-
-#include <Processes.h>
-#include <Gestalt.h>
-#include <CodeFragments.h>
-#include <Timer.h>
-#include <Resources.h>
-#include <ToolUtils.h>
-
+#include <stddef.h>
 #define XP_MACOSX 1
 #undef TARGET_RT_MAC_CFM
 
@@ -665,8 +658,43 @@ void Private_Shutdown(void)
 NPError    Private_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
     EnterCodeResource();
-    NPError ret = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
     PLUGINDEBUGSTR("\pNew;g;");
+
+    /*
+     *  We should negotiate and setup uniform event & drawing models, so the 32- and 64-bit plugins behave
+     * identically
+     */
+    NPBool supportsCoreGraphics = FALSE;
+    NPError err = NPN_GetValue(instance, NPNVsupportsCoreGraphicsBool, &supportsCoreGraphics);
+    if (err != NPERR_NO_ERROR || !supportsCoreGraphics) {
+
+    	PLUGINDEBUGSTR("\pNew: browser doesn't support CoreGraphics drawing model;g;");
+        return NPERR_INCOMPATIBLE_VERSION_ERROR;
+    }
+
+    err = NPN_SetValue(instance, NPPVpluginDrawingModel, (void*)NPDrawingModelCoreGraphics);
+    if (err != NPERR_NO_ERROR) {
+
+    	PLUGINDEBUGSTR("\pNew: couldn't activate CoreGraphics drawing model;g;");
+    	return NPERR_INCOMPATIBLE_VERSION_ERROR;
+    }
+
+    NPBool supportsCocoaEvents = FALSE;
+    err = NPN_GetValue(instance, NPNVsupportsCocoaBool, &supportsCocoaEvents);
+    if (err != NPERR_NO_ERROR || !supportsCocoaEvents) {
+
+		PLUGINDEBUGSTR("\pNew: browser doesn't support Cocoa event model;g;");
+		return NPERR_INCOMPATIBLE_VERSION_ERROR;
+	}
+
+    err = NPN_SetValue(instance, NPPVpluginEventModel, (void*)NPEventModelCocoa);
+    if (err != NPERR_NO_ERROR) {
+
+    	PLUGINDEBUGSTR("\pNew: couldn't activate Cocoa event model;g;");
+    	return NPERR_INCOMPATIBLE_VERSION_ERROR;
+    }
+
+    NPError ret = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
     ExitCodeResource();
     return ret;
 }
@@ -903,6 +931,9 @@ typedef int main_return_t;
 typedef NPError mainReturnType;
 #endif
 
+
+typedef void      (* NP_LOADDS NPP_ShutdownProcPtr)(void);
+
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
 typedef NPP_ShutdownUPP unloadupp_t;
 #else
@@ -1102,8 +1133,11 @@ NPError NP_Initialize(NPNetscapeFuncs* nsTable)
 
     /* validate input parameters */
 
-    if( NULL == nsTable  )
+    if( NULL == nsTable  ) {
+
+    	PLUGINDEBUGSTR("\pNP_Initialize error: NPERR_INVALID_FUNCTABLE_ERROR: table is null");
         return NPERR_INVALID_FUNCTABLE_ERROR;
+    }
 
     /*
      * Check the major version passed in Netscape's function table.
@@ -1114,11 +1148,20 @@ NPError NP_Initialize(NPNetscapeFuncs* nsTable)
      *
      */
 
-    if ((nsTable->version >> 8) > NP_VERSION_MAJOR)
-        return NPERR_INCOMPATIBLE_VERSION_ERROR;
+    if ((nsTable->version >> 8) > NP_VERSION_MAJOR) {
 
-    if (nsTable->size < sizeof(NPNetscapeFuncs))
+    	PLUGINDEBUGSTR("\pNP_Initialize error: NPERR_INCOMPATIBLE_VERSION_ERROR");
+        return NPERR_INCOMPATIBLE_VERSION_ERROR;
+    }
+
+
+    // We use all functions of the nsTable up to and including setexception. We therefore check that
+    // reaches at least till that function.
+    if (nsTable->size < (offsetof(NPNetscapeFuncs, setexception) + sizeof(NPN_SetExceptionProcPtr))) {
+
+    	PLUGINDEBUGSTR("\pNP_Initialize error: NPERR_INVALID_FUNCTABLE_ERROR: table too small");
         return NPERR_INVALID_FUNCTABLE_ERROR;
+    }
 
     int navMinorVers = nsTable->version & 0xFF;
 

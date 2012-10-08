@@ -26,6 +26,8 @@
 
 #include "vlcplugin_mac.h"
 
+#include <npapi.h>
+
 VlcPluginMac::VlcPluginMac(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode)
 {
@@ -44,21 +46,21 @@ void VlcPluginMac::toggle_fullscreen()
 {
     if (!get_options().get_enable_fs()) return;
     if (playlist_isplaying())
-        libvlc_toggle_fullscreen(libvlc_media_player);
+        libvlc_toggle_fullscreen(getMD());
 }
 
 void VlcPluginMac::set_fullscreen(int yes)
 {
     if (!get_options().get_enable_fs()) return;
     if (playlist_isplaying())
-        libvlc_set_fullscreen(libvlc_media_player, yes);
+        libvlc_set_fullscreen(getMD(), yes);
 }
 
 int  VlcPluginMac::get_fullscreen()
 {
     int r = 0;
     if (playlist_isplaying())
-        r = libvlc_get_fullscreen(libvlc_media_player);
+        r = libvlc_get_fullscreen(getMD());
     return r;
 }
 
@@ -76,8 +78,8 @@ bool VlcPluginMac::resize_windows()
      * relative to GrafPort window origin is set relative to document,
      * which of little use for drawing
      */
-    view.top     = ((NP_Port*) (npwindow.window))->porty;
-    view.left    = ((NP_Port*) (npwindow.window))->portx;
+    view.top	= 0; // ((NP_Port*) (npwindow.window))->porty;
+    view.left	= 0; // ((NP_Port*) (npwindow.window))->portx;
     view.bottom  = npwindow.height+view.top;
     view.right   = npwindow.width+view.left;
 
@@ -96,5 +98,5 @@ bool VlcPluginMac::resize_windows()
 
 bool VlcPluginMac::destroy_windows()
 {
-    window.window = NULL;
+    npwindow.window = NULL;
 }
