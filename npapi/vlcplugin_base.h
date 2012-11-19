@@ -294,6 +294,8 @@ public:
     virtual bool resize_windows() = 0;
     virtual bool destroy_windows() = 0;
 
+    virtual bool handle_event(void *event);
+
     virtual void toggle_fullscreen() = 0;
     virtual void set_fullscreen(int) = 0;
     virtual int get_fullscreen() = 0;

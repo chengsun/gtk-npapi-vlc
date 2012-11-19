@@ -680,6 +680,7 @@ NPError Private_DestroyStream(NPP instance, NPStream* stream, NPError reason);
 void Private_URLNotify(NPP instance, const char* url,
                        NPReason reason, void* notifyData);
 void Private_Print(NPP instance, NPPrint* platformPrint);
+int16_t Private_HandleEvent(NPP instance, NPEvent *event);
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *r_value);
 NPError Private_SetValue(NPP instance, NPNVariable variable, void *r_value);
 #ifdef OJI
@@ -773,6 +774,13 @@ Private_Print(NPP instance, NPPrint* platformPrint)
 {
     PLUGINDEBUGSTR("Print");
     NPP_Print(instance, platformPrint);
+}
+
+int16_t
+Private_HandleEvent(NPP instance, NPEvent *event)
+{
+    PLUGINDEBUGSTR("HandleEvent");
+    NPP_HandleEvent(instance, event);
 }
 
 NPError
@@ -1004,6 +1012,7 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         pluginFuncs->writeready = NewNPP_WriteReadyProc(Private_WriteReady);
         pluginFuncs->write      = NewNPP_WriteProc(Private_Write);
         pluginFuncs->print      = NewNPP_PrintProc(Private_Print);
+        pluginFuncs->event      = NewNPP_HandleEventProc(Private_HandleEvent);
         pluginFuncs->getvalue   = NewNPP_GetValueProc(Private_GetValue);
         pluginFuncs->setvalue   = NewNPP_SetValueProc(Private_SetValue);
 #else
@@ -1016,10 +1025,10 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         pluginFuncs->writeready = (NPP_WriteReadyProcPtr)(Private_WriteReady);
         pluginFuncs->write      = (NPP_WriteProcPtr)(Private_Write);
         pluginFuncs->print      = (NPP_PrintProcPtr)(Private_Print);
+        pluginFuncs->event      = (NPP_HandleEventProcPtr)(Private_HandleEvent);
         pluginFuncs->getvalue   = (NPP_GetValueProcPtr)(Private_GetValue);
         pluginFuncs->setvalue   = (NPP_SetValueProcPtr)(Private_SetValue);
 #endif
-        pluginFuncs->event      = NULL;
         if( minor >= NPVERS_HAS_NOTIFICATION )
         {
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)

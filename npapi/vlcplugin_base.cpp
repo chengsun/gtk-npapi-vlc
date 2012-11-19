@@ -578,6 +578,11 @@ void VlcPluginBase::setWindow(const NPWindow &window)
     npwindow = window;
 }
 
+bool VlcPluginBase::handle_event(void *event)
+{
+    return false;
+}
+
 /*****************************************************************************
  * VlcPluginBase playlist replacement methods
  *****************************************************************************/

@@ -100,3 +100,103 @@ bool VlcPluginMac::destroy_windows()
 {
     npwindow.window = NULL;
 }
+
+bool VlcPluginMac::handle_event(void *event)
+{
+    // FIXME: implement Cocoa event model, by porting this legacy code:
+/*
+    static UInt32 lastMouseUp = 0;
+    EventRecord *myEvent = (EventRecord*)event;
+
+    switch( myEvent->what )
+    {
+        case nullEvent:
+            return true;
+        case mouseDown:
+        {
+            if( (myEvent->when - lastMouseUp) < GetDblTime() )
+            {
+                // double click
+                p_plugin->toggle_fullscreen();
+            }
+            return true;
+        }
+        case mouseUp:
+            lastMouseUp = myEvent->when;
+            return true;
+        case keyUp:
+        case keyDown:
+        case autoKey:
+            return true;
+        case updateEvt:
+        {
+            const NPWindow& npwindow = p_plugin->getWindow();
+            if( npwindow.window )
+            {
+                bool hasVout = false;
+
+                if( p_plugin->playlist_isplaying() )
+                {
+                    hasVout = p_plugin->player_has_vout();
+#if 0
+                    if( hasVout )
+                    {
+                        libvlc_rectangle_t area;
+                        area.left = 0;
+                        area.top = 0;
+                        area.right = npwindow.width;
+                        area.bottom = npwindow.height;
+                        libvlc_video_redraw_rectangle(p_plugin->getMD(), &area, NULL);
+                    }
+#else
+#warning disabled code
+#endif
+                }
+
+                if( ! hasVout )
+                {
+                    // draw the text from get_bg_text()
+                    ForeColor(blackColor);
+                    PenMode( patCopy );
+
+                    // seems that firefox forgets to set the following
+                    // on occasion (reload)
+                    SetOrigin(((NP_Port *)npwindow.window)->portx,
+                              ((NP_Port *)npwindow.window)->porty);
+
+                    Rect rect;
+                    rect.left = 0;
+                    rect.top = 0;
+                    rect.right = npwindow.width;
+                    rect.bottom = npwindow.height;
+                    PaintRect( &rect );
+
+                    ForeColor(whiteColor);
+                    MoveTo( (npwindow.width-80)/ 2  , npwindow.height / 2 );
+                    if( !p_plugin->get_bg_text().empty() )
+                        DrawText( p_plugin->get_bg_text().c_str(), 0, p_plugin->get_bg_text().length() );
+                }
+            }
+            return true;
+        }
+        case activateEvt:
+            return false;
+        case NPEventType_GetFocusEvent:
+        case NPEventType_LoseFocusEvent:
+            return true;
+        case NPEventType_AdjustCursorEvent:
+            return false;
+        case NPEventType_MenuCommandEvent:
+            return false;
+        case NPEventType_ClippingChangedEvent:
+            return false;
+        case NPEventType_ScrollingBeginsEvent:
+            return true;
+        case NPEventType_ScrollingEndsEvent:
+            return true;
+        default:
+            ;
+    }
+*/
+    return VlcPluginBase::handle_event(event);
+}

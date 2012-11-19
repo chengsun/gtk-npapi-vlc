@@ -115,7 +115,7 @@ NP_GetEntryPoints(NPPluginFuncs* pFuncs)
     pFuncs->writeready    = NPP_WriteReady;
     pFuncs->write         = NPP_Write;
     pFuncs->print         = NPP_Print;
-    pFuncs->event         = 0;       /// reserved
+    pFuncs->event         = NPP_HandleEvent;
     pFuncs->getvalue      = NPP_GetValue;
     pFuncs->setvalue      = NPP_SetValue;
 

@@ -49,6 +49,8 @@ public:
     bool get_toolbar_visible()  { return false; }
     void update_controls()      {/* STUB */}
     void popup_menu()           {/* STUB */}
+
+    virtual void handle_event(void *event);
 private:
     void set_player_window();
 
