@@ -29,7 +29,7 @@
 #include "vlcplugin.h"
 #include "npolibvlc.h"
 
-#include "position.h"
+#include "../../common/position.h"
 
 /*
 ** Local helper macros and function

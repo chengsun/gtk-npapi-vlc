@@ -19,7 +19,7 @@ libvlcplugin_la_SOURCES = \
 	control/npolibvlc.h \
 	control/nporuntime.cpp \
 	control/nporuntime.h \
-	control/position.h \
+	../common/position.h \
 	support/classinfo.h \
 	../common/vlc_player_options.h \
 	../common/vlc_player.cpp \

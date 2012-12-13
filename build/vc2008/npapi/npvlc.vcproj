@@ -229,7 +229,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\npapi\control\position.h"
+				RelativePath="..\..\..\common\position.h"
 				>
 			</File>
 			<File

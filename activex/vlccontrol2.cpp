@@ -33,7 +33,7 @@
 #include "vlccontrol2.h"
 #include "vlccontrol.h"
 
-#include "position.h"
+#include "../common/position.h"
 
 // ---------
 

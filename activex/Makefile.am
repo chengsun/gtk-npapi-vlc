@@ -51,7 +51,7 @@ axvlc_la_SOURCES = \
     persiststorage.h \
     persiststreaminit.cpp \
     persiststreaminit.h \
-    position.h \
+    ../common/position.h \
     provideclassinfo.cpp \
     provideclassinfo.h \
     connectioncontainer.cpp \
