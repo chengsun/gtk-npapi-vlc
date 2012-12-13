@@ -92,7 +92,7 @@ npvlc_la_LIBADD += -lgdi32
 DATA_npvlc_rc = $(noinst_DATA)
 noinst_DATA = npvlc_rc.$(OBJEXT)
 
-npvlc_rc.$(OBJEXT): npvlc_rc.rc
+npvlc_rc.$(OBJEXT): package/npvlc_rc.rc
 	$(WINDRES) --include-dir $(srcdir) -i $< -o $@
 
 endif
