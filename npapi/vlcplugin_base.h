@@ -35,8 +35,6 @@
 #include "config.h"
 #endif
 
-#include <vlc/vlc.h>
-
 // Setup XP_MACOSX, XP_UNIX, XP_WIN
 #if defined(_WIN32)
 #define XP_WIN 1
