@@ -323,27 +323,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
 #endif
 }
 
-#ifdef OJI
-JRIEnv* NPN_GetJavaEnv()
-{
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
-    return CallNPN_GetJavaEnvProc(gNetscapeFuncs.getJavaEnv);
-#else
-    return (*gNetscapeFuncs.getJavaEnv);
-#endif
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
-    return CallNPN_GetJavaPeerProc(gNetscapeFuncs.getJavaPeer,
-                       instance);
-#else
-    return (*gNetscapeFuncs.getJavaPeer)(instance);
-#endif
-}
-#endif
-
 void
 NPN_InvalidateRect(NPP instance, NPRect *invalidRect)
 {
@@ -683,9 +662,6 @@ void Private_Print(NPP instance, NPPrint* platformPrint);
 int16_t Private_HandleEvent(NPP instance, NPEvent *event);
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *r_value);
 NPError Private_SetValue(NPP instance, NPNVariable variable, void *r_value);
-#ifdef OJI
-JRIGlobalRef Private_GetJavaClass(void);
-#endif
 
 /* function implementations */
 NPError
@@ -797,19 +773,6 @@ Private_SetValue(NPP instance, NPNVariable variable, void *r_value)
     return NPP_SetValue(instance, variable, r_value);
 }
 
-#ifdef OJI
-JRIGlobalRef
-Private_GetJavaClass(void)
-{
-    jref clazz = NPP_GetJavaClass();
-    if (clazz) {
-    JRIEnv* env = NPN_GetJavaEnv();
-    return JRI_NewGlobalRef(env, clazz);
-    }
-    return NULL;
-}
-#endif
-
 /*********************************************************************** 
  *
  * These functions are located automagically by netscape.
@@ -912,13 +875,6 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) >= 20)
         gNetscapeFuncs.pluginthreadasynccall =
             nsTable->pluginthreadasynccall;
-#endif
-#ifdef OJI
-        if( minor >= NPVERS_HAS_LIVECONNECT )
-        {
-            gNetscapeFuncs.getJavaEnv    = nsTable->getJavaEnv;
-            gNetscapeFuncs.getJavaPeer   = nsTable->getJavaPeer;
-        }
 #endif
         gNetscapeFuncs.getvalue      = nsTable->getvalue;
         gNetscapeFuncs.setvalue      = nsTable->setvalue;
@@ -1037,14 +993,7 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
             pluginFuncs->urlnotify = (NPP_URLNotifyProcPtr)(Private_URLNotify);
 #endif
         }
-#ifdef OJI
-        if( minor >= NPVERS_HAS_LIVECONNECT )
-            pluginFuncs->javaClass  = Private_GetJavaClass();
-        else
-            pluginFuncs->javaClass = NULL;
-#else
         pluginFuncs->javaClass = NULL;
-#endif
 
         err = NPP_Initialize();
     }

@@ -34,9 +34,6 @@ NPP_GET_MIME_CONST char * NPP_GetMIMEDescription( void );
 
 NPError NPP_Initialize( void );
 
-#ifdef OJI
-jref NPP_GetJavaClass( void );
-#endif
 void NPP_Shutdown( void );
 
 NPError NPP_New( NPMIMEType pluginType, NPP instance, uint16_t mode, NPint16_t argc,

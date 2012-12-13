@@ -377,18 +377,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
     CALL_NPN(CallNPN_ReloadPluginsProc, gNetscapeFuncs.reloadplugins, reloadPages);
 }
 
-#ifdef OJI
-JRIEnv* NPN_GetJavaEnv(void)
-{
-    return CallNPN_GetJavaEnvProc( gNetscapeFuncs.getJavaEnv );
-}
-
-jobject  NPN_GetJavaPeer(NPP instance)
-{
-    return CallNPN_GetJavaPeerProc( gNetscapeFuncs.getJavaPeer, instance );
-}
-#endif
-
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
     return CALL_NPN(CallNPN_GetValueProc, gNetscapeFuncs.getvalue, instance, variable, value);
@@ -627,9 +615,6 @@ void        Private_StreamAsFile(NPP instance, NPStream* stream, const char* fna
 void        Private_Print(NPP instance, NPPrint* platformPrint);
 int16_t     Private_HandleEvent(NPP instance, void* event);
 void        Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
-#ifdef OJI
-jobject     Private_GetJavaClass(void);
-#endif // OJI
 
 
 NPError Private_Initialize(void)
@@ -813,22 +798,6 @@ void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* not
     ExitCodeResource();
 }
 
-#ifdef OJI
-jobject Private_GetJavaClass(void)
-{
-    EnterCodeResource();
-    PLUGINDEBUGSTR("\pGetJavaClass;g;");
-
-    jobject clazz = NPP_GetJavaClass();
-    ExitCodeResource();
-    if (clazz)
-    {
-        JRIEnv* env = NPN_GetJavaEnv();
-        return (jobject)JRI_NewGlobalRef(env, clazz);
-    }
-    return NULL;
-}
-#endif
 
 void SetUpQD(void);
 void SetUpQD(void)
@@ -1090,14 +1059,7 @@ DEFINE_API_C(main_return_t) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* plugin
             pluginFuncs->urlnotify = (NPP_URLNotifyProcPtr)(PLUGIN_TO_HOST_GLUE(urlnotify, Private_URLNotify));
 #endif
         }
-#ifdef OJI
-        if( navMinorVers >= NPVERS_HAS_LIVECONNECT )
-        {
-            pluginFuncs->javaClass  = (JRIGlobalRef) Private_GetJavaClass();
-        }
-#else
         pluginFuncs->javaClass = NULL;
-#endif
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
         *unloadUpp = NewNPP_ShutdownProc(PLUGIN_TO_HOST_GLUE(shutdown, Private_Shutdown));
 #else
@@ -1280,14 +1242,7 @@ NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
     {
         pluginFuncs->urlnotify = Private_URLNotify;
     }
-#ifdef OJI
-    if( navMinorVers >= NPVERS_HAS_LIVECONNECT )
-    {
-        pluginFuncs->javaClass  = (JRIGlobalRef) Private_GetJavaClass();
-    }
-#else
     pluginFuncs->javaClass = NULL;
-#endif
 
     return NPERR_NO_ERROR;
 }
