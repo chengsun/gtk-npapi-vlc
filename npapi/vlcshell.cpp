@@ -151,18 +151,60 @@ void NPP_Shutdown( void )
     ;
 }
 
+static bool boolValue(const char *value) {
+    return ( !strcmp(value, "1") ||
+             !strcasecmp(value, "true") ||
+             !strcasecmp(value, "yes") );
+}
+
 NPError NPP_New( NPMIMEType, NPP instance,
                  NPuint16_t mode, NPint16_t argc,
                  char* argn[], char* argv[], NPSavedData* )
 {
     NPError status;
+    VlcPluginBase *p_plugin;
 
     if( instance == NULL )
     {
         return NPERR_INVALID_INSTANCE_ERROR;
     }
 
-    VlcPluginBase *p_plugin = new VlcPlugin( instance, mode );
+    /* we need to tell whether the plugin will be windowless
+     * before it is instantiated */
+    bool windowless = false;
+    for( int i = 0; i < argc; i++ )
+    {
+        if( !strcmp( argn[i], "windowless" ) )
+        {
+            windowless = boolValue(argv[i]);
+            break;
+        }
+    }
+
+#ifdef WINDOWLESS
+    if( windowless )
+    {
+        /* set windowless flag */
+        status = NPN_SetValue( instance, NPPVpluginWindowBool,
+                                       (void *)false);
+        if( NPERR_NO_ERROR != status )
+        {
+            return status;
+        }
+        status = NPN_SetValue( instance, NPPVpluginTransparentBool,
+                                       (void *)false);
+        if( NPERR_NO_ERROR != status )
+        {
+            return status;
+        }
+
+        p_plugin = new VlcWindowless( instance, mode );
+    }
+    else
+#endif
+    {
+        p_plugin = new VlcPlugin( instance, mode );
+    }
     if( NULL == p_plugin )
     {
         return NPERR_OUT_OF_MEMORY_ERROR;
