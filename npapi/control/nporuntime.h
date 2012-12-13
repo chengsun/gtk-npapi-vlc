@@ -29,7 +29,7 @@
 ** support framework for runtime script objects
 */
 
-//on windows, to avoid including <npapi.h> 
+//on windows, to avoid including <npapi.h>
 //from Microsoft SDK (rather then from Mozilla SDK),
 //#include it indirectly via <npfunctions.h>
 #include <npfunctions.h>

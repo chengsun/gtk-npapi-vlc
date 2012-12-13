@@ -72,7 +72,7 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-//on windows, to avoid including <npapi.h> 
+//on windows, to avoid including <npapi.h>
 //from Microsoft SDK (rather then from Mozilla SDK),
 //#include it indirectly via <npfunctions.h>
 #include <npfunctions.h>

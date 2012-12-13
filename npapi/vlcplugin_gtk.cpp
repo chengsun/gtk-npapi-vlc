@@ -491,7 +491,7 @@ bool VlcPluginGtk::create_windows()
     gtk_container_add(GTK_CONTAINER(toolitem), time_slider);
     gtk_tool_item_set_expand(toolitem, true);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), toolitem, -1);
-    
+
     /* volume slider */
     toolitem = gtk_tool_item_new();
     vol_slider = gtk_hscale_new_with_range(0, 200, 10);

@@ -551,7 +551,7 @@ NPError VlcPluginBase::init(int argc, char* const argn[], char* const argv[])
       p_em = libvlc_media_player_event_manager( getMD() );
       events.hook_manager( p_em, this );
     }
-    
+
     return NPERR_NO_ERROR;
 }
 

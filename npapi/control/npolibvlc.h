@@ -149,7 +149,7 @@ protected:
     LibvlcPlaylistNPObject(NPP instance, const NPClass *aClass) :
     RuntimeNPObject(instance, aClass),
     playlistItemsObj(NULL) {};
-    
+
     virtual ~LibvlcPlaylistNPObject();
 
     static const int propertyCount;
