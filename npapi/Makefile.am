@@ -2,7 +2,7 @@
 # Building the Mozilla plugin
 ###############################################################################
 
-EXTRA_DIST = npvlc_rc.rc.in npvlc.dll.manifest
+EXTRA_DIST = package/npvlc_rc.rc.in package/npvlc.dll.manifest
 MOSTLYCLEANFILES =
 CLEANFILES = $(BUILT_SOURCES)
 npvlcdir = $(libdir)/mozilla/plugins

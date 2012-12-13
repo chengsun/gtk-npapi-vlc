@@ -273,21 +273,21 @@ AC_CONFIG_FILES([
   share/Makefile
   npapi/Makefile
   activex/Makefile
-  npapi/install.js
-  npapi/install.rdf
-  npapi/manifest.json
+  npapi/package/install.js
+  npapi/package/install.rdf
+  npapi/package/manifest.json
 ])
 
 AM_COND_IF([HAVE_WIN32], [
   AC_CONFIG_FILES([
-    npapi/npvlc_rc.rc
+    npapi/package/npvlc_rc.rc
     activex/axvlc.inf
     activex/axvlc_rc.rc
   ])
 ])
 AM_COND_IF([HAVE_DARWIN], [
   AC_CONFIG_FILES([
-    npapi/vlc.r
+    npapi/package/vlc.r
     extras/macosx/Info.plist
     extras/macosx/InstallerInfo.plist
   ])
