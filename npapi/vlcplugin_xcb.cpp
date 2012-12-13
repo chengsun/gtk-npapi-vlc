@@ -29,6 +29,13 @@
 #include <cstring>
 #include <cstdlib>
 
+/* the latest version of XEmbed that we support */
+#define PLUGIN_XEMBED_PROTOCOL_VERSION 1
+
+/* Flags for _XEMBED_INFO */
+#define XEMBED_MAPPED                   (1 << 0)
+
+
 VlcPluginXcb::VlcPluginXcb(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode)
 {

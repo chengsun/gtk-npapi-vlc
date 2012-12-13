@@ -29,7 +29,6 @@
 
 #include "vlcplugin_base.h"
 #include <xcb/xcb.h>
-#include "xembed.h"
 
 class VlcPluginXcb : public VlcPluginBase
 {
