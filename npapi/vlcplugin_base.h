@@ -283,6 +283,7 @@ public:
     {
         return get_player().items_count();
     }
+    bool playlist_select(int);
 
     void control_handler(vlc_toolbar_clicked_t);
 
@@ -316,8 +317,6 @@ protected:
     virtual void on_media_player_new()     {};
     // called before libvlc_media_player_release
     virtual void on_media_player_release() {};
-
-    bool playlist_select(int);
 
     /* VLC reference */
     libvlc_instance_t   *libvlc_instance;
