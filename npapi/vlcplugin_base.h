@@ -54,6 +54,7 @@
 /* Windows includes */
 #ifdef XP_WIN
 #   include <windows.h>
+#   include <stdint.h>
 #endif
 
 #ifdef XP_UNIX
