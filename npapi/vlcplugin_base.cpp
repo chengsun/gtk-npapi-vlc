@@ -38,15 +38,6 @@
 
 #include <cctype>
 
-#if defined(XP_UNIX)
-#   include <pthread.h>
-#elif defined(XP_WIN)
-    /* windows headers */
-#   include <winbase.h>
-#else
-#warning "locking not implemented for this platform"
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include <cstdlib>

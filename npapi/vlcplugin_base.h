@@ -37,24 +37,23 @@
 
 // Setup XP_MACOSX, XP_UNIX, XP_WIN
 #if defined(_WIN32)
-#define XP_WIN 1
+#   define XP_WIN 1
 #elif defined(__APPLE__)
-#define XP_MACOSX 1
+#   define XP_MACOSX 1
 #else
-#define XP_UNIX 1
-#define MOZ_X11 1
+#   define XP_UNIX 1
+#   define MOZ_X11 1
 #endif
 
 #if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
-#define XP_UNIX 1
+#   define XP_UNIX 1
 #elif defined(XP_MACOSX)
-#undef XP_UNIX
+#   undef XP_UNIX
 #endif
 
+/* Windows includes */
 #ifdef XP_WIN
-    /* Windows stuff */
 #   include <windows.h>
-#   include <winbase.h>
 #endif
 
 #ifdef XP_UNIX
@@ -79,7 +78,6 @@
 #include <set>
 #include <assert.h>
 
-#include "control/nporuntime.h"
 #include "../common/vlc_player_options.h"
 #include "../common/vlc_player.h"
 
@@ -99,7 +97,7 @@ typedef struct {
 #elif defined(XP_WIN)
     CRITICAL_SECTION cs;
 #else
-#warning "locking not implemented in this platform"
+# warning "locking not implemented in this platform"
 #endif
 } plugin_lock_t;
 
