@@ -534,6 +534,7 @@ bool VlcPluginBase::canUseEventListener()
     return false;
 }
 
+#ifdef WINDOWLESS
 VlcWindowlessBase::VlcWindowlessBase(NPP instance, NPuint16_t mode) :
     VlcPluginBase(instance, mode)
 {
@@ -621,3 +622,4 @@ void VlcWindowlessBase::set_player_window() {
                                video_display_proxy,
                                this);
 }
+#endif

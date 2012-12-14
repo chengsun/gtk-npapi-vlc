@@ -215,7 +215,7 @@ private:
 #endif
 
 
-
+#ifdef WINDOWLESS
 const char DEF_CHROMA[] = "RV32";
 enum{
     DEF_PIXEL_BYTES = 4
@@ -280,5 +280,6 @@ protected:
     unsigned int m_media_width;
     unsigned int m_media_height;
 };
+#endif
 
 #endif
