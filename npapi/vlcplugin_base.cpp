@@ -539,10 +539,6 @@ VlcWindowlessBase::VlcWindowlessBase(NPP instance, NPuint16_t mode) :
 {
 }
 
-VlcWindowlessBase::~VlcWindowlessBase()
-{
-}
-
 unsigned VlcWindowlessBase::video_format_cb(char *chroma,
                                 unsigned *width, unsigned *height,
                                 unsigned *pitches, unsigned *lines)

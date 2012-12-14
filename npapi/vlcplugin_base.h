@@ -225,7 +225,6 @@ class VlcWindowlessBase : public VlcPluginBase
 {
 public:
     VlcWindowlessBase(NPP, NPuint16_t);
-    virtual ~VlcWindowlessBase();
 
     //for libvlc_video_set_format_callbacks
     static unsigned video_format_proxy(void **opaque, char *chroma,
