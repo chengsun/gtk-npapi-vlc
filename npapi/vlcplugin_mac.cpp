@@ -94,11 +94,13 @@ bool VlcPluginMac::resize_windows()
 #else
 #warning disabled code
 #endif
+    return true;
 }
 
 bool VlcPluginMac::destroy_windows()
 {
     npwindow.window = NULL;
+    return true;
 }
 
 bool VlcPluginMac::handle_event(void *event)
