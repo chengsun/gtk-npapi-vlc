@@ -31,151 +31,14 @@
 #ifndef __VLCPLUGIN_BASE_H__
 #define __VLCPLUGIN_BASE_H__
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-// Setup XP_MACOSX, XP_UNIX, XP_WIN
-#if defined(_WIN32)
-#   define XP_WIN 1
-#elif defined(__APPLE__)
-#   define XP_MACOSX 1
-#else
-#   define XP_UNIX 1
-#   define MOZ_X11 1
-#endif
-
-#if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
-#   define XP_UNIX 1
-#elif defined(XP_MACOSX)
-#   undef XP_UNIX
-#endif
-
-/* Windows includes */
-#ifdef XP_WIN
-#   include <windows.h>
-#   include <stdint.h>
-#endif
-
-#ifdef XP_UNIX
-#   include <pthread.h>
-#endif
-
-#ifndef __MAX
-#   define __MAX(a, b)   ( ((a) > (b)) ? (a) : (b) )
-#endif
-#ifndef __MIN
-#   define __MIN(a, b)   ( ((a) < (b)) ? (a) : (b) )
-#endif
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
-//on windows, to avoid including <npapi.h>
-//from Microsoft SDK (rather then from Mozilla SDK),
-//#include it indirectly via <npfunctions.h>
-#include <npfunctions.h>
+#include "vlcplugin.h"
+#include "events.h"
 
 #include <vector>
 #include <set>
-#include <assert.h>
 
 #include "../common/vlc_player_options.h"
 #include "../common/vlc_player.h"
-
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
-    typedef uint16 NPuint16_t;
-    typedef int16 NPint16_t;
-    typedef int32 NPint32_t;
-#else
-    typedef uint16_t NPuint16_t;
-    typedef int16_t NPint16_t;
-    typedef int32_t NPint32_t;
-#endif
-
-typedef struct {
-#if defined(XP_UNIX)
-    pthread_mutex_t mutex;
-#elif defined(XP_WIN)
-    CRITICAL_SECTION cs;
-#else
-# warning "locking not implemented in this platform"
-#endif
-} plugin_lock_t;
-
-typedef struct {
-    const char *name;                      /* event name */
-    const libvlc_event_type_t libvlc_type; /* libvlc event type */
-    libvlc_callback_t libvlc_callback;     /* libvlc callback function */
-} vlcplugin_event_t;
-
-class EventObj
-{
-private:
-
-    class Listener
-    {
-    public:
-        Listener(vlcplugin_event_t *event, NPObject *p_object, bool b_bubble):
-            _event(event), _listener(p_object), _bubble(b_bubble)
-            {
-                assert(event);
-                assert(p_object);
-            }
-        Listener(): _event(NULL), _listener(NULL), _bubble(false) { }
-        ~Listener()
-            {
-            }
-        libvlc_event_type_t event_type() const { return _event->libvlc_type; }
-        NPObject *listener() const { return _listener; }
-        bool bubble() const { return _bubble; }
-    private:
-        vlcplugin_event_t *_event;
-        NPObject *_listener;
-        bool _bubble;
-    };
-
-    class VLCEvent
-    {
-    public:
-        VLCEvent(libvlc_event_type_t libvlc_event_type, NPVariant *npparams, uint32_t npcount):
-            _libvlc_event_type(libvlc_event_type), _npparams(npparams), _npcount(npcount)
-            {
-            }
-        VLCEvent(): _libvlc_event_type(0), _npparams(NULL), _npcount(0) { }
-        ~VLCEvent()
-            {
-            }
-        libvlc_event_type_t event_type() const { return _libvlc_event_type; }
-        NPVariant *params() const { return _npparams; }
-        uint32_t count() const { return _npcount; }
-    private:
-        libvlc_event_type_t _libvlc_event_type;
-        NPVariant *_npparams;
-        uint32_t _npcount;
-    };
-    libvlc_event_manager_t *_em; /* libvlc media_player event manager */
-public:
-    EventObj(): _em(NULL), _already_in_deliver(false) { /* deferred to init() */ }
-    bool init();
-    ~EventObj();
-
-    void deliver(NPP browser);
-    void callback(const libvlc_event_t *event, NPVariant *npparams, uint32_t count);
-    bool insert(const NPString &name, NPObject *listener, bool bubble);
-    bool remove(const NPString &name, NPObject *listener, bool bubble);
-    void unhook_manager(void *);
-    void hook_manager(libvlc_event_manager_t *, void *);
-private:
-    vlcplugin_event_t *find_event(const char *s) const;
-    const char *find_name(const libvlc_event_t *event);
-    typedef std::vector<Listener> lr_l;
-    typedef std::vector<VLCEvent> ev_l;
-    lr_l _llist; /* list of registered listeners with 'addEventListener' method */
-    ev_l _elist; /* scheduled events list for delivery to browser */
-
-    plugin_lock_t lock;
-    bool _already_in_deliver;
-};
 
 typedef enum vlc_toolbar_clicked_e {
     clicked_Unknown = 0,
@@ -188,6 +51,7 @@ typedef enum vlc_toolbar_clicked_e {
     clicked_Mute,
     clicked_Unmute
 } vlc_toolbar_clicked_t;
+
 
 class VlcPluginBase: private vlc_player_options, private vlc_player
 {
@@ -334,6 +198,23 @@ protected:
 private:
     static std::set<VlcPluginBase*> _instances;
 };
+
+#if defined(XP_UNIX)
+#   if defined(USE_GTK)
+#       include "vlcplugin_gtk.h"
+        typedef class VlcPluginGtk VlcPlugin;
+#   else
+#       include "vlcplugin_xcb.h"
+        typedef class VlcPluginXcb VlcPlugin;
+#   endif
+#elif defined(XP_WIN)
+#   include "vlcplugin_win.h"
+    typedef class VlcPluginWin VlcPlugin;
+#elif defined(XP_MACOSX)
+#   include "vlcplugin_mac.h"
+    typedef class VlcPluginMac VlcPlugin;
+#endif
+
 
 
 const char DEF_CHROMA[] = "RV32";

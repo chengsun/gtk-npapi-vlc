@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "vlcplugin_base.h"
 #include "vlcplugin.h"
 #include "vlcshell.h"
 
