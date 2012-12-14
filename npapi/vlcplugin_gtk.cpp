@@ -513,6 +513,7 @@ bool VlcPluginGtk::resize_windows()
     req.width = npwindow.width;
     req.height = npwindow.height;
     gtk_widget_size_request(parent, &req);
+    return true;
 }
 
 bool VlcPluginGtk::destroy_windows()
@@ -529,4 +530,5 @@ bool VlcPluginGtk::destroy_windows()
     /* free colors */
     Colormap colormap = DefaultColormap(display, DefaultScreen(display));
     XFreeColors(display, colormap, &bg_color.pixel, 1, 0);
+    return true;
 }
