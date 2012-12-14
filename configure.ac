@@ -190,12 +190,11 @@ dnl we can't use the pkg-config macros.
     fi
   done
 
-test "$found" = 0 && AC_MSG_RESULT([no])
+AM_CONDITIONAL(HAVE_SDK, test "$found" = 0)
 
 CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS}"
 
-AC_CHECK_HEADERS(npapi.h)
-AC_CHECK_HEADERS(npruntime.h, [
+AC_CHECK_HEADERS(npapi.h npruntime.h, [
     dnl if found
   ],[
     dnl if not found
