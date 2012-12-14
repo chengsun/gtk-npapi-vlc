@@ -52,7 +52,6 @@ typedef enum vlc_toolbar_clicked_e {
     clicked_Unmute
 } vlc_toolbar_clicked_t;
 
-
 class VlcPluginBase: private vlc_player_options, private vlc_player
 {
 protected:

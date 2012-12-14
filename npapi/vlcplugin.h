@@ -79,6 +79,7 @@
 #elif defined(XP_UNIX)
 #   include <pthread.h>
 #endif
+#include <assert.h>
 
 typedef struct {
 #if defined(XP_UNIX)
@@ -89,6 +90,63 @@ typedef struct {
 # warning "locking not implemented in this platform"
 #endif
 } plugin_lock_t;
+
+/*****************************************************************************
+ * Lock utility functions
+ *****************************************************************************/
+static void plugin_lock_init(plugin_lock_t *lock)
+{
+    assert(lock);
+
+#if defined(XP_UNIX)
+    pthread_mutex_init(&lock->mutex, NULL);
+#elif defined(XP_WIN)
+    InitializeCriticalSection(&lock->cs);
+#else
+#warning "locking not implemented in this platform"
+#endif
+}
+
+static void plugin_lock_destroy(plugin_lock_t *lock)
+{
+    assert(lock);
+
+#if defined(XP_UNIX)
+    pthread_mutex_destroy(&lock->mutex);
+#elif defined(XP_WIN)
+    DeleteCriticalSection(&lock->cs);
+#else
+#warning "locking not implemented in this platform"
+#endif
+}
+
+static void plugin_lock(plugin_lock_t *lock)
+{
+    assert(lock);
+
+#if defined(XP_UNIX)
+    pthread_mutex_lock(&lock->mutex);
+#elif defined(XP_WIN)
+    EnterCriticalSection(&lock->cs);
+#else
+#warning "locking not implemented in this platform"
+#endif
+}
+
+static void plugin_unlock(plugin_lock_t *lock)
+{
+    assert(lock);
+
+#if defined(XP_UNIX)
+    pthread_mutex_unlock(&lock->mutex);
+#elif defined(XP_WIN)
+    LeaveCriticalSection(&lock->cs);
+#else
+#warning "locking not implemented in this platform"
+#endif
+}
+
+
 
 
 #include "vlcplugin_base.h"
