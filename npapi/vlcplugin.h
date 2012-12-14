@@ -58,11 +58,13 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+// Include stdint before NP*.h
+#include <stdint.h>
+
 // We use <npfunctions.h> insted of including <npapi.h>
 // To avoid using Microsoft SDK (rather then from Mozilla SDK),
 #include <npfunctions.h>
 
-#include <stdint.h>
 #if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
     typedef uint16 NPuint16_t;
     typedef int16 NPint16_t;
