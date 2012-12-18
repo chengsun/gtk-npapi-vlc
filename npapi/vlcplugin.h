@@ -33,7 +33,7 @@
 # include "config.h"
 #endif
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #   if defined(USE_GTK)
 #       include "vlcplugin_gtk.h"
         typedef class VlcPluginGtk VlcPlugin;

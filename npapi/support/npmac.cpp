@@ -78,6 +78,7 @@
 #define CALL_NPN(unused, FN, ...) ((*FN)(__VA_ARGS__))
 #endif
 
+#include "../common.h"
 #include "../vlcshell.h"
 
 #ifdef __MWERKS__
