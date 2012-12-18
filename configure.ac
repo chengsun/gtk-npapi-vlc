@@ -15,7 +15,7 @@ dnl Win32 need s a numerical version_extra.
 case $( echo ${VERSION_EXTRA}|wc -m ) in
        "1") VERSION_EXTRA_RC="0";;
        "2") VERSION_EXTRA_RC=$( echo ${VERSION_EXTRA}|tr "abcdefghi" "123456789") ;;
-       *) if test ${VERSION_EXTRA} = "-git"; then VERSION_EXTRA_RC="666"; else VERSION_EXTRA_RC="99"; fi
+       *) if test "${VERSION_EXTRA}" = "-git"; then VERSION_EXTRA_RC="666"; else VERSION_EXTRA_RC="99"; fi
 esac
 AC_SUBST(VERSION_EXTRA_RC)
 COPYRIGHT_YEARS="2002-2012"
@@ -192,7 +192,8 @@ dnl we can't use the pkg-config macros.
 
 AM_CONDITIONAL(HAVE_SDK, test "$found" = 0)
 
-CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS} -I${srcdir}/gecko/"
+CPPFLAGS_save="${CPPFLAGS}"
+CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS} -Igecko/"
 
 AC_CHECK_HEADERS(npapi.h npruntime.h, [
     dnl if found
@@ -230,6 +231,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   AC_MSG_RESULT(no)
   AC_DEFINE(NPP_GET_MIME_CONST, [], [Whether NPP_GetMIMEDescription returns const])
 ])
+
+CPPFLAGS="${CPPFLAGS_save}"
 
 AC_LANG_POP(C++)
 
