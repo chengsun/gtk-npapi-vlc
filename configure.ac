@@ -192,7 +192,7 @@ dnl we can't use the pkg-config macros.
 
 AM_CONDITIONAL(HAVE_SDK, test "$found" = 0)
 
-CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS}"
+CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS} -I${srcdir}/gecko/"
 
 AC_CHECK_HEADERS(npapi.h npruntime.h, [
     dnl if found
