@@ -31,7 +31,7 @@
 
 #include <assert.h>
 #include <vector>
-#include "vlcplugin.h"
+#include "common.h"
 #include "../common/vlc_player.h"
 
 typedef struct {

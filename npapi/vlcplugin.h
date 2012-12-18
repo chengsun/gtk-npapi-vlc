@@ -33,124 +33,21 @@
 # include "config.h"
 #endif
 
-// Setup XP_MACOSX, XP_UNIX, XP_WIN
-#if defined(_WIN32)
-#   define XP_WIN 1
-#elif defined(__APPLE__)
-#   define XP_MACOSX 1
-#else
-#   define XP_UNIX 1
-#   define MOZ_X11 1
-#endif
-
-#if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
-#   define XP_UNIX 1
+#if defined(XP_UNIX)
+#   if defined(USE_GTK)
+#       include "vlcplugin_gtk.h"
+        typedef class VlcPluginGtk VlcPlugin;
+#   else
+#       include "vlcplugin_xcb.h"
+        typedef class VlcPluginXcb VlcPlugin;
+#   endif
+#elif defined(XP_WIN)
+#   include "vlcplugin_win.h"
+    typedef class VlcPluginWin VlcPlugin;
 #elif defined(XP_MACOSX)
-#   undef XP_UNIX
+#   include "vlcplugin_mac.h"
+    typedef class VlcPluginMac VlcPlugin;
 #endif
 
-#ifndef __MAX
-#   define __MAX(a, b)   ( ((a) > (b)) ? (a) : (b) )
-#endif
-#ifndef __MIN
-#   define __MIN(a, b)   ( ((a) < (b)) ? (a) : (b) )
-#endif
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
-// Include stdint before NP*.h
-#include <stdint.h>
-
-// We use <npfunctions.h> insted of including <npapi.h>
-// To avoid using Microsoft SDK (rather then from Mozilla SDK),
-#include <npfunctions.h>
-
-#if (((NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR) < 20)
-    typedef uint16 NPuint16_t;
-    typedef int16 NPint16_t;
-    typedef int32 NPint32_t;
-#else
-    typedef uint16_t NPuint16_t;
-    typedef int16_t NPint16_t;
-    typedef int32_t NPint32_t;
-#endif
-
-/* Lock includes */
-#ifdef XP_WIN
-#   include <windows.h>
-#elif defined(XP_UNIX)
-#   include <pthread.h>
-#endif
-#include <assert.h>
-
-typedef struct {
-#if defined(XP_UNIX)
-    pthread_mutex_t mutex;
-#elif defined(XP_WIN)
-    CRITICAL_SECTION cs;
-#else
-# warning "locking not implemented in this platform"
-#endif
-} plugin_lock_t;
-
-/*****************************************************************************
- * Lock utility functions
- *****************************************************************************/
-static void plugin_lock_init(plugin_lock_t *lock)
-{
-    assert(lock);
-
-#if defined(XP_UNIX)
-    pthread_mutex_init(&lock->mutex, NULL);
-#elif defined(XP_WIN)
-    InitializeCriticalSection(&lock->cs);
-#else
-#warning "locking not implemented in this platform"
-#endif
-}
-
-static void plugin_lock_destroy(plugin_lock_t *lock)
-{
-    assert(lock);
-
-#if defined(XP_UNIX)
-    pthread_mutex_destroy(&lock->mutex);
-#elif defined(XP_WIN)
-    DeleteCriticalSection(&lock->cs);
-#else
-#warning "locking not implemented in this platform"
-#endif
-}
-
-static void plugin_lock(plugin_lock_t *lock)
-{
-    assert(lock);
-
-#if defined(XP_UNIX)
-    pthread_mutex_lock(&lock->mutex);
-#elif defined(XP_WIN)
-    EnterCriticalSection(&lock->cs);
-#else
-#warning "locking not implemented in this platform"
-#endif
-}
-
-static void plugin_unlock(plugin_lock_t *lock)
-{
-    assert(lock);
-
-#if defined(XP_UNIX)
-    pthread_mutex_unlock(&lock->mutex);
-#elif defined(XP_WIN)
-    LeaveCriticalSection(&lock->cs);
-#else
-#warning "locking not implemented in this platform"
-#endif
-}
-
-
-
-
-#include "vlcplugin_base.h"
 
 #endif /* __VLCPLUGIN_H__ */

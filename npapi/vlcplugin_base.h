@@ -31,7 +31,7 @@
 #ifndef __VLCPLUGIN_BASE_H__
 #define __VLCPLUGIN_BASE_H__
 
-#include "vlcplugin.h"
+#include "common.h"
 #include "events.h"
 
 #include <vector>
@@ -197,22 +197,6 @@ protected:
 private:
     static std::set<VlcPluginBase*> _instances;
 };
-
-#if defined(XP_UNIX)
-#   if defined(USE_GTK)
-#       include "vlcplugin_gtk.h"
-        typedef class VlcPluginGtk VlcPlugin;
-#   else
-#       include "vlcplugin_xcb.h"
-        typedef class VlcPluginXcb VlcPlugin;
-#   endif
-#elif defined(XP_WIN)
-#   include "vlcplugin_win.h"
-    typedef class VlcPluginWin VlcPlugin;
-#elif defined(XP_MACOSX)
-#   include "vlcplugin_mac.h"
-    typedef class VlcPluginMac VlcPlugin;
-#endif
 
 
 #ifdef WINDOWLESS

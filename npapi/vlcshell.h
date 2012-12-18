@@ -28,7 +28,6 @@
 # include "config.h"
 #endif
 
-#include "vlcplugin.h"
 
 NPP_GET_MIME_CONST char * NPP_GetMIMEDescription( void );
 

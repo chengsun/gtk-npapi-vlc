@@ -34,9 +34,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "vlcplugin_base.h"
-#include "vlcplugin.h"
+#include "common.h"
 #include "vlcshell.h"
+#include "vlcplugin.h"
 
 static char mimetype[] =
     /* MPEG-1 and MPEG-2 */

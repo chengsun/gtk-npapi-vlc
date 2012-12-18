@@ -57,8 +57,12 @@
 #endif
 
 #include <cstring>
+#include "../common.h"
 #include "../vlcshell.h"
 
+#ifdef USE_GTK
+# include <gtk/gtk.h>
+#endif
 /*
  * Define PLUGIN_TRACE to have the wrapper functions print
  * messages to stderr whenever they are called.

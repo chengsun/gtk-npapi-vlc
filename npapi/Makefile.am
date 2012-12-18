@@ -10,6 +10,7 @@ npvlcdir = $(libdir)/mozilla/plugins
 AM_CPPFLAGS = $(LIBVLC_CFLAGS)
 
 libvlcplugin_la_SOURCES = \
+	common.h \
 	events.h \
 	events.cpp \
 	vlcshell.h \
