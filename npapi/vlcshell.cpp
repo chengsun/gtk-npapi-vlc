@@ -246,6 +246,7 @@ NPError NPP_New( NPMIMEType, NPP instance,
 #ifdef WINDOWLESS
     if( windowless )
     {
+        printf( "Using Windowless mode\n" );
         /* set windowless flag */
         status = NPN_SetValue( instance, NPPVpluginWindowBool,
                                        (void *)false);
