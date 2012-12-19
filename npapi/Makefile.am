@@ -43,16 +43,16 @@ npvlc_la_DEPENDENCIES = $(libvlcplugin_la_DEPENDENCIES)
 npvlc_la_LIBADD = $(libvlcplugin_la_LIBADD)
 npvlc_la_LDFLAGS = $(libvlcplugin_la_LDFLAGS)
 
+gecko:
+	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers gecko-svn -r HEAD
+	mv gecko-svn gecko
+
 if !HAVE_DARWIN
 if !HAVE_WIN32
 
 # Unix (x11) platforms
 #
 npvlc_LTLIBRARIES = libvlcplugin.la
-
-gecko:
-	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers gecko-svn -r HEAD
-	mv gecko-svn gecko
 
 if FETCH_NPAPI
 $(libvlcplugin_la_OBJECTS): gecko
