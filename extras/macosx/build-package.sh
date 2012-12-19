@@ -234,11 +234,7 @@ fi
 
 ##########################
 # Hack for VLC.app
-if [ "$FULL_PRODUCT_NAME" = "VLC.app" ] ; then
-    vlc_install "bin/${prefix}" "vlc" "${target}" "bin" "@loader_path/lib"
-    mv ${target}/vlc ${target}/VLC
-    chmod +x ${target}/VLC
-elif [ "$FULL_PRODUCT_NAME" = "VLC-Plugin.plugin" ] ; then
+if [ "$FULL_PRODUCT_NAME" = "VLC-Plugin.plugin" ] ; then
     # install Safari webplugin
     vlc_install "${src_dir}/${prefix}" "npvlc.${suffix}" "${target}" "lib" "@loader_path/lib"
     mv ${target}/npvlc.${suffix} "${target}/VLC Plugin"
@@ -264,16 +260,3 @@ cd ${target_lib}
 ln -sf libvlc.5.dylib libvlc.dylib
 ln -sf libvlccore.5.dylib libvlccore.dylib
 popd > /dev/null
-
-##########################
-# Build the share folder
-if [ $PRODUCT != "VLC.app" ]; then
-    echo "Building share folder..."
-    pbxcp="cp -av" 
-    mkdir -p ${target_share}
-    if test "$use_archs" = "no"; then
-        $pbxcp ${libvlc_dir}/share/vlc/lua ${target_share}
-    else
-        $pbxcp ${main_build_dir}/share/lua ${target_share}
-    fi
-fi
