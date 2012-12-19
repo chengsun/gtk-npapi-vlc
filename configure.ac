@@ -223,13 +223,13 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
    #endif
    #include <stdint.h>
    #include <npapi.h>
-  const char *NPP_GetMIMEDescription(void);
+  char *NPP_GetMIMEDescription(void);
 ])],[
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(NPP_GET_MIME_CONST, [const], [Whether NPP_GetMIMEDescription returns const])
-],[
   AC_MSG_RESULT(no)
   AC_DEFINE(NPP_GET_MIME_CONST, [], [Whether NPP_GetMIMEDescription returns const])
+],[
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(NPP_GET_MIME_CONST, [const], [Whether NPP_GetMIMEDescription returns const])
 ])
 
 CPPFLAGS="${CPPFLAGS_save}"
