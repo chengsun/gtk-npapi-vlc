@@ -85,6 +85,13 @@ spopd #extras/macosx
 # Build time
 #
 
+info "Building tools"
+spushd extras/macosx/vlc/extras/tools
+if ! [ -e build ]; then
+./bootstrap && make
+fi
+spopd
+
 info "Fetching contrib"
 
 spushd extras/macosx/vlc/contrib
@@ -103,7 +110,7 @@ export CXX="xcrun clang++"
 export OBJC="xcrun clang"
 PREFIX="${npapi_root_dir}/extras/macosx/vlc/64bit_install_dir"
 
-info "Configuring vlc"
+info "Configuring VLC"
 
 if ! [ -e ${PREFIX} ]; then
     mkdir ${PREFIX}
@@ -151,7 +158,7 @@ cd 64build
         --disable-macosx-vlc-app \
         --prefix=${PREFIX} > ${out}
 
-info "Compiling vlc"
+info "Compiling VLC"
 
 CORE_COUNT=`sysctl -n machdep.cpu.core_count`
 let MAKE_JOBS=$CORE_COUNT+1
