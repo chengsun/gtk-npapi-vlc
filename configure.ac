@@ -190,8 +190,6 @@ dnl we can't use the pkg-config macros.
     fi
   done
 
-AM_CONDITIONAL(HAVE_SDK, test "$found" = 0)
-
 CPPFLAGS_save="${CPPFLAGS}"
 CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS} -Igecko/"
 
