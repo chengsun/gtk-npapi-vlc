@@ -148,6 +148,7 @@ cd 64build
         --disable-nls \
         --disable-sdl \
         --disable-sdl-image \
+        --disable-macosx-vlc-app \
         --prefix=${PREFIX} > ${out}
 
 info "Compiling vlc"
