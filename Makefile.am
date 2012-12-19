@@ -15,11 +15,9 @@ if BUILD_ACTIVEX
 SUBDIRS += activex
 endif
 
-if HAVE_SDK
 npapi-headers:
 	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers gecko -r HEAD
 	touch $@
-endif
 
 EXTRA_DIST = \
 	autogen.sh \
