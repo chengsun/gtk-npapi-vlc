@@ -166,7 +166,83 @@ info "Installing VLC"
 make install > ${out}
 cd ..
 
-find ${PREFIX}/lib/vlc/plugins -name *.a -type f -exec cp '{}' ${PREFIX}/lib/vlc/plugins \;
+find ${PREFIX}/lib/vlc/plugins -name *.dylib -type f -exec cp '{}' ${PREFIX}/lib/vlc/plugins \;
+
+info "Removing unneeded modules"
+blacklist="
+stats
+access_bd
+shm
+access_imem
+oldrc
+real
+hotkeys
+gestures
+sap
+dynamicoverlay
+rss
+ball
+marq
+magnify
+audiobargraph_
+clone
+mosaic
+osdmenu
+puzzle
+mediadirs
+t140
+ripple
+motion
+sharpen
+grain
+posterize
+mirror
+wall
+scene
+blendbench
+psychedelic
+alphamask
+netsync
+audioscrobbler
+motiondetect
+motionblur
+export
+smf
+podcast
+bluescreen
+erase
+stream_filter_record
+speex_resampler
+remoteosd
+magnify
+gradient
+tospdif
+dtstofloat32
+logger
+visual
+fb
+aout_file
+yuv
+dummy
+invert
+sepia
+wave
+hqdn3d
+headphone_channel_mixer
+gaussianblur
+gradfun
+extract
+colorthres
+antiflicker
+anaglyph
+adjust
+remap
+"
+
+for i in ${blacklist}
+do
+    find ${PREFIX}/lib/vlc/plugins -name *$i* -type f -exec rm '{}' \;
+done
 
 spopd
 
