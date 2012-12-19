@@ -167,7 +167,6 @@ AS_IF([test "x${enable_npapi}" != x"no"],[
 AC_LANG_PUSH(C++)
 AC_MSG_CHECKING([Mozilla headers])
 
-found=0
 dnl pkg-config
 dnl As we want to do a loop due to the number of name possible for the .pc
 dnl we can't use the pkg-config macros.
@@ -182,7 +181,6 @@ dnl we can't use the pkg-config macros.
         MOZILLA_CFLAGS=$(eval $PKG_CONFIG --cflags "$i" )
         MOZILLA_LIBS=$(eval $PKG_CONFIG --libs "$i" )
         AC_MSG_RESULT([yes])
-        found=1
         break
       else
         AC_MSG_RESULT([no])
