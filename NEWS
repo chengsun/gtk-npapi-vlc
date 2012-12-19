@@ -1,3 +1,16 @@
+Changes between VLC 2.0.2 and 2.0.5:
+-----------------------------------
+ * NPAPI: core class rework and redesign
+ * NPAPI: core windowless support
+ * Update test page
+ * Drop OJI support
+ * Improve packaging on most platforms
+ * Fix memory and Handle leaks
+ * Fix browser events propagation in NPAPI
+ * ActiveX: first step of Win64 support
+ * Upgrade the libVLC wrapper
+ 
+
 Changes between VLC 2.0.0 and 2.0.2:
 -----------------------------------
  * introduce MediaDescription object for exposing media meta information
