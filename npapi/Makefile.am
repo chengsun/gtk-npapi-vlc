@@ -84,6 +84,10 @@ else # Win32
 #
 lib_LTLIBRARIES = npvlc.la
 
+if FETCH_NPAPI
+$(npvlc_la_OBJECTS): gecko
+endif
+
 AM_CPPFLAGS += -DXP_WIN -DXP_WIN32 \
 	-DXPCOM_GLUE -DHAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 SOURCES_support = \
@@ -107,6 +111,10 @@ npvlc_rc.$(OBJEXT): package/npvlc_rc.rc
 
 endif
 else
+
+if FETCH_NPAPI
+$(npvlc_la_OBJECTS): gecko
+endif
 
 # MacOS X
 # Mac OS plugins need .r files that will be processed into rsrc files
