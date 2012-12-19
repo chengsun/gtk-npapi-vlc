@@ -15,10 +15,6 @@ if BUILD_ACTIVEX
 SUBDIRS += activex
 endif
 
-npapi-headers:
-	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers gecko -r HEAD
-	touch $@
-
 EXTRA_DIST = \
 	autogen.sh \
 	extras/macosx/Info.plist.in \

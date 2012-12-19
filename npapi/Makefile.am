@@ -7,7 +7,7 @@ MOSTLYCLEANFILES =
 CLEANFILES = $(BUILT_SOURCES)
 npvlcdir = $(libdir)/mozilla/plugins
 
-AM_CPPFLAGS = $(LIBVLC_CFLAGS) -I$(top_srcdir)/gecko $(MOZILLA_CFLAGS)
+AM_CPPFLAGS = $(LIBVLC_CFLAGS) -Igecko $(MOZILLA_CFLAGS)
 
 libvlcplugin_la_SOURCES = \
 	common.h \
@@ -49,6 +49,14 @@ if !HAVE_WIN32
 # Unix (x11) platforms
 #
 npvlc_LTLIBRARIES = libvlcplugin.la
+
+gecko:
+	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers gecko-svn -r HEAD
+	mv gecko-svn gecko
+
+if FETCH_NPAPI
+$(libvlcplugin_la_OBJECTS): gecko
+endif
 
 AM_CPPFLAGS += -DXP_UNIX -DDATA_PATH=\"$(pkgdatadir)\"
 libvlcplugin_la_LIBADD += $(MOZILLA_LIBS)
