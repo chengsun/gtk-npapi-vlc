@@ -197,9 +197,11 @@ CPPFLAGS="${CPPFLAGS} ${MOZILLA_CFLAGS} -Igecko/"
 
 AC_CHECK_HEADERS(npapi.h npruntime.h, [
     dnl if found
+    have_headers="true"
   ],[
     dnl if not found
-    AC_MSG_ERROR([Please install the Mozilla development tools, required headers were not found.])
+    AC_MSG_WARN([Please install the Mozilla development tools, required headers were not found.])
+    have_headers="false"
   ], [
     #include <stdint.h>
     #if HAVE_NPAPI_H
@@ -207,7 +209,7 @@ AC_CHECK_HEADERS(npapi.h npruntime.h, [
     #endif
   ]
 )
-
+AM_CONDITIONAL(FETCH_NPAPI, [ test "${have_headers}" != "true" ])
 
 dnl
 dnl check the const-ness of GetMIMEDesc, since it changed in latest npapi headers
