@@ -7,7 +7,7 @@ MOSTLYCLEANFILES =
 CLEANFILES = $(BUILT_SOURCES)
 npvlcdir = $(libdir)/mozilla/plugins
 
-AM_CPPFLAGS = $(LIBVLC_CFLAGS) -I$(top_srcdir)/gecko
+AM_CPPFLAGS = $(LIBVLC_CFLAGS) -I$(top_srcdir)/gecko $(MOZILLA_CFLAGS)
 
 libvlcplugin_la_SOURCES = \
 	common.h \
