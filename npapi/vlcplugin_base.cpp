@@ -536,7 +536,7 @@ bool VlcPluginBase::canUseEventListener()
 
 #ifdef WINDOWLESS
 VlcWindowlessBase::VlcWindowlessBase(NPP instance, NPuint16_t mode) :
-    VlcPluginBase(instance, mode)
+    VlcPluginBase(instance, mode), m_media_width(0), m_media_height(0)
 {
 }
 
