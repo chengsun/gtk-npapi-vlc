@@ -61,21 +61,30 @@ endif
 AM_CPPFLAGS += -DXP_UNIX -DDATA_PATH=\"$(pkgdatadir)\"
 libvlcplugin_la_LIBADD += $(MOZILLA_LIBS)
 
+SOURCES_support = \
+	support/npunix.cpp
+
 if WITH_GTK
 AM_CPPFLAGS += $(GTK_CFLAGS)
 libvlcplugin_la_LIBADD += $(GTK_LIBS) $(X_LIBS) $(X_PRE_LIBS) -lX11
-SOURCES_support = \
-	support/npunix.cpp \
+SOURCES_support += \
 	vlcplugin_gtk.cpp \
 	vlcplugin_gtk.h
 else # !WITH_GTK
 AM_CPPFLAGS += $(XCB_CFLAGS)
 libvlcplugin_la_LIBADD += $(XCB_LIBS)
-SOURCES_support = \
-	support/npunix.cpp \
+SOURCES_support += \
 	vlcplugin_xcb.cpp \
 	vlcplugin_xcb.h
 endif # !USE_GTK
+
+if HAVE_XCB
+AM_CPPFLAGS += $(XCB_CFLAGS)
+libvlcplugin_la_LIBADD += $(XCB_LIBS)
+SOURCES_support += \
+	vlcwindowless_xcb.cpp \
+	vlcwindowless_xcb.h
+endif # !HAVE_XCB
 
 else # Win32
 

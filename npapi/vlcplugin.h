@@ -33,7 +33,14 @@
 # include "config.h"
 #endif
 
+#include "common.h"
+
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
+#   if defined(USE_XCB)
+#       define WINDOWLESS
+#       include "vlcwindowless_xcb.h"
+        typedef VlcWindowlessXCB VlcWindowless;
+#   endif
 #   if defined(USE_GTK)
 #       include "vlcplugin_gtk.h"
         typedef class VlcPluginGtk VlcPlugin;
