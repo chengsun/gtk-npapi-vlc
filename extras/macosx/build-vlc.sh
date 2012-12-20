@@ -242,7 +242,6 @@ antiflicker
 anaglyph
 adjust
 remap
-vmem
 amem
 bluray
 "
