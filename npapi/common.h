@@ -37,6 +37,7 @@
 #if defined(_WIN32)
 #   define XP_WIN 1
 #elif defined(__APPLE__)
+#   define HAVE_PTHREAD
 #   define XP_MACOSX 1
 #else
 #   define HAVE_PTHREAD
