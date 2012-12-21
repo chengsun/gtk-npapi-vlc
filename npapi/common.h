@@ -39,6 +39,7 @@
 #elif defined(__APPLE__)
 #   define XP_MACOSX 1
 #else
+#   define HAVE_PTHREAD
 #   define XP_UNIX 1
 #   define MOZ_X11 1
 #endif
@@ -78,13 +79,13 @@
 /* Lock includes */
 #ifdef XP_WIN
 #   include <windows.h>
-#elif defined(XP_UNIX)
+#elif defined(HAVE_PTHREAD)
 #   include <pthread.h>
 #endif
 #include <assert.h>
 
 typedef struct {
-#if defined(XP_UNIX)
+#if defined(HAVE_PTHREAD)
     pthread_mutex_t mutex;
 #elif defined(XP_WIN)
     CRITICAL_SECTION cs;
@@ -100,7 +101,7 @@ static void plugin_lock_init(plugin_lock_t *lock)
 {
     assert(lock);
 
-#if defined(XP_UNIX)
+#if defined(HAVE_PTHREAD)
     pthread_mutex_init(&lock->mutex, NULL);
 #elif defined(XP_WIN)
     InitializeCriticalSection(&lock->cs);
@@ -113,7 +114,7 @@ static void plugin_lock_destroy(plugin_lock_t *lock)
 {
     assert(lock);
 
-#if defined(XP_UNIX)
+#if defined(HAVE_PTHREAD)
     pthread_mutex_destroy(&lock->mutex);
 #elif defined(XP_WIN)
     DeleteCriticalSection(&lock->cs);
@@ -126,7 +127,7 @@ static void plugin_lock(plugin_lock_t *lock)
 {
     assert(lock);
 
-#if defined(XP_UNIX)
+#if defined(HAVE_PTHREAD)
     pthread_mutex_lock(&lock->mutex);
 #elif defined(XP_WIN)
     EnterCriticalSection(&lock->cs);
@@ -139,7 +140,7 @@ static void plugin_unlock(plugin_lock_t *lock)
 {
     assert(lock);
 
-#if defined(XP_UNIX)
+#if defined(HAVE_PTHREAD)
     pthread_mutex_unlock(&lock->mutex);
 #elif defined(XP_WIN)
     LeaveCriticalSection(&lock->cs);
