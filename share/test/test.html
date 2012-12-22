@@ -400,6 +400,12 @@ Insert Slider widget
     <input size=4 value="100" id="telxPage" onClick='doTelxPage(document.getElementById("telxPage").value);'>
 </td>
 </tr>
+<tr>
+    <td>
+        <input type=button value="3D transform" onClick='doToggle3dTransform();'>
+        (windowless only)
+    </td>
+</tr>
 </table>
 <SCRIPT language="javascript">
 <!--
@@ -503,6 +509,20 @@ function doToggleTeletext()
             document.getElementById("telx").innerHTML = "Teletext off";
             telxState = false;
         }
+    }
+}
+
+function doToggle3dTransform()
+{
+    var vlc = getVLC("vlc");
+    var transform = "rotate3d(1,2,1, 45deg)";
+
+    if( vlc )
+    {
+        if (!vlc.style.transform)
+            vlc.style.transform = transform;
+        else
+            vlc.style.transform = '';
     }
 }
 
