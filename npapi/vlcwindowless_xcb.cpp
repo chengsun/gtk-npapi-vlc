@@ -25,7 +25,6 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
-
 #include <cstring>
 #include <cstdlib>
 
@@ -93,7 +92,7 @@ bool VlcWindowlessXCB::handle_event(void *event)
 
         xcb_gcontext_t gc;
         xcb_void_cookie_t cookie;
-        xcb_generic_error_t* err;
+        xcb_generic_error_t *err;
         XGraphicsExposeEvent *xgeevent = reinterpret_cast<XGraphicsExposeEvent *>(xevent);
 
         /* Something went wrong during initialization */
@@ -110,18 +109,6 @@ bool VlcWindowlessXCB::handle_event(void *event)
         int left = (npwindow.width  - m_media_width)  / 2;
         int top  = (npwindow.height - m_media_height) / 2;
 
-        /* TODO Expose:
-
-        xcb_pixmap_t pmap = xcb_generate_id(m_conn);
-        xcb_create_pixmap(m_conn, 24, pmap, xgeevent->drawable, m_media_width, m_media_height);
-
-        gc = xcb_generate_id(m_conn);
-        xcb_create_gc(m_conn, gc, xgeevent->drawable, 0, NULL);
-        xcb_image_put(m_conn, pmap, gc, image, left, top, 0);
-        xcb_copy_area(m_conn, pmap, xgeevent->drawable, gc, 0, 0, 0, 0, m_media_width, m_media_height);
-        */
-
-        /* Push the frame in X11 */
         gc = xcb_generate_id(m_conn);
         xcb_create_gc(m_conn, gc, xgeevent->drawable, 0, NULL);
 
@@ -136,7 +123,7 @@ bool VlcWindowlessXCB::handle_event(void *event)
                     left, top,
                     0, 24,
                     m_media_width * m_media_height * 4,
-                    (const uint8_t*)&m_frame_buf[0]);
+                    (const uint8_t *)&m_frame_buf[0]);
 
         if (err = xcb_request_check(m_conn, cookie))
         {
