@@ -27,7 +27,7 @@
 #define WINDOWLESS
 #include "vlcplugin_base.h"
 
-#include <X11/Xlib-xcb.h>
+#include <xcb/xcb.h>
 
 class VlcWindowlessXCB : public VlcWindowlessBase
 {

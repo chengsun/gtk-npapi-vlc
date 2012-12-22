@@ -23,7 +23,7 @@
 
 #include "vlcwindowless_xcb.h"
 
-#include <X11/Xlib-xcb.h>
+#include <xcb/xcb.h>
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
 
@@ -33,9 +33,7 @@
 VlcWindowlessXCB::VlcWindowlessXCB(NPP instance, NPuint16_t mode) :
     VlcWindowlessBase(instance, mode), m_conn(0), m_screen(0)
 {
-    //FIXME Avoid using XOpenDisplay in an XCB context
-    Display *display = XOpenDisplay(NULL);
-    if (!(m_conn = XGetXCBConnection(display)))
+    if (!(m_conn = xcb_connect(NULL, NULL)))
     {
         fprintf(stderr, "Can't connect to XCB\n");
         return;
