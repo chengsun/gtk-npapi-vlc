@@ -70,8 +70,8 @@ void VlcWindowlessXCB::drawBackground(xcb_drawable_t drawable)
 
     /* Prepare to fill the background */
     xcb_gcontext_t background = xcb_generate_id(m_conn);
-    uint32_t        mask       = XCB_GC_BACKGROUND | XCB_GC_GRAPHICS_EXPOSURES;
-    uint32_t        values[2]  = {0, colorpixel};
+    uint32_t        mask       = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
+    uint32_t        values[2]  = {colorpixel, 0};
     xcb_create_gc(m_conn, background, drawable, mask, values);
     xcb_rectangle_t rect;
     rect.x = 0;
