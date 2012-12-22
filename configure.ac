@@ -243,7 +243,7 @@ dnl GTK+ for linux toolbar
 AC_ARG_WITH([gtk], AS_HELP_STRING([--with-gtk], [Build the GTK+ toolbars in NPAPI plugin [default=auto]]),, [with_gtk=yes])
 gtk_found=no
 AS_IF([ test "${SYS}" != "mingw32" -a "${SYS}" != "darwin" ], [
-  PKG_CHECK_MODULES(XCB, [xcb xcb-image],[xcb_found=yes])
+  PKG_CHECK_MODULES(XCB, [xcb],[xcb_found=yes])
   AS_IF([ test "x$with_gtk" != "xno" ],
     [
        PKG_CHECK_MODULES(GTK, [gtk+-2.0], [gtk_found=yes])

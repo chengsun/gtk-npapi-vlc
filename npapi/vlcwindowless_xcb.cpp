@@ -25,7 +25,6 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
-#include <xcb/xcb_image.h>
 
 #include <cstring>
 #include <cstdlib>
@@ -92,6 +91,9 @@ bool VlcWindowlessXCB::handle_event(void *event)
     switch (xevent->type) {
     case GraphicsExpose:
 
+        xcb_gcontext_t gc;
+        xcb_void_cookie_t cookie;
+        xcb_generic_error_t* err;
         XGraphicsExposeEvent *xgeevent = reinterpret_cast<XGraphicsExposeEvent *>(xevent);
 
         /* Something went wrong during initialization */
@@ -103,18 +105,6 @@ bool VlcWindowlessXCB::handle_event(void *event)
         /* Validate video size */
         if (m_media_width == 0 || m_media_height == 0)
             break;
-
-        /* Create our X11 image */
-        xcb_image_t *image = xcb_image_create_native(
-                            m_conn,
-                            m_media_width,
-                            m_media_height,
-                            XCB_IMAGE_FORMAT_Z_PIXMAP,
-                            24,
-                            &m_frame_buf[0],
-                            m_frame_buf.size(),
-                            NULL
-                    );
 
         /* Compute the position of the video */
         int left = (npwindow.width  - m_media_width)  / 2;
@@ -132,11 +122,28 @@ bool VlcWindowlessXCB::handle_event(void *event)
         */
 
         /* Push the frame in X11 */
-        xcb_gcontext_t  gc = xcb_generate_id(m_conn);
+        gc = xcb_generate_id(m_conn);
         xcb_create_gc(m_conn, gc, xgeevent->drawable, 0, NULL);
 
-        //FIXME xcb_put_image_checked is more efficient than xcb_image_*
-        xcb_image_put(m_conn, xgeevent->drawable, gc, image, left, top, 0);
+        /* Push the frame in X11 */
+        cookie = xcb_put_image_checked(
+                    m_conn,
+                    XCB_IMAGE_FORMAT_Z_PIXMAP,
+                    xgeevent->drawable,
+                    gc,
+                    m_media_width,
+                    m_media_height,
+                    left, top,
+                    0, 24,
+                    m_media_width * m_media_height * 4,
+                    (const uint8_t*)&m_frame_buf[0]);
+
+        if (err = xcb_request_check(m_conn, cookie))
+        {
+            fprintf(stderr, "Unable to put picture into drawable. Error %d\n",
+                            err->error_code);
+            free(err);
+        }
 
         /* Flush the the connection */
         xcb_flush(m_conn);
