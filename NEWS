@@ -9,7 +9,9 @@ Changes between VLC 2.0.2 and 2.0.5:
  * Fix browser events propagation in NPAPI
  * ActiveX: first step of Win64 support
  * Upgrade the libVLC wrapper
- 
+ * Drop the dependency on external NPAPI headers: it will get downloaded
+ * Support for Windowless under X11 with XCB
+
 
 Changes between VLC 2.0.0 and 2.0.2:
 -----------------------------------
