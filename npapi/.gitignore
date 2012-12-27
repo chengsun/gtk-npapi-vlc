@@ -3,4 +3,4 @@ npvlc_rc.rc
 vlc.r
 install.rdf
 manifest.json
-gecko/
+npapi-sdk/

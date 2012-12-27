@@ -7,7 +7,7 @@ MOSTLYCLEANFILES =
 CLEANFILES = $(BUILT_SOURCES)
 npvlcdir = $(libdir)/mozilla/plugins
 
-AM_CPPFLAGS = $(LIBVLC_CFLAGS) -Igecko $(MOZILLA_CFLAGS)
+AM_CPPFLAGS = $(LIBVLC_CFLAGS) -Inpapi-sdk $(MOZILLA_CFLAGS)
 
 libvlcplugin_la_SOURCES = \
 	common.h \
@@ -43,9 +43,9 @@ npvlc_la_DEPENDENCIES = $(libvlcplugin_la_DEPENDENCIES)
 npvlc_la_LIBADD = $(libvlcplugin_la_LIBADD)
 npvlc_la_LDFLAGS = $(libvlcplugin_la_LDFLAGS)
 
-gecko:
-	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers gecko-svn -r HEAD
-	mv gecko-svn gecko
+npapi-sdk:
+	svn export http://npapi-sdk.googlecode.com/svn/trunk/headers npapi-sdk-svn -r HEAD
+	mv npapi-sdk-svn npapi-sdk
 
 if !HAVE_DARWIN
 if !HAVE_WIN32
@@ -55,7 +55,7 @@ if !HAVE_WIN32
 npvlc_LTLIBRARIES = libvlcplugin.la
 
 if FETCH_NPAPI
-$(libvlcplugin_la_OBJECTS): gecko
+$(libvlcplugin_la_OBJECTS): npapi-sdk
 endif
 
 AM_CPPFLAGS += -DXP_UNIX -DDATA_PATH=\"$(pkgdatadir)\"
@@ -94,7 +94,7 @@ else # Win32
 lib_LTLIBRARIES = npvlc.la
 
 if FETCH_NPAPI
-$(npvlc_la_OBJECTS): gecko
+$(npvlc_la_OBJECTS): npapi-sdk
 endif
 
 AM_CPPFLAGS += -DXP_WIN -DXP_WIN32 \
@@ -122,7 +122,7 @@ endif
 else
 
 if FETCH_NPAPI
-$(npvlc_la_OBJECTS): gecko
+$(npvlc_la_OBJECTS): npapi-sdk
 endif
 
 # MacOS X

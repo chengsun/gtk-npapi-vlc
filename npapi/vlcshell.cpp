@@ -180,7 +180,7 @@ NPError NPP_GetValue( NPP instance, NPPVariable variable, void *value )
 }
 
 /*
- * there is some confusion in gecko headers regarding definition of this API
+ * there is some confusion in NPAPI headers regarding definition of this API
  * NPPVariable is wrongly defined as NPNVariable, which sounds incorrect.
  */
 
