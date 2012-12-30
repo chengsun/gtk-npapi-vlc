@@ -1,13 +1,14 @@
 /*****************************************************************************
  * vlcplugin_mac.cpp: a VLC plugin for Mozilla (Mac interface)
  *****************************************************************************
- * Copyright (C) 2011 the VideoLAN team
+ * Copyright (C) 2011-2012 VLC Authors and VideoLAN
  * $Id$
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Damien Fouilleul <damienf@videolan.org>
  *          Jean-Paul Saman <jpsaman@videolan.org>
  *          Cheng Sun <chengsun9@gmail.com>
+ *          Felix Paul Kühne <fkuehne # videolan # org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,31 +106,36 @@ bool VlcPluginMac::destroy_windows()
 
 bool VlcPluginMac::handle_event(void *event)
 {
-    // FIXME: implement Cocoa event model, by porting this legacy code:
+    NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
+
+    if (!event)
+        return false;
+
+    NPCocoaEventType eventType = cocoaEvent->type;
+
+    switch (eventType) {
+        case NPCocoaEventMouseDown:
+        {
+            if (cocoaEvent->data.mouse.clickCount >= 2)
+                VlcPluginMac::toggle_fullscreen();
+
+            return true;
+        }
+        case NPCocoaEventMouseUp:
+        case NPCocoaEventKeyUp:
+        case NPCocoaEventKeyDown:
+        case NPCocoaEventFocusChanged:
+        case NPCocoaEventScrollWheel:
+            return true;
+
+        default:
+            break;
+    }
 /*
-    static UInt32 lastMouseUp = 0;
     EventRecord *myEvent = (EventRecord*)event;
 
     switch( myEvent->what )
     {
-        case nullEvent:
-            return true;
-        case mouseDown:
-        {
-            if( (myEvent->when - lastMouseUp) < GetDblTime() )
-            {
-                // double click
-                p_plugin->toggle_fullscreen();
-            }
-            return true;
-        }
-        case mouseUp:
-            lastMouseUp = myEvent->when;
-            return true;
-        case keyUp:
-        case keyDown:
-        case autoKey:
-            return true;
         case updateEvt:
         {
             const NPWindow& npwindow = p_plugin->getWindow();
@@ -181,23 +187,6 @@ bool VlcPluginMac::handle_event(void *event)
             }
             return true;
         }
-        case activateEvt:
-            return false;
-        case NPEventType_GetFocusEvent:
-        case NPEventType_LoseFocusEvent:
-            return true;
-        case NPEventType_AdjustCursorEvent:
-            return false;
-        case NPEventType_MenuCommandEvent:
-            return false;
-        case NPEventType_ClippingChangedEvent:
-            return false;
-        case NPEventType_ScrollingBeginsEvent:
-            return true;
-        case NPEventType_ScrollingEndsEvent:
-            return true;
-        default:
-            ;
     }
 */
     return VlcPluginBase::handle_event(event);
