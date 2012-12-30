@@ -80,7 +80,7 @@ endif # !USE_GTK
 
 if HAVE_XCB
 AM_CPPFLAGS += $(XCB_CFLAGS)
-libvlcplugin_la_LIBADD += $(XCB_LIBS)
+libvlcplugin_la_LIBADD += $(XCB_LIBS) -lX11-xcb
 SOURCES_support += \
 	vlcwindowless_xcb.cpp \
 	vlcwindowless_xcb.h
