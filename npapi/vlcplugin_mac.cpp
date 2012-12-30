@@ -131,63 +131,43 @@ bool VlcPluginMac::handle_event(void *event)
         default:
             break;
     }
-/*
-    EventRecord *myEvent = (EventRecord*)event;
 
-    switch( myEvent->what )
-    {
-        case updateEvt:
-        {
-            const NPWindow& npwindow = p_plugin->getWindow();
-            if( npwindow.window )
-            {
-                bool hasVout = false;
+    if (eventType == NPCocoaEventDrawRect) {
+        if (playlist_isplaying && p_plugin->player_has_vout)
+            return false;
 
-                if( p_plugin->playlist_isplaying() )
-                {
-                    hasVout = p_plugin->player_has_vout();
-#if 0
-                    if( hasVout )
-                    {
-                        libvlc_rectangle_t area;
-                        area.left = 0;
-                        area.top = 0;
-                        area.right = npwindow.width;
-                        area.bottom = npwindow.height;
-                        libvlc_video_redraw_rectangle(p_plugin->getMD(), &area, NULL);
-                    }
-#else
-#warning disabled code
-#endif
-                }
-
-                if( ! hasVout )
-                {
-                    // draw the text from get_bg_text()
-                    ForeColor(blackColor);
-                    PenMode( patCopy );
-
-                    // seems that firefox forgets to set the following
-                    // on occasion (reload)
-                    SetOrigin(((NP_Port *)npwindow.window)->portx,
-                              ((NP_Port *)npwindow.window)->porty);
-
-                    Rect rect;
-                    rect.left = 0;
-                    rect.top = 0;
-                    rect.right = npwindow.width;
-                    rect.bottom = npwindow.height;
-                    PaintRect( &rect );
-
-                    ForeColor(whiteColor);
-                    MoveTo( (npwindow.width-80)/ 2  , npwindow.height / 2 );
-                    if( !p_plugin->get_bg_text().empty() )
-                        DrawText( p_plugin->get_bg_text().c_str(), 0, p_plugin->get_bg_text().length() );
-                }
-            }
-            return true;
+        CGContextRef cgContext = cocoaEvent->data.draw.context;
+        if (!cgContext) {
+            return false;
         }
+
+        float windowWidth = npwindow.width;
+        float windowHeight = npwindow.height;
+
+        CGContextSaveGState(cgContext);
+
+        // this context is flipped..
+        CGContextTranslateCTM(cgContext, 0.0, windowHeight);
+        CGContextScaleCTM(cgContext, 1., -1.);
+
+        // draw a gray background
+        CGContextAddRect(cgContext, CGRectMake(0, 0, windowWidth, windowHeight));
+        CGContextSetGrayFillColor(cgContext, 0.5, 1.);
+        CGContextDrawPath(cgContext, kCGPathFill);
+
+        // draw dummy text, needs improvement
+        CGContextSetRGBStrokeColor(cgContext, 0, 0, 0, .5 );
+        CGContextSetTextDrawingMode(cgContext, kCGTextFillStroke );
+        CFAttributedStringRef attRef = CFAttributedStringCreate(kCFAllocatorDefault, CFSTR("VLC Web Plugin"), NULL );
+        CTLineRef textTine = CTLineCreateWithAttributedString(attRef);
+        CGContextSetTextPosition(cgContext, 200, 200 );
+        CTLineDraw(textTine, cgContext);
+        CFRelease(textTine);
+
+        CGContextRestoreGState(cgContext);
+
+        return true;
     }
-*/
+
     return VlcPluginBase::handle_event(event);
 }
