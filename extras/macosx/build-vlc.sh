@@ -189,7 +189,6 @@ sap
 dynamicoverlay
 rss
 ball
-marq
 magnify
 audiobargraph_
 clone
@@ -240,9 +239,7 @@ extract
 colorthres
 antiflicker
 anaglyph
-adjust
 remap
-amem
 bluray
 "
 
