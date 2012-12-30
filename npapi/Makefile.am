@@ -18,6 +18,8 @@ libvlcplugin_la_SOURCES = \
 	vlcplugin.h \
 	vlcplugin_base.cpp \
 	vlcplugin_base.h \
+	vlcwindowless_base.cpp \
+	vlcwindowless_base.h \
 	control/npolibvlc.cpp \
 	control/npolibvlc.h \
 	control/nporuntime.cpp \
