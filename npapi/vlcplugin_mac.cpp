@@ -133,7 +133,7 @@ bool VlcPluginMac::handle_event(void *event)
     }
 
     if (eventType == NPCocoaEventDrawRect) {
-        if (playlist_isplaying && p_plugin->player_has_vout)
+        if (VlcPluginBase::playlist_isplaying() && VlcPluginBase::player_has_vout())
             return false;
 
         CGContextRef cgContext = cocoaEvent->data.draw.context;
